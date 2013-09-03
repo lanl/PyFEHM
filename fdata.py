@@ -3210,6 +3210,134 @@ class fdata(object):						#FEHM data file.
 		'''Display contents of TIME macro.
 		'''
 		for k in self.time.keys():	print k +': ' + str(self.time[k])
+	def new_zone(self,index,name=None,rect=None,nodelist=None,file=None,permeability=None,conductivity=None,density=None,
+		specific_heat=None,porosity=None,youngs_modulus=None,poissons_ratio=None,thermal_expansion=None,pressure_coupling=None,overwrite=False):
+		# if neither rect nor nodelist specified, not enough information to create the zone
+		if not rect and not nodelist:
+			print 'ERROR: either rect or nodelist must be specified'
+			return
+		# if both rect and nodelist are specified, proceed with rect, print warning
+		if rect and nodelist:
+			print 'WARNING: only one of rect or nodelist should be specified, proceeding with rect values'
+			
+		# determine if zone already exists, delete or exit
+		if index in self.zone.keys():
+			if overwrite:
+				self.delete(self.zone[index])
+			else:
+				print 'ERROR: specified zone already exists, overwrite flag set to false'
+				return
+		
+		# assemble zone
+		zn = fzone(index=index,name=name,file=file)
+		if rect:
+			zn.rect(rect[0],rect[1])
+		elif nodelist:
+			zn.type = 'nnum'
+			nds = []
+			for nd in nodelist:
+				if isinstance(nd,int):
+					if nd in self.grid.node.keys(): nds.append(self.grid.node[nd])
+				elif isinstance(nd,fnode): nds.append(nd)
+			zn.nodelist = nds
+		self.add(zn)
+		
+		# add permeability property macros
+		if permeability:
+			if not (isinstance(permeability,(int,float)) or (isinstance(permeability,list) and len(permeability) == 3)):
+				print 'ERROR: permeability must be a single float (isotropic) or three item list ([x,y,z] anisotropic'
+				return
+			# unpack values
+			if isinstance(permeability,(int,float)):
+				kx,ky,kz = [permeability,permeability,permeability]
+			else:
+				kx,ky,kz = permeability
+			# assign
+			if index in self.perm.keys():
+				self.perm[index].param['kx'] = kx
+				self.perm[index].param['ky'] = ky
+				self.perm[index].param['kz'] = kz
+			else:
+				macro = fmacro('perm',zone=index,param=(('kx',kx),('ky',ky),('kz',kz)))
+				self.add(macro)
+		
+		# add conductivity property macros
+		if conductivity:
+			if not (isinstance(conductivity,(int,float)) or (isinstance(conductivity,list) and len(conductivity) == 3)):
+				print 'ERROR: conductivity must be a single float (isotropic) or three item list ([x,y,z] anisotropic'
+				return
+			# unpack values
+			if isinstance(conductivity,(int,float)):
+				kx,ky,kz = [conductivity,conductivity,conductivity]
+			else:
+				kx,ky,kz = conductivity
+			# assign
+			if index in self.cond.keys():
+				self.cond[index].param['cond_x'] = kx
+				self.cond[index].param['cond_y'] = ky
+				self.cond[index].param['cond_z'] = kz
+			else:
+				macro = fmacro('cond',zone=index,param=(('cond_x',kx),('cond_y',ky),('cond_z',kz)))
+				self.add(macro)
+				
+		# add rock property macros
+		if density or specific_heat or porosity:
+			if not density:
+				print 'WARNING: No density specified, assigning default '+str(dflt.density)
+				density = dflt.density
+			
+			if not specific_heat:
+				print 'WARNING: No specific heat specified, assigning default '+str(dflt.specific_heat)
+				specific_heat = dflt.specific_heat
+			
+			if not porosity:
+				print 'WARNING: No porosity specified, assigning default '+str(dflt.porosity)
+				porosity = dflt.porosity
+						
+			# assign
+			if index in self.rock.keys():
+				self.rock[index].param['density'] = density
+				self.rock[index].param['specific_heat'] = specific_heat
+				self.rock[index].param['porosity'] = porosity
+			else:
+				macro = fmacro('rock',zone=index,param=(('density',density),('specific_heat',specific_heat),('porosity',porosity)))
+				self.add(macro)
+				
+		# add elastic property macros
+		if youngs_modulus or poissons_ratio:
+			if not youngs_modulus:
+				print 'WARNING: No Youngs modulus specified, assigning default '+str(dflt.youngs_modulus)
+				youngs_modulus = dflt.youngs_modulus
+			
+			if not poissons_ratio:
+				print 'WARNING: No Poissons ratio specified, assigning default '+str(dflt.poissons_ratio)
+				poissons_ratio = dflt.poissons_ratio
+			
+			# assign
+			if index in self.elastic.keys():
+				self.elastic[index].param['youngs_modulus'] = youngs_modulus
+				self.elastic[index].param['poissons_ratio'] = poissons_ratio
+			else:
+				macro = fmacro('elastic',zone=index,param=(('youngs_modulus',youngs_modulus),('poissons_ratio',poissons_ratio)))
+				self.add(macro)
+				
+		# add stress coupling property macros
+		if thermal_expansion or pressure_coupling:
+			if not thermal_expansion:
+				print 'WARNING: No coefficient of thermal expansion specified, assigning default '+str(dflt.thermal_expansion)
+				thermal_expansion = dflt.thermal_expansion
+			
+			if not pressure_coupling:
+				print 'WARNING: No pressure coupling term specified, assigning default '+str(dflt.pressure_coupling)
+				pressure_coupling = dflt.pressure_coupling
+			
+			# assign
+			if index in self.biot.keys():
+				self.biot[index].param['thermal_expansion'] = thermal_expansion
+				self.biot[index].param['pressure_coupling'] = pressure_coupling
+			else:
+				macro = fmacro('biot',zone=index,param=(('thermal_expansion',thermal_expansion),('pressure_coupling',pressure_coupling)))
+				self.add(macro)
 	def run(self,input='',grid = '',incon='',exe='',files=dflt.files):
 		'''Run an fehm simulation. This command first writes out the input file, *fehmn.files* and this incon file
 		if changes have been made. A command line call is then made to the FEHM executable at the specified path (defaults

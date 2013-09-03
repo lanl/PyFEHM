@@ -7,7 +7,7 @@ class fdflt(object):
 		self.conductivity			=	2.2
 		self.density				=	2500.
 		self.porosity				=	0.1	
-		self.specific_heat			=	1.e3	# kJ / kg
+		self.specific_heat			=	1.e3	
 		self.youngs_modulus			=	1.e4 	# MPa
 		self.poissons_ratio			=	0.25
 		self.pressure_coupling		=	1.
