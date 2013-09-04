@@ -2060,7 +2060,7 @@ class fdata(object):						#FEHM data file.
 	"""Class for FEHM data file. 
 	
 	"""
-	def __init__(self,filename='',meshfilename='',inconfilename='',sticky_zones=dflt.sticky_zones,associate=dflt.associate,work_dir = ''):		#Initialise data file
+	def __init__(self,filename='',meshfilename='',inconfilename='',sticky_zones=dflt.sticky_zones,associate=dflt.associate,work_dir = '',skip=[]):		#Initialise data file
 		from copy import copy
 		self._filename=filename			
 		self._meshfilename=meshfilename	
@@ -2109,11 +2109,12 @@ class fdata(object):						#FEHM data file.
 		self._dtx = default_ctrl['timestep_multiplier_AIAA']
 		# add 'everything' zone
 		self._add_zone(fzone(index=0))
-		if self.filename and self.meshfilename and self.inconfilename: self.read(filename,meshfilename,inconfilename)
-		elif self.filename and self.meshfilename: self.read(filename,meshfilename)
+		if filename == 'fehmn.files': self.read(filename,skip=skip)
+		elif self.filename and self.meshfilename and self.inconfilename: self.read(filename,meshfilename,inconfilename,skip=skip)
+		elif self.filename and self.meshfilename: self.read(filename,meshfilename,skip=skip)
 		elif self.filename: print 'ERROR: meshfile must be specified if reading existing input file.'; return
 	def __repr__(self): return self.filename			#Print out details
-	def read(self,filename='',meshfilename='',inconfilename=''):			#Reads data from file.
+	def read(self,filename='',meshfilename='',inconfilename='',skip=[]):			#Reads data from file.
 		'''Read FEHM input file and construct fdata object.
 		
 		:param filename: Name of FEHM input file.
@@ -2122,6 +2123,12 @@ class fdata(object):						#FEHM data file.
 		:type meshfilename: str
 		
 		'''
+		if filename == 'fehmn.files':
+			with open(filename) as f:
+				for ln in f.readlines():
+					if ln.startswith('rsti:'): inconfilename = ln.split('rsti:')[-1].strip()
+					if ln.startswith('grida:'): meshfilename = ln.split('grida:')[-1].strip()
+					if ln.startswith('input:'): filename = ln.split('input:')[-1].strip()
 		if meshfilename and (self.grid.number_nodes==0):
 			print 'reading grid file'
 			self.meshfilename=meshfilename
@@ -2169,7 +2176,7 @@ class fdata(object):						#FEHM data file.
 		while more:
 			line=infile.readline()
 			keyword=line[0:4].strip()
-			if keyword in fdata_sections:
+			if keyword in fdata_sections and keyword not in skip:
 				print 'reading '+keyword
 				fn=read_fn[keyword]
 				if keyword in macro_list.keys():
