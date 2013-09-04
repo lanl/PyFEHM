@@ -1672,13 +1672,14 @@ class fboun(object):						#FEHM boundary condition object.
 	'''Boundary condition object.
 	
 	'''
-	def __init__(self,zone=[],type='ti',times=[],variable=[],attempt_fix=True):
+	def __init__(self,zone=[],type='ti',times=[],variable=[],file=None,attempt_fix=True):
 		self._zone = []					
 		if zone: self.zone=zone
 		self._type = type 				
 		self._times=times	
 		self._parent = None
-		self._variable = []				
+		self._variable = []			
+		self._file = file	
 		self._attempt_fix = attempt_fix
 		if variable: self.variable = variable
 	def __repr__(self): 
@@ -1709,6 +1710,9 @@ class fboun(object):						#FEHM boundary condition object.
 	def _get_times(self): return self._times
 	def _set_times(self,value): self._times=value
 	times = property(_get_times,_set_times)#: (*lst[fl64]*) Vector of times.
+	def _get_file(self): return self._file
+	def _set_file(self,value): self._file = value
+	file = property(_get_file,_set_file)#: (*str*) File string where information about the macro is stored. If file does not currently exist, it will be created and written to when the FEHM input file is written.
 	def _get_attempt_fix(self): return self._attempt_fix
 	def _set_attempt_fix(self,value):
 		if not(isinstance(value,bool) or value in [0,1]): print 'Boolean values only'; return
@@ -2322,16 +2326,17 @@ class fdata(object):						#FEHM data file.
 			#nd.variable.update(dict(zip(names,vars[:,nd.index-1,0])))
 			nd.variable.update(dict(zip(names,vars[:,nd.index-1])))
 	def _read_boun(self,infile):							#BOUN: Reads BOUN macro.
-		line=infile.readline().strip()		
+		line=infile.readline().strip()	
 		new_bouns=[]
+		file_flag=False
 		# read models
 		while not (not line or line.startswith('end')):
+			if line.startswith('file'): file_flag = True; break 		# read file data	
 			new_boun = fboun()
 			line=infile.readline().strip()
 			new_boun.type = line
 			line=infile.readline().strip()
 			nums = line.split()
-#			new_boun.n_times = int(nums[0])
 			new_boun.times = [float(num) for num in nums[1:]]
 			line=infile.readline().strip() 			# read next model
 			while not (line.startswith('model') or not line or line.startswith('end')):
@@ -2342,19 +2347,40 @@ class fdata(object):						#FEHM data file.
 				new_boun.variable.append(var)
 				line=infile.readline().strip() 			# read next model
 			new_bouns.append(new_boun)
-		# read zone assignments
-		line=infile.readline().strip() 			# read next zone assignment
-		while line:
-			nums = line.split()
-			if (nums[0] == '1' and nums[1] == '0' and nums[2] == '0') or (int(nums[0])<0):
-				new_bouns[int(nums[-1])-1].zone.append(self.zone[_zone_ind(nums[0])])
+		
+		if file_flag:
+			line=infile.readline().strip()
+			if not os.path.isfile(line):
+				# check if in subdirectory with input file
+				fname = self._filename.split(slash)
+				if len(fname)>0:
+					fn0 = ''
+					for fn in fname[:-1]: fn0 += fn
+					if not os.path.isfile(fn0+slash+line):
+						print 'ERROR: cannot find macro file '+line
+					else:
+						macrofile = open(fn0+slash+line)
+						line = macrofile.readline().strip()
+						self._read_boun(macrofile)
+						macrofile.close()
 			else:
-				nds = (int(nums[0]),int(nums[1]),int(nums[2]))
-				new_bouns[int(nums[-1])-1].zone.append(nds)
-			#new_bouns[int(nums[3])-1].zones.append(self.zone[_zone_ind(nums[0])])
+				macrofile = open(line)
+				line = macrofile.readline().strip()
+				self._read_boun(macrofile)
+				macrofile.close()
+		else:
+			# read zone assignments
 			line=infile.readline().strip() 			# read next zone assignment
-		for new_boun in new_bouns:
-			self._add_boun(new_boun)
+			while line:
+				nums = line.split()
+				if (nums[0] == '1' and nums[1] == '0' and nums[2] == '0') or (int(nums[0])<0):
+					new_bouns[int(nums[-1])-1].zone.append(self.zone[_zone_ind(nums[0])])
+				else:
+					nds = (int(nums[0]),int(nums[1]),int(nums[2]))
+					new_bouns[int(nums[-1])-1].zone.append(nds)
+				line=infile.readline().strip() 			# read next zone assignment
+			for new_boun in new_bouns:
+				self._add_boun(new_boun)
 	def _write_boun(self,outfile):								#Writes BOUN macro.
 		ws = _title_string('BOUNDARY CONDITIONS',72)
 		outfile.write(ws)
@@ -3212,6 +3238,38 @@ class fdata(object):						#FEHM data file.
 		for k in self.time.keys():	print k +': ' + str(self.time[k])
 	def new_zone(self,index,name=None,rect=None,nodelist=None,file=None,permeability=None,conductivity=None,density=None,
 		specific_heat=None,porosity=None,youngs_modulus=None,poissons_ratio=None,thermal_expansion=None,pressure_coupling=None,overwrite=False):
+		''' Create and assign a new zone. Material properties are optionally specified, new macros will be created if required.
+		
+		:param index: Zone index.
+		:type index: int
+		:param name: Zone name.
+		:type name: str
+		:param rect: Two item list. Each item is itself a three item (or two for 2D) list containing [x,y,z] coordinates of zone bounding box.
+		:type rect: lst
+		:param nodelist: List of node objects or indices of zone. Only one of rect or nodelist should be specified (rect will be taken if both given).
+		:type nodelist: lst
+		:param file: Name of auxiliary file for zone
+		:type file: str
+		:param permeability: Permeability of zone. One float for isotropic, three item list [x,y,z] for anisotropic.
+		:type permeability: fl64, list
+		:param conductivity: Conductivity of zone. One float for isotropic, three item list [x,y,z] for anisotropic.
+		:type conductivity: fl64, list
+		:param density: Density of zone. If not specified, defaults will be used for specific heat and porosity.
+		:type density: fl64
+		:param specific_heat: Specific heat of zone. If not specified, defaults will be used for density and porosity.
+		:type specific_heat: fl64
+		:param porosity: Porosity of zone. If not specified, defaults will be used for density and specific heat.
+		:type porosity: fl64
+		:param youngs_modulus: Young's modulus of zone. If not specified, default will be used for Poisson's ratio.
+		:type youngs_modulus: fl64
+		:param poissons_ratio: Poisson's ratio of zone. If not specified, default will be used for Young's modulus.
+		:type poissons_ratio: fl64
+		:param thermal_expansion: Coefficient of thermal expansion for zone. If not specified, default will be used for pressure coupling term.
+		:type thermal_expansion: fl64
+		:param pressure_coupling: Pressure coupling term for zone. If not specified, default will be used for coefficient of thermal expansion.
+		:type pressure_coupling: fl64
+		'''
+		
 		# if neither rect nor nodelist specified, not enough information to create the zone
 		if not rect and not nodelist:
 			print 'ERROR: either rect or nodelist must be specified'
