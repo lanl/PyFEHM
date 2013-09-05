@@ -1,44 +1,25 @@
 """Class for FEHM data"""
 
 import numpy as np
-from fgrid import*
-from copy import deepcopy
-from copy import copy
-import os,time
+from copy import copy, deepcopy
+import os,time,platform
 try:
 	from matplotlib import pyplot as plt
 	from mpl_toolkits.mplot3d import axes3d
 except ImportError:
 	'placeholder'
-from fpost import *
-import platform
 
+from fgrid import*
+from fvars import*
+from fpost import*
 from fdflt import*
+
 dflt = fdflt()
 
 WINDOWS = platform.system()=='Windows'
 if WINDOWS: copyStr = 'copy'; delStr = 'del'; slash = '\\'
 else: copyStr = 'cp'; delStr = 'rm'; slash = '/'
 
-# default values for mactro ITER (parameters controlling solver)
-default_iter = {'linear_converge_NRmult_G1':1.e-5,'quadratic_converge_NRmult_G2':1.e-5,'stop_criteria_NRmult_G3':1.e-3,'machine_tolerance_TMCH':-1.e-5,'overrelaxation_factor_OVERF':1.1,
-				'reduced_dof_IRDOF':0,'reordering_param_ISLORD':0,'IRDOF_param_IBACK':0,'number_SOR_iterations_ICOUPL':0,'max_machine_time_RNMAX':3600,}
-# default values for macro CTRL (parameters controlling simulation)
-default_ctrl = {'max_newton_iterations_MAXIT':10,'newton_cycle_tolerance_EPM':1.e-5,'number_orthogonalizations_NORTH':8,
-				'max_solver_iterations_MAXSOLVE':24,'acceleration_method_ACCM':'gmre',
-				'JA':1,'JB':0,'JC':0,'order_gauss_elim_NAR':2,
-				'implicitness_factor_AAW':1,'gravity_direction_AGRAV':3,'upstream_weighting_UPWGT':1.0,
-				'max_multiply_iterations_IAMM':7,'timestep_multiplier_AIAA':1.5,'min_timestep_DAYMIN':1.e-5,'max_timestep_DAYMAX':30.,
-				'geometry_ICNL':0,'stor_file_LDA':0}
-# default values for macro TIME
-default_time = {'initial_timestep_DAY':1.,'max_time_TIMS':365.,'max_timestep_NSTEP':200,'print_interval_IPRTOUT':1,'initial_year_YEAR':None,'initial_month_MONTH':None,'initial_day_INITTIME':None}
-# default values for macro SOL
-default_sol = {'coupling_NTT':1,'element_integration_INTG':-1}
-# default values for macro TRAC
-default_trac = {'init_solute_conc_ANO':0.,'implicit_factor_AWC':1.,'tolerance_EPC':1.e-7,'upstream_weight_UPWGTA':0.5,
-				'solute_start_DAYCS':1.,'solute_end_DAYCF':2.,'flow_end_DAYHF':1.,'flow_start_DAYHS':2.,
-				'max_iterations_IACCMX':50,'timestep_multiplier_DAYCM':1.2,'initial_timestep_DAYCMM':1.,'max_timestep_DAYCMX':1000.,'print_interval_NPRTTRC':1.}
-default_adsorption = {'type_IADSF':None,'alpha1_A1ADSF':None,'alpha2_A2ADSF':None,'beta_BETADF':None}
 # list of macros that might be encountered
 fdata_sections = ['cont','pres','zonn','zone','cond','time','ctrl','iter','rock','perm',
 					'boun','flow','strs','text','sol','nfin','hist','node','carb','rlp','grad','nobr',
@@ -199,6 +180,19 @@ class fzone(object):						#FEHM zone object.
 			self._nodelist = nodelist
 		self._attempt_fix = attempt_fix
 		if file: self._file = file
+		# material properties
+		self._permeability = None
+		self._conductivity = None
+		self._density = None
+		self._specific_heat = None
+		self._porosity = None
+		self._youngs_modulus = None
+		self._poissons_ratio = None
+		self._thermal_expansion = None
+		self._pressure_coupling = None
+		self._Pi = None
+		self._Ti = None
+		self._Si = None
 	def __repr__(self): return str(self.index)	
 	def _get_index(self): return self._index
 	def _set_index(self,value): self._index = value
@@ -548,7 +542,7 @@ class fzone(object):						#FEHM zone object.
 		elif self.type == 'list':
 			ws = 'Zone '+str(self.index)+'\n'
 			ws +=  'Type: list\n'
-			ws += 'Contains '+str(len(self.points))+' nodes\n'
+			ws += 'Contains '+str(len(self.nodelist))+' nodes\n'
 			pts=np.array(self.points)
 			ws += 'x-range: '+str(np.min(pts[:,0]))+' - '+str(np.max(pts[:,0]))+'\n'
 			ws += 'y-range: '+str(np.min(pts[:,1]))+' - '+str(np.max(pts[:,1]))+'\n'
@@ -562,7 +556,7 @@ class fzone(object):						#FEHM zone object.
 		elif self.type == 'nnum':
 			ws = 'Zone '+str(self.index)+'\n'
 			ws +=  'Type: nnum (list of nodes)\n'
-			ws += 'Contains '+str(len(self.points))+' nodes\n'
+			ws += 'Contains '+str(len(self.nodelist))+' nodes\n'
 		elif not self.index:
 			print 'Background zone (denoted 1 0 0), encompassing all nodes.'; return
 		else: return
@@ -618,6 +612,172 @@ class fzone(object):						#FEHM zone object.
 			elif value == 0: value = False
 		self._attempt_fix = value
 	attempt_fix = property(_get_attempt_fix,_set_attempt_fix)#: (*bool*) Boolean indicating steps should be taken to fix macro.
+	def _get_permeability(self): return self._permeability
+	def _set_permeability(self,value): 
+		self._permeability = value
+		# set commands
+		if not self._parent: print 'Zone not associated with input file, no macro changes made.'; return
+		if isinstance(value,(int,float)): kx = value; ky = value; kz = value
+		elif isinstance(value,(list,tuple)) and len(value)==3: kx,ky,kz = value
+		if self.index in self._parent.perm.keys():
+			self._parent.perm[self.index].param['kx']=kx
+			self._parent.perm[self.index].param['ky']=ky
+			self._parent.perm[self.index].param['kz']=kz
+			self._parent._associate_macro(self._parent.perm[self.index])
+		else:
+			self._parent.add(fmacro('perm',zone=self.index,param=(('kx',kx),('ky',ky),('kz',kz))))
+	permeability = property(_get_permeability, _set_permeability) #: (*fl64*,*lst*) Permeability properties of zone.
+	def _get_conductivity(self): return self._conductivity
+	def _set_conductivity(self,value): 
+		self._conductivity = value
+		# set commands
+		if not self._parent: print 'Zone not associated with input file, no macro changes made.'; return
+		if isinstance(value,(int,float)): kx = value; ky = value; kz = value
+		elif isinstance(value,(list,tuple)) and len(value)==3: kx,ky,kz = value
+		if self.index in self._parent.cond.keys():
+			self._parent.cond[self.index].param['cond_x']=kx
+			self._parent.cond[self.index].param['cond_y']=ky
+			self._parent.cond[self.index].param['cond_z']=kz
+			self._parent._associate_macro(self._parent.cond[self.index])
+		else:
+			self._parent.add(fmacro('cond',zone=self.index,param=(('cond_x',kx),('cond_y',ky),('cond_z',kz))))
+	conductivity = property(_get_conductivity, _set_conductivity) #: (*fl64*,*lst*) Conductivity properties of zone.
+	def _get_density(self): return self._density
+	def _set_density(self,value): 
+		self._density = value
+		# set commands
+		if not self._parent: print 'Zone not associated with input file, no macro changes made.'; return
+		if self.index in self._parent.rock.keys():
+			self._parent.rock[self.index].param['density']=value
+			self._parent._associate_macro(self._parent.rock[self.index])
+		else:
+			self._parent.add(fmacro('rock',zone=self.index,param=(('density',value),('specific_heat',dflt.specific_heat),('porosity',dflt.porosity))))
+			print 'WARNING: Assigning default specific heat and porosity...'
+	density = property(_get_density, _set_density) #: (*fl64*) 	Density of zone.
+	def _get_specific_heat(self): return self._specific_heat
+	def _set_specific_heat(self,value): 
+		self._specific_heat = value
+		# set commands
+		if not self._parent: print 'Zone not associated with input file, no macro changes made.'; return
+		if self.index in self._parent.rock.keys():
+			self._parent.rock[self.index].param['specific_heat']=value			
+			self._parent._associate_macro(self._parent.rock[self.index])
+		else:
+			self._parent.add(fmacro('rock',zone=self.index,param=(('density',dflt.density),('specific_heat',value),('porosity',dflt.porosity))))
+			print 'WARNING: Assigning default density and porosity...'
+	specific_heat = property(_get_specific_heat, _set_specific_heat) #: (*fl64*) Specific heat of zone.
+	def _get_porosity(self): return self._porosity
+	def _set_porosity(self,value): 
+		self._porosity = value
+		# set commands
+		if not self._parent: print 'Zone not associated with input file, no macro changes made.'; return
+		if self.index in self._parent.rock.keys():
+			self._parent.rock[self.index].param['porosity']=value
+			self._parent._associate_macro(self._parent.rock[self.index])
+		else:
+			self._parent.add(fmacro('rock',zone=self.index,param=(('density',dflt.density),('specific_heat',dflt.specific_heat),('porosity',value))))
+			print 'WARNING: Assigning default density and specific heat...'
+	porosity = property(_get_porosity, _set_porosity) #: (*fl64*) Porosity of zone.
+	def _get_youngs_modulus(self): return self._youngs_modulus
+	def _set_youngs_modulus(self,value): 
+		self._youngs_modulus = value
+		# set commands
+		if not self._parent: print 'Zone not associated with input file, no macro changes made.'; return
+		if self.index in self._parent.elastic.keys():
+			self._parent.elastic[self.index].param['youngs_modulus']=value
+			self._parent._associate_macro(self._parent.elastic[self.index])
+		else:
+			self._parent.add(fmacro('elastic',zone=self.index,param=(('youngs_modulus',value),('poissons_ratio',dflt.poissons_ratio))))
+			print 'WARNING: Assigning default Poissons ratio...'
+	youngs_modulus = property(_get_youngs_modulus, _set_youngs_modulus) #: (*fl64*) Young's modulus of zone.
+	def _get_poissons_ratio(self): return self._poissons_ratio
+	def _set_poissons_ratio(self,value): 
+		self._poissons_ratio = value
+		# set commands
+		if not self._parent: print 'Zone not associated with input file, no macro changes made.'; return
+		if self.index in self._parent.elastic.keys():
+			self._parent.elastic[self.index].param['poissons_ratio']=value
+			self._parent._associate_macro(self._parent.elastic[self.index])
+		else:
+			self._parent.add(fmacro('elastic',zone=self.index,param=(('youngs_modulus',dflt.youngs_modulus),('poissons_ratio',value))))
+			print 'WARNING: Assigning default Youngs modulus...'
+	poissons_ratio = property(_get_poissons_ratio, _set_poissons_ratio) #: (*fl64*) Poisson's ratio of zone.
+	def _get_thermal_expansion(self): return self._thermal_expansion
+	def _set_thermal_expansion(self,value): 
+		self._thermal_expansion = value
+		# set commands
+		if not self._parent: print 'Zone not associated with input file, no macro changes made.'; return
+		if self.index in self._parent.biot.keys():
+			self._parent.biot[self.index].param['thermal_expansion']=value
+			self._parent._associate_macro(self._parent.biot[self.index])
+		else:
+			self._parent.add(fmacro('biot',zone=self.index,param=(('thermal_expansion',value),('pressure_coupling',dflt.pressure_coupling))))
+			print 'WARNING: Assigning default pressure coupling...'
+	thermal_expansion = property(_get_thermal_expansion, _set_thermal_expansion) #: (*fl64*) Coefficient of thermal expansion of zone.
+	def _get_pressure_coupling(self): return self._pressure_coupling
+	def _set_pressure_coupling(self,value): 
+		self._pressure_coupling = value
+		# set commands
+		if not self._parent: print 'Zone not associated with input file, no macro changes made.'; return
+		if self.index in self._parent.biot.keys():
+			self._parent.biot[self.index].param['pressure_coupling']=value
+			self._parent._associate_macro(self._parent.biot[self.index])
+		else:
+			self._parent.add(fmacro('biot',zone=self.index,param=(('thermal_expansion',dflt.thermal_expansion),('pressure_coupling',value))))
+			print 'WARNING: Assigning default thermal expansion...'
+	pressure_coupling = property(_get_pressure_coupling, _set_pressure_coupling) #: (*fl64*) Pressure coupling term of zone.
+	def _get_Pi(self): return self._Pi
+	def _set_Pi(self,value): 
+		self._Pi = value
+		# set commands
+		if not self._parent: print 'Zone not associated with input file, no macro changes made.'; return
+		if self.index in self._parent.pres.keys():
+			self._parent.pres[self.index].param['pressure']=value
+			self._parent._associate_macro(self._parent.pres[self.index])
+		else:
+			self._parent.add(fmacro('pres',zone=self.index,param=(('pressure',value),('temperature',dflt.Ti),('saturation',1))))
+			print 'WARNING: Assigning default initial temperature (fully saturated liquid)...'
+			self._Ti = dflt.Ti
+		if self._Ti > tsat(self._Pi)[0]: 
+			self._parent.pres[self.index].param['saturation']=3
+			self._Si = 0.
+		else: 
+			self._parent.pres[self.index].param['saturation']=1
+			self._Si = 1.
+	Pi = property(_get_Pi, _set_Pi) #: (*fl64*) Initial pressure in zone.
+	def _get_Ti(self): return self._Ti
+	def _set_Ti(self,value): 
+		self._Ti = value
+		# set commands
+		if not self._parent: print 'Zone not associated with input file, no macro changes made.'; return
+		if self.index in self._parent.pres.keys():
+			self._parent.pres[self.index].param['temperature']=value
+			self._parent._associate_macro(self._parent.pres[self.index])
+		else:
+			self._parent.add(fmacro('pres',zone=self.index,param=(('pressure',dflt.Pi),('temperature',value),('saturation',1))))
+			print 'WARNING: Assigning default initial pressure (fully saturated liquid)...'
+			self._Pi = dflt.Pi
+		if self._Ti > tsat(self._Pi)[0]: 
+			self._parent.pres[self.index].param['saturation']=3
+			self._Si = 0.
+		else: 
+			self._parent.pres[self.index].param['saturation']=1
+			self._Si = 1.
+	Ti = property(_get_Ti, _set_Ti) #: (*fl64*) Initial temperature in zone.
+	def _get_Si(self): return self._Si
+	def _set_Si(self,value): 
+		self._Si = value
+		# set commands
+		if not self._parent: print 'Zone not associated with input file, no macro changes made.'; return
+		if self.index in self._parent.pres.keys():
+			self._parent.pres[self.index].param['temperature']=value
+			self._parent.pres[self.index].param['saturation']=2
+			self._parent._associate_macro(self._parent.pres[self.index])
+		else:
+			self._parent.add(fmacro('pres',zone=self.index,param=(('pressure',dflt.pressure),('temperature',value),('saturation',2))))
+			print 'WARNING: Assigning default initial pressure (two phase)...'
+		self._Ti = tsat(self._parent.pres[self.index].param['pressure'])[0]
+	Si = property(_get_Si, _set_Si) #: (*fl64*) Initial saturation in zone.
 	def _check(self):
 		# if file called for but non-existant on disk, print warning
 		if self.type == None: print 'WARNING: Zone '+str(self.index)+' type not assigned.'
@@ -1322,7 +1482,7 @@ class ftrac(object): 						#FEHM chemistry module.
 	
 	"""
 	def __init__(self, parent=None, ldsp=False):
-		self._param=ImmutableDict(copy(default_trac))	
+		self._param=ImmutableDict(copy(dflt.trac))	
 		self._on=False
 		self._ldsp = ldsp
 		self._specieslist = []
@@ -2074,19 +2234,19 @@ class fdata(object):						#FEHM data file.
 		# model objects
 		self._bounlist = []				
 		self._cont = fcont()				
-		self._ctrl=ImmutableDict(copy(default_ctrl))	
+		self._ctrl=ImmutableDict(copy(dflt.ctrl))	
 		self._grid=fgrid()				
 		self.grid._parent = self
 		self._incon=fincon() 			
 		self.incon._parent = self
 		self._hist = fhist()				
-		self._iter=ImmutableDict(copy(default_iter))	
+		self._iter=ImmutableDict(copy(dflt.iter))	
 		self._nfinv = 0					
 		self._nobr = 0					
 		self._rlpmlist=[]
-		self._sol = ImmutableDict(copy(default_sol))
+		self._sol = ImmutableDict(copy(dflt.sol))
 		self.text=[]					#: (*str*) Information about the model printed at the top of the input file.
-		self._time=ImmutableDict(copy(default_time))	
+		self._time=ImmutableDict(copy(dflt.time))	
 		self.times=[]					
 		self._zonelist=[]				
 		#self._zone={}				
@@ -2100,13 +2260,13 @@ class fdata(object):						#FEHM data file.
 		self._files._parent = self
 		self._verbose = True
 		# time stepping shortcuts
-		self._tf = default_time['max_time_TIMS']
-		self._ti = default_time['initial_day_INITTIME']
-		self._dti = default_time['initial_timestep_DAY']
-		self._dtmin = default_ctrl['min_timestep_DAYMIN']
-		self._dtmax = default_ctrl['max_timestep_DAYMAX']
-		self._dtn = default_time['max_timestep_NSTEP']
-		self._dtx = default_ctrl['timestep_multiplier_AIAA']
+		self._tf = dflt.time['max_time_TIMS']
+		self._ti = dflt.time['initial_day_INITTIME']
+		self._dti = dflt.time['initial_timestep_DAY']
+		self._dtmin = dflt.ctrl['min_timestep_DAYMIN']
+		self._dtmax = dflt.ctrl['max_timestep_DAYMAX']
+		self._dtn = dflt.time['max_timestep_NSTEP']
+		self._dtx = dflt.ctrl['timestep_multiplier_AIAA']
 		# add 'everything' zone
 		self._add_zone(fzone(index=0))
 		if filename == 'fehmn.files': self.read(filename,skip=skip)
@@ -2117,10 +2277,14 @@ class fdata(object):						#FEHM data file.
 	def read(self,filename='',meshfilename='',inconfilename='',skip=[]):			#Reads data from file.
 		'''Read FEHM input file and construct fdata object.
 		
-		:param filename: Name of FEHM input file.
+		:param filename: Name of FEHM input file. Alternatively, supplying 'fehmn.files' will cause PyFEHM to query this file for input, grid and restart file names if they are available.
 		:type filename: str
 		:param meshfilename: Name of FEHM grid file.
 		:type meshfilename: str
+		:param inconfilename: Name of FEHM restart file.
+		:type inconfilename: str
+		:param skip: List of macro strings to ignore when reading an input file.
+		:type skip: list
 		
 		'''
 		if filename == 'fehmn.files':
@@ -3244,7 +3408,8 @@ class fdata(object):						#FEHM data file.
 		'''
 		for k in self.time.keys():	print k +': ' + str(self.time[k])
 	def new_zone(self,index,name=None,rect=None,nodelist=None,file=None,permeability=None,conductivity=None,density=None,
-		specific_heat=None,porosity=None,youngs_modulus=None,poissons_ratio=None,thermal_expansion=None,pressure_coupling=None,overwrite=False):
+		specific_heat=None,porosity=None,youngs_modulus=None,poissons_ratio=None,thermal_expansion=None,pressure_coupling=None,
+		Pi=None,Ti=None,Si=None,overwrite=False):
 		''' Create and assign a new zone. Material properties are optionally specified, new macros will be created if required.
 		
 		:param index: Zone index.
@@ -3275,6 +3440,14 @@ class fdata(object):						#FEHM data file.
 		:type thermal_expansion: fl64
 		:param pressure_coupling: Pressure coupling term for zone. If not specified, default will be used for coefficient of thermal expansion.
 		:type pressure_coupling: fl64
+		:param Pi: Initial pressure in the zone. If not specified, default will be used for initial temperature and saturation calculated.
+		:type Pi: fl64
+		:param Ti: Initial temperature in the zone. If not specified, default will be used for initial pressure and saturation calculated.
+		:type Ti: fl64
+		:param Si: Initial saturation in the zone. If not specified, default will be used for initial pressure and the saturation temperature calculated.
+		:type Si: fl64
+		:param overwrite: If zone already exists, delete it and create the new one.
+		:type overwrite: bool
 		'''
 		
 		# if neither rect nor nodelist specified, not enough information to create the zone
@@ -3403,6 +3576,65 @@ class fdata(object):						#FEHM data file.
 			else:
 				macro = fmacro('biot',zone=index,param=(('thermal_expansion',thermal_expansion),('pressure_coupling',pressure_coupling)))
 				self.add(macro)
+			
+		# add initial conditions macros
+		if Pi or Ti or Si:
+			if not Si and Pi and Ti:
+				if Ti < tsat(Pi)[0]: Si = 1.; si = 1
+				else: Si = 0.; si = 3
+				ti = Ti
+				
+			elif not Si and Pi and not Ti:
+				print 'WARNING: No initial temperature specified, assigning default '+str(dflt.Ti)
+				Ti = dflt.Ti
+				if Ti < tsat(Pi)[0]: Si = 1.; si = 1
+				else: Si = 0.; si = 3
+				ti = Ti
+			
+			elif not Si and Ti and not Pi:
+				Pi = dflt.Pi
+				print 'WARNING: No initial pressure specified, assigning default '+str(dflt.Pi)
+				if Ti < tsat(Pi)[0]: Si = 1.; si = 1
+				else: Si = 0.; si = 3
+				ti = Ti
+				
+			elif Si and Ti and not Pi:
+				Pi = sat(Ti)[0]
+				print 'NOTE: For supplied saturation '+str(Si)+' and temperature '+str(Ti)+', saturation pressure of '+str(Pi)+' will be used.'
+				
+				ti = Si
+				si = 2
+			
+			elif Si and Pi:
+				if Ti:
+					print 'WARNING: Ignoring Ti, using Pi to calculate saturation temperature.'
+				Ti = tsat(Pi)[0]
+				
+				ti = Si
+				si = 2
+			
+			elif Si and not Ti and not Pi:
+				Pi = dflt.Pi
+				Ti = tsat(Pi)[0]
+				
+				print 'WARNING: No initial pressure specified, assigning default '+str(dflt.Pi)
+				print 'NOTE: For supplied saturation '+str(Si)+' and default pressure '+str(Pi)+', saturation temperature of '+str(Ti)+' will be used.'
+				
+				ti = Si
+				si = 2
+			
+			# assign
+			if index in self.pres.keys():
+				self.pres[index].param['pressure'] = Pi
+				self.pres[index].param['temperature'] = ti
+				self.pres[index].param['saturation'] = si
+			else:
+				macro = fmacro('pres',zone=index,param=(('pressure',Pi),('temperature',ti),('saturation',si)))
+				self.add(macro)
+				
+			self.zone[index]._Pi = Pi
+			self.zone[index]._Ti = Ti
+			self.zone[index]._Si = Si
 	def run(self,input='',grid = '',incon='',exe='',files=dflt.files):
 		'''Run an fehm simulation. This command first writes out the input file, *fehmn.files* and this incon file
 		if changes have been made. A command line call is then made to the FEHM executable at the specified path (defaults
