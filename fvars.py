@@ -44,7 +44,7 @@ else:
 	co2_interp_path = dflt.co2_interp_path
 
 co2Vars = False
-if co2_interp_path != '': co2Vars = True
+if co2_interp_path != '' and os.path.isfile(co2_interp_path): co2Vars = True
 
 if co2Vars:
 	with open(co2_interp_path,'r') as f:
