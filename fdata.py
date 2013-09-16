@@ -2273,7 +2273,7 @@ class fdata(object):						#FEHM data file.
 			'_bounlist','_cont','_ctrl','_grid','_incon','_hist','_iter','_nfinv','_nobr','_rlpmlist','_sol',
 			'_time','text','times','_time','_zonelist','_writeSubFiles','_strs','_carb','_trac','_files','_verbose',
 			'_tf','_ti','_dti','_dtmin','_dtmax','_dtn','_dtx','_sections','_help']
-	def __init__(self,filename='',meshfilename='',inconfilename='',sticky_zones=dflt.sticky_zones,associate=dflt.associate,work_dir = '',skip=[]):		#Initialise data file
+	def __init__(self,filename='',meshfilename='',inconfilename='',sticky_zones=dflt.sticky_zones,associate=dflt.associate,work_dir = '',full_connectivity=dflt.full_connectivity,skip=[]):		#Initialise data file
 		from copy import copy
 		self._filename=filename			
 		self._meshfilename=meshfilename	
@@ -2323,12 +2323,12 @@ class fdata(object):						#FEHM data file.
 		self._dtx = dflt.ctrl['timestep_multiplier_AIAA']
 		# add 'everything' zone
 		self._add_zone(fzone(index=0))
-		if filename == 'fehmn.files': self.read(filename,skip=skip)
-		elif self.filename and self.meshfilename and self.inconfilename: self.read(filename,meshfilename,inconfilename,skip=skip)
-		elif self.filename and self.meshfilename: self.read(filename,meshfilename,skip=skip)
+		if filename == 'fehmn.files': self.read(filename,full_connectivity=full_connectivity,skip=skip)
+		elif self.filename and self.meshfilename and self.inconfilename: self.read(filename,meshfilename,inconfilename,full_connectivity=full_connectivity,skip=skip)
+		elif self.filename and self.meshfilename: self.read(filename,meshfilename,full_connectivity=full_connectivity,skip=skip)
 		elif self.filename: print 'ERROR: meshfile must be specified if reading existing input file.'; return
 	def __repr__(self): return self.filename			#Print out details
-	def read(self,filename='',meshfilename='',inconfilename='',skip=[]):			#Reads data from file.
+	def read(self,filename='',meshfilename='',inconfilename='',full_connectivity=dflt.full_connectivity,skip=[]):			#Reads data from file.
 		'''Read FEHM input file and construct fdata object.
 		
 		:param filename: Name of FEHM input file. Alternatively, supplying 'fehmn.files' will cause PyFEHM to query this file for input, grid and restart file names if they are available.
@@ -2346,12 +2346,16 @@ class fdata(object):						#FEHM data file.
 				for ln in f.readlines():
 					if ln.startswith('rsti:'): inconfilename = ln.split('rsti:')[-1].strip()
 					if ln.startswith('grida:'): meshfilename = ln.split('grida:')[-1].strip()
+					if ln.startswith('gridf:'): meshfilename = ln.split('gridf:')[-1].strip()
 					if ln.startswith('input:'): filename = ln.split('input:')[-1].strip()
+					if ln.startswith('stor:'): 
+						storfilename = ln.split('stor:')[-1].strip()
+						self.files.stor = storfilename
 		if meshfilename and (self.grid.number_nodes==0):
 			print 'reading grid file'
 			self.meshfilename=meshfilename
 			if isinstance(meshfilename,str):
-				self.grid.read(meshfilename)
+				self.grid.read(meshfilename,full_connectivity=full_connectivity)
 				self.grid._parent=self
 				self.files.grid = meshfilename
 		if inconfilename:
@@ -2410,6 +2414,7 @@ class fdata(object):						#FEHM data file.
 				self._sections.append(keyword)
 			if line.startswith('stop'): more=False
 		infile.close()
+		self.grid.what
 		self._add_boundary_zones()
 		return self
 	def write(self,filename='',writeSubFiles = True):	#Writes data to a file.
@@ -3772,7 +3777,8 @@ class fdata(object):						#FEHM data file.
 			if file == 'check': self.files._use_check = True
 			if file == 'hist': self.files._use_hist = True
 			if file == 'outp': self.files._use_outp = True
-		if self.ctrl['stor_file_LDA']: self._use_stor = True
+		if self.ctrl['stor_file_LDA']: self.files._use_stor = True
+		if self.work_dir: os.system(copyStr + self.files.stor +self.work_dir + slash + self.files.stor)
 		
 		if not self.files.input: self.files.input = self.filename
 		if not self.files.grid: 

@@ -305,9 +305,14 @@ class fgrid(object):				#Grid object.
 				if connectivity == 8:
 					nds1 = [el[1],el[1],el[1],el[7],el[7],el[7],el[4],el[4],el[6],el[6],el[2],el[5]]
 					nds2 = [el[5],el[2],el[4],el[6],el[3],el[8],el[3],el[8],el[5],el[2],el[3],el[8]]
-				else:
+				elif connectivity == 4:
 					nds1 = [el[1],el[2],el[3],el[4]]
 					nds2 = [el[2],el[3],el[4],el[1]]
+				elif connectivity == 3:
+					nds1 = [el[1],el[2],el[3]]
+					nds2 = [el[2],el[3],el[1]]
+				else:
+					print 'ERROR: unrecognized connectivity'; return
 				for nd1,nd2 in zip(nds1,nds2):
 					if nd1>nd2: ndi = nd2; nd2 = nd1; nd1 = ndi
 					nd1 = self.node[nd1]; nd2 = self.node[nd2]
