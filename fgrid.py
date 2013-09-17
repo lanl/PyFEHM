@@ -37,7 +37,7 @@ class fnode(object):				#Node object.
 	__slots__ = ['_index','_position','_connections','_elements','_variable','_material','_generator','_zone',
 		'_permeability','_conductivity','_density','_specific_heat','_porosity','_youngs_modulus','_poissons_ratio','_thermal_expansion',
 		'_pressure_coupling','_Pi','_Ti','_Si','_S_co2gi','_S_co2li','_co2_aqi','_strsi','_dispi','_P','_T','_S',
-		'_S_co2g','_S_co2l','_co2_aq','_strs','_disp']
+		'_S_co2g','_S_co2l','_co2_aq','_strs','_disp','_vol']
 	def __init__(self,index=None,position=None):		
 		self._index = index			
 		self._position=position	
@@ -72,6 +72,7 @@ class fnode(object):				#Node object.
 		self._co2_aq = None
 		self._strs = None
 		self._disp = None		
+		self._vol = None
 	def __repr__(self): return 'n'+str(self.index)
 	def _get_index(self): return self._index
 	index = property(_get_index) #: (*int*) Integer number denoting the node.	
@@ -141,9 +142,8 @@ class fnode(object):				#Node object.
 	elements = property(_get_elements)#: (*lst[felem]*) List of element objects of which the node is a member.
 	def _get_zonelist(self): return [self.zone[k] for k in self.zone.keys()]
 	zonelist = property(_get_zonelist)	#: (*lst[fzone]*) List of zones of which the node is a member
-	def _get_control_volume(self):
-		return None
-	ctrl_vol = property(_get_control_volume)				#: (*fl64*) Control volume associated with the node *** NOT DONE ***.
+	def _get_vol(self): return self._vol
+	vol = property(_get_vol)				#: (*fl64*) Control volume associated with the node *** NOT DONE ***.
 	def _get_permeability(self): return self._permeability
 	permeability = property(_get_permeability) #: (**)
 	def _get_conductivity(self): return self._conductivity
@@ -520,6 +520,24 @@ class fgrid(object):				#Grid object.
 			fm = fmake(meshfilename,x,y,z)
 			fm.write()		
 			self.read(meshfilename)
+	def volumes(self,volumefilename):
+		infile = open(volumefilename,'r')
+		line = infile.readline() 
+		line = infile.readline().strip().split()
+		Ncol = int(line[0])
+		colnames = []
+		for i in range(Ncol):
+			line = infile.readline().strip().split(',')
+			colnames.append(line[0])
+		keepReading = True
+		for i,name in enumerate(colnames):
+			if name == 'vorvol': break
+		while keepReading:
+			line = infile.readline().strip().split()
+			if not line: keepReading = False; continue
+			ndI = int(line[1])
+			ndV = float(line[i+1])
+			self.node[ndI]._vol = ndV
 	def add_node(self,node=fnode()):		#Add a node object.
 		self._nodelist.append(node)
 		self._node[node.index] = self._nodelist[-1]
