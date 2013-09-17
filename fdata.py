@@ -615,7 +615,7 @@ class fzone(object):						#FEHM zone object.
 				zmax,zmin = self._parent.grid.zmax+.01,self._parent.grid.zmin-.01
 			for nd in self._parent.grid.nodelist:
 				x,y,z = nd.position
-				if (x<xmax) and (x>xmin) and (y<ymax) and (y>ymin) and (z<zmax) and (z>zmin):
+				if (x<=xmax) and (x>=xmin) and (y<=ymax) and (y>=ymin) and (z<=zmax) and (z>=zmin):
 					nds.append(nd)
 			self._nodelist = nds
 		if self.index == 0: self._nodelist = self._parent.grid.nodelist
