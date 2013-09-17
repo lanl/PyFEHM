@@ -3517,8 +3517,8 @@ class fdata(object):						#FEHM data file.
 				poutfile.write('cden\n')
 				outfile.write(str(i+1)+'\n')
 				outfile.write(str(sp.density_modifier)+'\n')
-				#outfile.write('\n')
-				#break
+				outfile.write('\n')
+				break
 	def _read_time(self,infile):							#TIME: Reads TIME macro.
 		line=infile.readline()
 		nums = line.split()
@@ -3891,9 +3891,10 @@ class fdata(object):						#FEHM data file.
 				sleep(dflt.sleep_time)
 				self.incon.read(self.files.rsto)
 				p.poll()
-				print p.returncode
-				if until(self) or p.returncode == 0: 
+				if until(self): 
 					p.terminate()
+					self._running = False
+				if p.returncode == 0:
 					self._running = False
 			
 		if self.work_dir: os.chdir(cwd)
@@ -4078,7 +4079,9 @@ class fdata(object):						#FEHM data file.
 			while more:
 				new_zone = fzone()
 				if file: new_zone.file=file
-				new_zone.index = int(line.split()[0])
+				# assess whether zone has already been defined
+				zind = int(line.split()[0])
+				new_zone.index = zind
 				if line.rfind('#') != -1: new_zone.name = line[line.rfind('#')+1:].strip()
 				line=infile.readline().strip()
 				new_zone.points = []
@@ -4116,8 +4119,44 @@ class fdata(object):						#FEHM data file.
 						pts = line.split()
 						for pt in pts: allpts.append(float(pt))
 						iPts += len(pts) 
-					new_zone.points = allpts
-				self._add_zone(new_zone)		
+					new_zone.points = np.array(list(flatten(allpts)))
+					if np.size(new_zone.points)==24: 
+						if self.grid.dimensions == 3: 
+							new_zone.points = list(new_zone.points.reshape(3,8))
+						else: 
+							new_zone.points = list(new_zone.points[:16].reshape(2,8))
+					else: new_zone.points = list(new_zone.points.reshape(2,4))
+				# zone already defined, check if definitions match
+				if zind in self.zone.keys():
+					zn_old = self.zone[zind]
+					if zn_old.type != new_zone.type:
+						print 'WARNING: zone '+str(zind)+' was defined earlier in the input file. PyFEHM assumes unique zone definitions. This zone will be ignored.'
+					if new_zone.type == 'rect':
+						x0n,x1n = np.min(new_zone.points[0]), np.max(new_zone.points[0])
+						y0n,y1n = np.min(new_zone.points[1]), np.max(new_zone.points[1])
+						z0n,z1n = np.min(new_zone.points[2]), np.max(new_zone.points[2])
+						x0o,x1o = np.min(zn_old.points[0]), np.max(zn_old.points[0])
+						y0o,y1o = np.min(zn_old.points[1]), np.max(zn_old.points[1])
+						z0o,z1o = np.min(zn_old.points[2]), np.max(zn_old.points[2])
+						
+						if (x0n != x0o) or (x1n != x1o) or (y0n != y0o) or (y1n != y1o) or (z0n != z0o) or (z1n != z1o):
+							print 'WARNING: zone '+str(zind)+' was defined earlier in the input file. PyFEHM assumes unique zone definitions. This zone will be ignored.'
+					else:
+						nds_old = zn_old.nodelist
+						nds_new = new_zone.nodelist
+						different_zone = False
+						for nd in nds_old:
+							if nd not in nds_new:
+								different_zone = True
+								break
+						for nd in nds_new:
+							if nd not in nds_old:
+								different_zone = True
+								break
+						if different_zone:
+							print 'WARNING: zone '+str(zind)+' was defined earlier in the input file. PyFEHM assumes unique zone definitions. This zone will be ignored.'
+				
+				if not zind in self.zone.keys(): self._add_zone(new_zone)		
 				line=infile.readline()
 				if not line.strip(): more = False
 	def _read_zonn_file(self,file):								#Reads ZONN from specified file.
@@ -4215,17 +4254,9 @@ class fdata(object):						#FEHM data file.
 		if not zn.file: outfile.write('\n')		
 	def _add_zone(self,zone=fzone()):							#Adds a ZONE object.
 		zone._parent = self
-		if zone.type == 'rect': 			# ensure correct shaping
-			zone.points = np.array(list(flatten(zone.points)))
-			if np.size(zone.points)==24: 
-				if self.grid.dimensions == 3: 
-					zone.points = list(zone.points.reshape(3,8))
-				else: 
-					zone.points = list(zone.points[:16].reshape(2,8))
-			else: zone.points = list(zone.points.reshape(2,4))
 		if zone not in self._zonelist:
 			self._zonelist.append(zone)
-		self._zonelist.sort(key=lambda x: x.index)
+		#self._zonelist.sort(key=lambda x: x.index)
 		self._associate_zone(zone)
 	def _associate_zone(self,zone): 							#Associates nodes contained within a ZONE, with that zone
 		if not self._associate: return
