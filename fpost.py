@@ -280,28 +280,31 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 		else:
 			files=glob(filename)
 			if len(files)==0: print 'ERROR: '+filename+' not found'; return
-			if self._nearest:
-				ts = [fl.split('_node')[0] for fl in files]
-				ts = [fl.split('_sca')[0] for fl in ts]
-				ts = [fl.split('_con')[0] for fl in ts]
-				ts = [fl.split('_days')[0] for fl in ts]
-				ts = [fl.split('.')[-2:] for fl in ts]
-				ts = [float(tsi[0]+'.'+tsi[1]) for tsi in ts]
-				ts = min(enumerate(ts), key=lambda x: abs(x[1]-self._nearest))[0]
-				files = [files[ts]]				
-			elif latest and not first:
+			if self._nearest or latest or first:
 				files = filter(os.path.isfile, glob(filename))
 				files.sort(key=lambda x: os.path.getmtime(x))
-				files = [files[-1]]
-			elif not latest and first:
-				files = filter(os.path.isfile, glob(filename))
-				files.sort(key=lambda x: os.path.getmtime(x))
-				files = [files[0]]
-			elif latest and first:
-				files = filter(os.path.isfile, glob(filename))
-				files.sort(key=lambda x: os.path.getmtime(x))
-				files = [files[0],files[-1]]
-				
+				files2 = []
+				if first:
+					files2.append(files[0])
+				if self._nearest:
+					ts = [fl.split('_node')[0] for fl in files]
+					ts = [fl.split('_sca')[0] for fl in ts]
+					ts = [fl.split('_con')[0] for fl in ts]
+					ts = [fl.split('_days')[0] for fl in ts]
+					ts = [fl.split('.')[-2:] for fl in ts]
+					ts = [float(tsi[0]+'.'+tsi[1]) for tsi in ts]
+					if isinstance(self._nearest,(float,int)):
+						tsi = min(enumerate(ts), key=lambda x: abs(x[1]-self._nearest))[0]
+						files2.append(files[tsi])
+					elif isinstance(self._nearest,(list,tuple)):
+						for near in self._nearest:
+							tsi = min(enumerate(ts), key=lambda x: abs(x[1]-near))[0]
+							files2.append(files[tsi])
+				if latest:
+					files2.append(files[-1])
+				files = []
+				for file in files2:
+					if file not in files: files.append(file)
 		configured=False
 		for i,fname in enumerate(files):
 			print fname
