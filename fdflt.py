@@ -35,6 +35,7 @@ class fdflt(object):
 		self.associate 				= 	True		# associate macro, zone information with nodes
 		self.sticky_zones 			= 	True		# print zone definitions immediately before use in input file
 		self.full_connectivity 		=	True	
+		self.sleep_time 			= 	1.
 		
 		# default values for mactro ITER (parameters controlling solver)
 		self.iter = {

@@ -34,6 +34,10 @@ nbr_update = dict((
 class fnode(object):				#Node object.
 	""" FEHM grid node object.
 	"""
+	__slots__ = ['_index','_position','_connections','_elements','_variable','_material','_generator','_zone',
+		'_permeability','_conductivity','_density','_specific_heat','_porosity','_youngs_modulus','_poissons_ratio','_thermal_expansion',
+		'_pressure_coupling','_Pi','_Ti','_Si','_S_co2gi','_S_co2li','_co2_aqi','_strsi','_dispi','_P','_T','_S',
+		'_S_co2g','_S_co2l','_co2_aq','_strs','_disp']
 	def __init__(self,index=None,position=None):		
 		self._index = index			
 		self._position=position	
@@ -43,6 +47,31 @@ class fnode(object):				#Node object.
 		self._material = ImmutableDict({}) 		
 		self._generator = ImmutableDict({}) 		
 		self._zone = ImmutableDict({}) 			
+		self._permeability = None
+		self._conductivity = None
+		self._density = None
+		self._specific_heat = None
+		self._porosity = None
+		self._youngs_modulus = None
+		self._poissons_ratio = None
+		self._thermal_expansion = None
+		self._pressure_coupling = None
+		self._Pi = None
+		self._Ti = None
+		self._Si = None
+		self._S_co2gi = None
+		self._S_co2li = None
+		self._co2_aqi = None
+		self._strsi = None
+		self._dispi = None	
+		self._P = None
+		self._T = None
+		self._S = None
+		self._S_co2g = None
+		self._S_co2l = None
+		self._co2_aq = None
+		self._strs = None
+		self._disp = None		
 	def __repr__(self): return 'n'+str(self.index)
 	def _get_index(self): return self._index
 	index = property(_get_index) #: (*int*) Integer number denoting the node.	
@@ -115,6 +144,56 @@ class fnode(object):				#Node object.
 	def _get_control_volume(self):
 		return None
 	ctrl_vol = property(_get_control_volume)				#: (*fl64*) Control volume associated with the node *** NOT DONE ***.
+	def _get_permeability(self): return self._permeability
+	permeability = property(_get_permeability) #: (**)
+	def _get_conductivity(self): return self._conductivity
+	conductivity = property(_get_conductivity) #: (**)
+	def _get_density(self): return self._density
+	density = property(_get_density) #: (**)
+	def _get_specific_heat(self): return self._specific_heat
+	specific_heat = property(_get_specific_heat) #: (**)
+	def _get_porosity(self): return self._porosity
+	porosity = property(_get_porosity) #: (**)
+	def _get_youngs_modulus(self): return self._youngs_modulus
+	youngs_modulus = property(_get_youngs_modulus) #: (**)
+	def _get_poissons_ratio(self): return self._poissons_ratio
+	poissons_ratio = property(_get_poissons_ratio) #: (**)
+	def _get_thermal_expansion(self): return self._thermal_expansion
+	thermal_expansion = property(_get_thermal_expansion) #: (**)
+	def _get_pressure_coupling(self): return self._pressure_coupling
+	pressure_coupling = property(_get_pressure_coupling) #: (**)
+	def _get_Pi(self): return self._Pi
+	Pi = property(_get_Pi) #: (**)
+	def _get_Ti(self): return self._Ti
+	Ti = property(_get_Ti) #: (**)
+	def _get_Si(self): return self._Si
+	Si = property(_get_Si) #: (**)
+	def _get_S_co2gi(self): return self._S_co2gi
+	S_co2gi = property(_get_S_co2gi) #: (**)
+	def _get_S_co2li(self): return self._S_co2li
+	S_co2li = property(_get_S_co2li) #: (**)
+	def _get_co2_aqi(self): return self._co2_aqi
+	co2_aqi = property(_get_co2_aqi) #: (**)
+	def _get_strsi(self): return self._strsi
+	strsi = property(_get_strsi) #: (**)
+	def _get_dispi(self): return self._dispi
+	dispi = property(_get_dispi) #: (**)
+	def _get_P(self): return self._P
+	P = property(_get_P) #: (**)
+	def _get_T(self): return self._T
+	T = property(_get_T) #: (**)
+	def _get_S(self): return self._S
+	S = property(_get_S) #: (**)
+	def _get_S_co2g(self): return self._S_co2g
+	S_co2g = property(_get_S_co2g) #: (**)
+	def _get_S_co2l(self): return self._S_co2l
+	S_co2l = property(_get_S_co2l) #: (**)
+	def _get_co2_aq(self): return self._co2_aq
+	co2_aq = property(_get_co2_aq) #: (**)
+	def _get_strs(self): return self._strs
+	strs = property(_get_strs) #: (**)
+	def _get_disp(self): return self._disp
+	disp = property(_get_disp) #: (**)
 class fconn(object):				#Connection object.
 	"""Connection object, comprising two connected nodes, separated by some distance.
 
