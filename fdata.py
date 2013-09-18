@@ -4577,12 +4577,8 @@ class fdata(object):						#FEHM data file.
 		if isinstance(macro.zone,list):
 			for zn in macro.zone:
 				for nd in zn.nodelist:	
-					if macro.type =='rlp':
-						addToNode = {'rlp_model':macro.index}
-						nd._material.update(addToNode)
-					elif macro.type =='permmodel':
-						addToNode = {'perm_model':macro.index}
-						nd._material.update(addToNode)
+					if macro.type =='rlp': nd._rlpmodel = macro.index
+					elif macro.type =='permmodel': nd._permmodel = macro.index
 		elif isinstance(macro.zone,tuple):
 			'placeholder'
 		elif isinstance(macro.zone,fzone) or isinstance(macro.zone,int) or isinstance(macro.zone,str):

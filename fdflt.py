@@ -22,6 +22,7 @@ class fdflt(object):
 		# output data formats
 		self.hist_format 			= 	'tec'
 		self.cont_format 			= 	'surf'
+		self.parental_cont 			= 	True
 
 		# set this to the fehm executable to be used if no default assigned
 		self.fehm_path 				=	'c:\\users\\264485\\fehm\\source\\src\\fehm.exe'

@@ -257,12 +257,12 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 		self._first = first
 		self._nearest = nearest
 		self._nkeys=1
-		if self._filename: self.read(filename,self._latest,self._first)
+		if self._filename: self.read(filename,self._latest,self._first,self._nearest)
 	def __getitem__(self,key):
 		if key in self.times:
 			return self._data[key]
 		else: return None
-	def read(self,filename,latest=False,first=False): 						# read contents of file
+	def read(self,filename,latest=False,first=False,nearest=[]): 						# read contents of file
 		'''Read in FEHM contour output information.
 		
 		:param filename: File name for output data, can include wildcards to define multiple output files.
@@ -271,8 +271,8 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 		:type latest: bool
 		:param first: Boolean indicating PyFEHM should read the first entry in a wildcard search.
 		:type first: bool
-		:param nearest: Read in the file with date closest to the day supplied.
-		:type nearest: bool
+		:param nearest: Read in the file with date closest to the day supplied. List input will parse multiple output files.
+		:type nearest: fl64,list
 		'''
 		from glob import glob
 		if isinstance(filename,list):
@@ -331,6 +331,27 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 				else: self._read_data_avsx(header)
 			self._file.close()
 			configured = True
+		if dflt.parental_cont:
+			print ''
+			print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+			print 'WARNING:'
+			print ''
+			print 'Contour data is indexed using the Pythonic convention in which the first index is 0. FEHM node numbering convention begins at 1.'
+			print ''
+			print 'THEREFORE, to get the correct contour value for a particular node, you need to pass the node index MINUS 1. Using node index to access contour data will return incorrect values.'
+			print ''
+			print 'For example:'
+			print '>>> node10 = dat.grid.node[10]'
+			print '>>> c = fcontour(\'*.csv\')'
+			print '>>> T_node10 = c[c.times[-1]][\'T\'][node10.index - 1]'
+			print '  or'
+			print '>>> T_node10 = c[c.times[-1]][\'T\'][9]'
+			print 'will return the correct value for node 10.'
+			print ''
+			print 'Do not turn off this message unless you understand how to correctly access nodal values from contour data.' 
+			print 'To turn off this message, open the environment file \'fdflt.py\' and set self.parental_cont = False'
+			print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+			print ''
 	def _detect_format(self,header):
 		if header.startswith('TITLE ='):		# check for TEC output
 			self._format = 'tec'

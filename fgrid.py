@@ -34,17 +34,17 @@ nbr_update = dict((
 class fnode(object):				#Node object.
 	""" FEHM grid node object.
 	"""
-	__slots__ = ['_index','_position','_connections','_elements','_variable','_material','_generator','_zone',
+	__slots__ = ['_index','_position','_connections','_elements','_generator','_zone',
 		'_permeability','_conductivity','_density','_specific_heat','_porosity','_youngs_modulus','_poissons_ratio','_thermal_expansion',
 		'_pressure_coupling','_Pi','_Ti','_Si','_S_co2gi','_S_co2li','_co2_aqi','_strsi','_dispi','_P','_T','_S',
-		'_S_co2g','_S_co2l','_co2_aq','_strs','_disp','_vol']
+		'_S_co2g','_S_co2l','_co2_aq','_strs','_disp','_vol','_rlpmodel','_permmodel']
 	def __init__(self,index=None,position=None):		
 		self._index = index			
 		self._position=position	
 		self._connections = []	
 		self._elements = []		
-		self._variable = ImmutableDict({}) 		
-		self._material = ImmutableDict({}) 		
+		#self._variable = ImmutableDict({}) 		
+		#self._material = ImmutableDict({}) 		
 		self._generator = ImmutableDict({}) 		
 		self._zone = ImmutableDict({}) 			
 		self._permeability = None
@@ -73,6 +73,8 @@ class fnode(object):				#Node object.
 		self._strs = None
 		self._disp = None		
 		self._vol = None
+		self._rlpmodel = None
+		self._permmodel = None
 	def __repr__(self): return 'n'+str(self.index)
 	def _get_index(self): return self._index
 	index = property(_get_index) #: (*int*) Integer number denoting the node.	
@@ -84,18 +86,20 @@ class fnode(object):				#Node object.
 	def _get_generator(self): return self._generator
 	def _set_generator(self,value): self._generator = value
 	generator = property(_get_generator, _set_generator) #: (*dict*) Dictionary of generator properties associated with node.
-	def _get_variable(self): return self._variable
-	def _set_variable(self,value): self._variable = value
-	variable = property(_get_variable, _set_variable) #: (*dict*) Dictionary of thermodynamic properties associated with node. Only accessible when initial conditions files are loaded in conjunction with the input file and grid.
-	def _get_material(self): return self._material
-	def _set_material(self,value): self._material = value
-	material = property(_get_material, _set_material) #: (*dict*) Dictionary of material properties associated with node.
+	#def _get_variable(self): return self._variable
+	#def _set_variable(self,value): self._variable = value
+	#variable = property(_get_variable, _set_variable) #: (*dict*) Dictionary of thermodynamic properties associated with node. Only accessible when initial conditions files are loaded in conjunction with the input file and grid.
+	#def _get_material(self): return self._material
+	#def _set_material(self,value): self._material = value
+	#material = property(_get_material, _set_material) #: (*dict*) Dictionary of material properties associated with node.
 	def _get_info(self):
 		prntStr='\n Node number: '+str(self.index)+'\n'
 		prntStr+='\nGeometric properties.......\n'
 		prntStr+='          x = '+str(self.position[0])+'\n'
 		prntStr+='          y = '+str(self.position[1])+'\n'
 		prntStr+='          z = '+str(self.position[2])+'\n'
+		if self.vol != None:
+			prntStr+='     volume = '+str(self.vol)+'\n'
 		prntStr+=' neighbours = ['
 		for nd in self.connected_nodes:	prntStr+=str(nd.index)+','
 		prntStr = prntStr[:-1]+']\n'
@@ -106,22 +110,58 @@ class fnode(object):				#Node object.
 				if zn.name:
 					prntStr+=': '+zn.name
 				prntStr+='\n'
-		if self.variable:
-			prntStr+='\nState......................\n'
-			keys = self.variable.keys()
-			if 'T' in keys: prntStr+='temperature = '+str(self.variable['T'])+'\n'
-			if 'P' in keys: prntStr+='   pressure = '+str(self.variable['P'])+'\n'
-			if 'S' in keys: prntStr+='  sat water = '+str(self.variable['S'])+'\n'
-			if 'S_co2g' in keys: prntStr+='sat co2 gas = '+str(self.variable['S_co2g'])+'\n' 
-			if 'S_co2l' in keys: prntStr+='sat co2 liq = '+str(self.variable['S_co2l'])+'\n' 
-			if 'co2aq' in keys: prntStr+='dissolved co2 = '+str(self.variable['co2aq'])+'\n' 
-			if 'eos' in keys: prntStr+='water phase = '+str(self.variable['eos'])+'\n' 
-			if 'co2_eos' in keys: prntStr+='  co2 phase = '+str(self.variable['co2_eos'])+'\n' 
-		if self.material:
-			prntStr+='\nMaterial properties........\n'
-			ks = self.material.keys()
-			for k in node_props:
-				if k in ks: prntStr += '    '+k + ' = ' +str(self.material[k])+'\n'
+		#if self.variable:
+		prntStr+='\nState......................\n'
+		if self.T or self.Ti: 
+			if self.T and self.Ti:
+				prntStr+='temperature = '+str(self.T)+' (init: '+str(self.Ti)+')\n'
+			elif self.T:
+				prntStr+='temperature = '+str(self.T)+'\n'
+			elif self.Ti:
+				prntStr+='temperature = '+str(self.Ti)+' (initial)\n'
+		if self.P or self.Pi: 
+			if self.P and self.Pi:
+				prntStr+='   pressure = '+str(self.P)+' (init: '+str(self.Pi)+')\n'
+			elif self.P:
+				prntStr+='   pressure = '+str(self.P)+'\n'
+			elif self.Pi:
+				prntStr+='   pressure = '+str(self.Pi)+' (initial)\n'
+		if self.S or self.Si: 
+			if self.S and self.Si:
+				prntStr+='  sat water = '+str(self.S)+' (init: '+str(self.Si)+')\n'
+			elif self.S:
+				prntStr+='  sat water = '+str(self.S)+'\n'
+			elif self.Si:
+				prntStr+='  sat water = '+str(self.Si)+' (initial)\n'
+			#if 'S_co2g' in keys: prntStr+='sat co2 gas = '+str(self.variable['S_co2g'])+'\n' 
+			#if 'S_co2l' in keys: prntStr+='sat co2 liq = '+str(self.variable['S_co2l'])+'\n' 
+			#if 'co2aq' in keys: prntStr+='dissolved co2 = '+str(self.variable['co2aq'])+'\n' 
+			#if 'eos' in keys: prntStr+='water phase = '+str(self.variable['eos'])+'\n' 
+			#if 'co2_eos' in keys: prntStr+='  co2 phase = '+str(self.variable['co2_eos'])+'\n' 
+		#if self.material:
+		prntStr+='\nMaterial properties........\n'
+		if isinstance(self.permeability,(list,tuple,np.ndarray)):
+			prntStr += '    kx = ' +str(self.permeability[0])+'\n'
+			prntStr += '    ky = ' +str(self.permeability[1])+'\n'
+			prntStr += '    kz = ' +str(self.permeability[2])+'\n'
+		if isinstance(self.conductivity,(list,tuple,np.ndarray)):
+			prntStr += '    cond_x = ' +str(self.conductivity[0])+'\n'
+			prntStr += '    cond_y = ' +str(self.conductivity[1])+'\n'
+			prntStr += '    cond_z = ' +str(self.conductivity[2])+'\n'
+		if self.density:
+			prntStr += '    density = ' +str(self.density)+'\n'
+		if self.specific_heat:
+			prntStr += '    spec. heat = ' +str(self.specific_heat)+'\n'
+		if self.porosity:
+			prntStr += '    porosity = ' +str(self.porosity)+'\n'
+		if self.youngs_modulus:
+			prntStr += '    Youngs modulus = ' +str(self.youngs_modulus)+'\n'
+		if self.poissons_ratio:
+			prntStr += '    Poissons ratio = ' +str(self.poissons_ratio)+'\n'
+		if self.thermal_expansion:
+			prntStr += '    Thermal expansion = ' +str(self.thermal_expansion)+'\n'
+		if self.pressure_coupling:
+			prntStr += '    Pressure coupling = ' +str(self.pressure_coupling)+'\n'
 		if self.generator:
 			prntStr+='\nGenerator properties.......\n'
 			ks = self.generator.keys()
@@ -143,57 +183,61 @@ class fnode(object):				#Node object.
 	def _get_zonelist(self): return [self.zone[k] for k in self.zone.keys()]
 	zonelist = property(_get_zonelist)	#: (*lst[fzone]*) List of zones of which the node is a member
 	def _get_vol(self): return self._vol
-	vol = property(_get_vol)				#: (*fl64*) Control volume associated with the node *** NOT DONE ***.
+	vol = property(_get_vol)				#: (*fl64*) Control volume associated with the node. This information only available if volumes() method called from grid attribute.
 	def _get_permeability(self): return self._permeability
-	permeability = property(_get_permeability) #: (**)
+	permeability = property(_get_permeability) #: (*list*) permeability values at node.
 	def _get_conductivity(self): return self._conductivity
-	conductivity = property(_get_conductivity) #: (**)
+	conductivity = property(_get_conductivity) #: (*list*) conductivity values at node.
 	def _get_density(self): return self._density
-	density = property(_get_density) #: (**)
+	density = property(_get_density) #: (*fl64*) density at node.
 	def _get_specific_heat(self): return self._specific_heat
-	specific_heat = property(_get_specific_heat) #: (**)
+	specific_heat = property(_get_specific_heat) #: (*fl64*) specific heat at node.
 	def _get_porosity(self): return self._porosity
-	porosity = property(_get_porosity) #: (**)
+	porosity = property(_get_porosity) #: (*fl64*) porosity at node.
 	def _get_youngs_modulus(self): return self._youngs_modulus
-	youngs_modulus = property(_get_youngs_modulus) #: (**)
+	youngs_modulus = property(_get_youngs_modulus) #: (*fl64*) Youngs modulus at node.
 	def _get_poissons_ratio(self): return self._poissons_ratio
-	poissons_ratio = property(_get_poissons_ratio) #: (**)
+	poissons_ratio = property(_get_poissons_ratio) #: (*fl64*) Poissons ratio at node.
 	def _get_thermal_expansion(self): return self._thermal_expansion
-	thermal_expansion = property(_get_thermal_expansion) #: (**)
+	thermal_expansion = property(_get_thermal_expansion) #: (*fl64*) Coefficient of thermal expansion at node.
 	def _get_pressure_coupling(self): return self._pressure_coupling
-	pressure_coupling = property(_get_pressure_coupling) #: (**)
+	pressure_coupling = property(_get_pressure_coupling) #: (*fl64*) Biot pressure coupling coefficient at node.
 	def _get_Pi(self): return self._Pi
-	Pi = property(_get_Pi) #: (**)
+	Pi = property(_get_Pi) #: (*fl64*) initial pressure at node.
 	def _get_Ti(self): return self._Ti
-	Ti = property(_get_Ti) #: (**)
+	Ti = property(_get_Ti) #: (*fl64*) initial temperature at node.
 	def _get_Si(self): return self._Si
-	Si = property(_get_Si) #: (**)
+	Si = property(_get_Si) #: (*fl64*) initial water saturation at node.
 	def _get_S_co2gi(self): return self._S_co2gi
-	S_co2gi = property(_get_S_co2gi) #: (**)
+	S_co2gi = property(_get_S_co2gi) #: (*fl64*) initial gaseous CO2 saturation at node.
 	def _get_S_co2li(self): return self._S_co2li
-	S_co2li = property(_get_S_co2li) #: (**)
+	S_co2li = property(_get_S_co2li) #: (*fl64*) initial liquid CO2 saturation at node.
 	def _get_co2_aqi(self): return self._co2_aqi
-	co2_aqi = property(_get_co2_aqi) #: (**)
+	co2_aqi = property(_get_co2_aqi) #: (*fl64*) initial dissolved CO2 concentration at node.
 	def _get_strsi(self): return self._strsi
-	strsi = property(_get_strsi) #: (**)
+	strsi = property(_get_strsi) #: (*fl64*) initial stresses at node.
 	def _get_dispi(self): return self._dispi
-	dispi = property(_get_dispi) #: (**)
+	dispi = property(_get_dispi) #: (*fl64*) initial displacements at node.
 	def _get_P(self): return self._P
-	P = property(_get_P) #: (**)
+	P = property(_get_P) #: (*fl64*) pressure at node.
 	def _get_T(self): return self._T
-	T = property(_get_T) #: (**)
+	T = property(_get_T) #: (*fl64*) temperature at node.
 	def _get_S(self): return self._S
-	S = property(_get_S) #: (**)
+	S = property(_get_S) #: (*fl64*) water saturation at node.
 	def _get_S_co2g(self): return self._S_co2g
-	S_co2g = property(_get_S_co2g) #: (**)
+	S_co2g = property(_get_S_co2g) #: (*fl64*) gaseous CO2 saturation at node.
 	def _get_S_co2l(self): return self._S_co2l
-	S_co2l = property(_get_S_co2l) #: (**)
+	S_co2l = property(_get_S_co2l) #: (*fl64*) liquid CO2 saturation at node.
 	def _get_co2_aq(self): return self._co2_aq
-	co2_aq = property(_get_co2_aq) #: (**)
+	co2_aq = property(_get_co2_aq) #: (*fl64*) dissolved CO2 concentration at node.
 	def _get_strs(self): return self._strs
-	strs = property(_get_strs) #: (**)
+	strs = property(_get_strs) #: (*list*) stresses at node ([xx,yy,xy] for 2D, [xx,yy,zz,xy,yz,xz] for 3D).
 	def _get_disp(self): return self._disp
-	disp = property(_get_disp) #: (**)
+	disp = property(_get_disp) #: (*list*) displacements at node ([x,y] for 2D, [x,y,z] for 3D).
+	def _get_rlpmodel(self): return self._rlpmodel
+	rlpmodel = property(_get_rlpmodel) #: (*int*) index of relative permeability model assigned to ndoe
+	def _get_permmodel(self): return self._permmodel
+	permmodel = property(_get_permmodel) #: (*int*) index of stress-permeability model assigned to node.
 class fconn(object):				#Connection object.
 	"""Connection object, comprising two connected nodes, separated by some distance.
 
@@ -521,6 +565,11 @@ class fgrid(object):				#Grid object.
 			fm.write()		
 			self.read(meshfilename)
 	def volumes(self,volumefilename):
+		""" Reads a lagrit generated file containing control volume information.
+		
+		:param volumefilename: Name of lagrit output file containing control volume information.
+		:type volumefilename: str
+		"""
 		infile = open(volumefilename,'r')
 		line = infile.readline() 
 		line = infile.readline().strip().split()
