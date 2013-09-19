@@ -2492,8 +2492,9 @@ class fdata(object):						#FEHM data file.
 	__slots__ = ['_filename','_meshfilename','_inconfilename','_sticky_zones','_allMacro','_allModel','_associate','_work_dir',
 			'_bounlist','_cont','_ctrl','_grid','_incon','_hist','_iter','_nfinv','_nobr','_vapl','_adif','_rlpmlist','_pporlist','_vconlist','_sol',
 			'_time','text','times','_time','_zonelist','_writeSubFiles','_strs','_ngas','_carb','_trac','_files','_verbose',
-			'_tf','_ti','_dti','_dtmin','_dtmax','_dtn','_dtx','_sections','_help','_running']
-	def __init__(self,filename='',meshfilename='',inconfilename='',sticky_zones=dflt.sticky_zones,associate=dflt.associate,work_dir = '',full_connectivity=dflt.full_connectivity,skip=[]):		#Initialise data file
+			'_tf','_ti','_dti','_dtmin','_dtmax','_dtn','_dtx','_sections','_help','_running','_unparsed_blocks']
+	def __init__(self,filename='',meshfilename='',inconfilename='',sticky_zones=dflt.sticky_zones,associate=dflt.associate,work_dir = '',
+		full_connectivity=dflt.full_connectivity,skip=[],keep_unknown=dflt.keep_unknown):		#Initialise data file
 		from copy import copy
 		self._filename=filename			
 		self._meshfilename=meshfilename	
@@ -2538,6 +2539,8 @@ class fdata(object):						#FEHM data file.
 		self._files._parent = self
 		self._verbose = True
 		self._running = False 		# boolean indicating whether a simulation is in progress
+		self._unparsed_blocks = {}
+		self.keep_unknown = keep_unknown
 		# time stepping shortcuts
 		self._tf = dflt.time['max_time_TIMS']
 		self._ti = dflt.time['initial_day_INITTIME']
@@ -2620,27 +2623,62 @@ class fdata(object):						#FEHM data file.
 		infile.close()
 		infile = open(filename,'r')		
 		more = True
-		keyword=''
+		precedingKey='start'
+		precedingZoneKey = None
+		line=infile.readline()
 		while more:
-			line=infile.readline()
 			keyword=line[0:4].strip()
+			print keyword
 			if keyword in fdata_sections and keyword not in skip:
 				print 'reading '+keyword
 				fn=read_fn[keyword]
 				if keyword in macro_list.keys():
 					self._read_macro(infile,keyword)
+					precedingZoneKey = None
 				elif keyword in model_list.keys():
 					self._read_model(infile,keyword)
+					precedingZoneKey = None
 				else:
-					fn(infile)
+					if keyword in ['zone','zonn']:
+						block = fn(infile)
+						precedingZoneKey = copy(precedingKey)
+					else:
+						fn(infile)
+						precedingZoneKey = None
 				self._sections.append(keyword)
+				precedingKey = keyword
 			elif keyword[0:3] in fdata_sections and keyword not in skip:
 				keyword = keyword[0:3]
 				print 'reading '+keyword
 				fn=read_fn[keyword]
 				fn(infile)
 				self._sections.append(keyword)
-			if line.startswith('stop'): more=False
+				precedingKey = keyword
+			elif line.startswith('stop'): more=False; continue
+			else: 
+				print line
+				# start recording a code block
+				foundKey = False
+				if not precedingZoneKey: block = []
+				else: precedingKey = precedingZoneKey
+				while not foundKey:	
+					block.append(line)
+					line=infile.readline()
+					keyword=line[0:4].strip()
+					if keyword in fdata_sections and keyword not in skip: 
+						foundKey = True
+						continue
+					elif keyword[0:3] in fdata_sections and keyword not in skip:
+						foundKey = True
+						continue
+					elif line.startswith('stop'):
+						foundKey = True
+						continue
+				print precedingKey
+				print block
+				self._unparsed_blocks.update(dict(((precedingKey,block),)))
+				continue
+			line=infile.readline()
 		infile.close()
 		self._add_boundary_zones()
 		return self
@@ -2663,34 +2701,37 @@ class fdata(object):						#FEHM data file.
 			if not os.path.isdir(self.work_dir): os.system('mkdir '+self.work_dir)
 		outfile = open(self.work_dir+self.filename,'w')
 		outfile.write('# '+self.filename+'\n')
-		if self.text: self._write_text(outfile)
-		if self.sol: self._write_sol(outfile)
-		if self.nfinv: self._write_nfinv(outfile)
-		if self.nobr: self._write_nobr(outfile)
-		if self.vapl: self._write_vapl(outfile)
-		if self.adif != None: self._write_adif(outfile)
-		if len(self.zone)>1 and not self.sticky_zones: self._write_zonn_all(outfile)
-		if self.cont.variables: self._write_cont(outfile)
-		if self.hist.variables: self._write_hist(outfile)
-		if self.gradlist: self._write_macro(outfile,'grad')
-		if self.pres: self._write_macro(outfile,'pres')
-		if self.ngas.dof != None: self._write_ngas(outfile)
-		if self.bounlist: self._write_boun(outfile)
-		if self.flow: self._write_macro(outfile,'flow')
-		if self.hflx: self._write_macro(outfile,'hflx')
-		if self.perm: self._write_macro(outfile,'perm')
-		if self.rock: self._write_macro(outfile,'rock')
-		if self.pporlist: self._write_model(outfile,'ppor')
-		if self.cond: self._write_macro(outfile,'cond')		
-		if self.vconlist: self._write_model(outfile,'vcon')		
-		if self.rlplist: self._write_model(outfile,'rlp')		
-		if self.rlpmlist: self._write_rlpm(outfile)		
-		if self.time: self._write_time(outfile)
-		if self.ctrl: self._write_ctrl(outfile)
-		if self.iter: self._write_iter(outfile)
-		if self.carb.iprtype!=1: self._write_carb(outfile)
-		if self.strs.param['ISTRS']: self._write_strs(outfile)
-		if self.trac._on: self._write_trac(outfile)
+		self._write_unparsed(outfile,'start')
+		if self.text: self._write_text(outfile); self._write_unparsed(outfile,'text')
+		if self.sol: self._write_sol(outfile); self._write_unparsed(outfile,'sol')
+		if self.nfinv: self._write_nfinv(outfile); self._write_unparsed(outfile,'nfinv')
+		if self.nobr: self._write_nobr(outfile); self._write_unparsed(outfile,'nobr')
+		if self.vapl: self._write_vapl(outfile); self._write_unparsed(outfile,'vapl')
+		if self.adif != None: self._write_adif(outfile); self._write_unparsed(outfile,'adif')
+		if len(self.zone)>1 and not self.sticky_zones: 
+			self._write_zonn_all(outfile)
+			self._write_unparsed(outfile,'zone')
+		if self.cont.variables: self._write_cont(outfile); self._write_unparsed(outfile,'cont')
+		if self.hist.variables: self._write_hist(outfile); self._write_unparsed(outfile,'hist')
+		if self.gradlist: self._write_macro(outfile,'grad'); self._write_unparsed(outfile,'grad')
+		if self.pres: self._write_macro(outfile,'pres'); self._write_unparsed(outfile,'pres')
+		if self.ngas.dof != None: self._write_ngas(outfile); self._write_unparsed(outfile,'ngas')
+		if self.bounlist: self._write_boun(outfile); self._write_unparsed(outfile,'boun')
+		if self.flow: self._write_macro(outfile,'flow'); self._write_unparsed(outfile,'flow')
+		if self.hflx: self._write_macro(outfile,'hflx'); self._write_unparsed(outfile,'hflx')
+		if self.perm: self._write_macro(outfile,'perm'); self._write_unparsed(outfile,'perm')
+		if self.rock: self._write_macro(outfile,'rock'); self._write_unparsed(outfile,'rock')
+		if self.pporlist: self._write_model(outfile,'ppor'); self._write_unparsed(outfile,'ppor')
+		if self.cond: self._write_macro(outfile,'cond'); self._write_unparsed(outfile,'cond')
+		if self.vconlist: self._write_model(outfile,'vcon'); self._write_unparsed(outfile,'vcon')
+		if self.rlplist: self._write_model(outfile,'rlp'); self._write_unparsed(outfile,'rlp')		
+		if self.rlpmlist: self._write_rlpm(outfile); self._write_unparsed(outfile,'rlpm')		
+		if self.time: self._write_time(outfile); self._write_unparsed(outfile,'time')
+		if self.ctrl: self._write_ctrl(outfile); self._write_unparsed(outfile,'ctrl')
+		if self.iter: self._write_iter(outfile); self._write_unparsed(outfile,'iter')
+		if self.carb.iprtype!=1: self._write_carb(outfile); self._write_unparsed(outfile,'carb')
+		if self.strs.param['ISTRS']: self._write_strs(outfile); self._write_unparsed(outfile,'strs')
+		if self.trac._on: self._write_trac(outfile); self._write_unparsed(outfile,'trac')
 		outfile.write('stop\n')
 		outfile.close()
 	def add(self,obj):									#Adds a new object to the file
@@ -2810,6 +2851,13 @@ class fdata(object):						#FEHM data file.
 				elif strs3D: nd._strsi = [self.incon.strs_xx[i],self.incon.strs_yy[i],self.incon.strs_zz[i],self.incon.strs_xy[i],self.incon.strs_yz[i],self.incon.strs_xz[i]]
 				if strs2D: nd._dispi = [self.incon.disp_x[i],self.incon.disp_y[i]]
 				elif strs3D: nd._dispi = [self.incon.disp_x[i],self.incon.disp_y[i],self.incon.disp_z[i]]
+	def _write_unparsed(self,outfile,key):
+		if not self.keep_unknown: return
+		if key in self._unparsed_blocks.keys():
+			block = self._unparsed_blocks[key]
+			for line in block:
+				if key == 'start': line = '# '+line
+				outfile.write(line)
 	def _read_adif(self,infile):							#ADIF: Reads ADIF macro.
 		line = infile.readline().strip().split()
 		self.adif = float(line[0])
@@ -3209,7 +3257,9 @@ class fdata(object):						#FEHM data file.
 				cnt += 1
 				if cnt == 10: outfile.write('\n'); cnt = 0
 			if cnt != 0: outfile.write('\n')
-			
+
+		self._write_unparsed(outfile,'flxz')	
+		
 		znlist = []		
 		if self.hist.zonelist: 
 			zns = []
@@ -3229,6 +3279,8 @@ class fdata(object):						#FEHM data file.
 				outfile.write('\n')
 			outfile.write('\n')
 			
+		self._write_unparsed(outfile,'node')	
+		
 		if self.hist.nodelist:
 			self.hist.nodelist = list(flatten(self.hist.nodelist))
 			nds = []; ndsInds = []
@@ -4325,9 +4377,10 @@ class fdata(object):						#FEHM data file.
 				self.add(fmacro('pres',zone=(nd.index,nd.index,1),file = auxiliary_file, param=(('pressure',p0),('temperature',ti),('saturation',1))))
 ################## ZONE FUNCTIONS
 	def _read_zonn(self,infile,file=''):					#ZONE: Reads ZONE or ZONN macro.
-		line=infile.readline().strip()
+		block = ['zone\n']
+		line=infile.readline().strip(); block.append(line+'\n')
 		if line[0:4]=='file':
-			line = infile.readline().strip()
+			line = infile.readline().strip(); block.append(line+'\n')
 			self._read_zonn_file(line)
 		else:
 			more = True
@@ -4338,24 +4391,24 @@ class fdata(object):						#FEHM data file.
 				zind = int(line.split()[0])
 				new_zone.index = zind
 				if line.rfind('#') != -1: new_zone.name = line[line.rfind('#')+1:].strip()
-				line=infile.readline().strip()
+				line=infile.readline().strip(); block.append(line+'\n')
 				new_zone.points = []
 				if line[0:4]=='list':
 					new_zone.type='list'
 					morePoints = True
 					while morePoints:
-						line=infile.readline().strip()
+						line=infile.readline().strip(); block.append(line+'\n')
 						pts = line.split()
 						if not pts: morePoints = False
 						else: new_zone.nodelist.append(self.grid.node_nearest_point([float(pt) for pt in pts]))
 				elif line[0:4] == 'nnum':
 					new_zone.type='nnum'
-					line=infile.readline().strip()			
+					line=infile.readline().strip(); block.append(line+'\n')		
 					nums = line.split()
 					number_nodes = int(nums[0])					
 					for num in nums[1:]: new_zone.nodelist.append(self.grid.node[int(num)])
 					while (len(new_zone.nodelist)!=number_nodes):
-						line=infile.readline().strip()			
+						line=infile.readline().strip(); block.append(line+'\n')		
 						nums = line.split()
 						for num in nums: new_zone.nodelist.append(self.grid.node[int(num)])
 				else:
@@ -4370,7 +4423,7 @@ class fdata(object):						#FEHM data file.
 					for pt in pts: allpts.append(float(pt))
 					iPts += len(pts) 
 					while iPts != numPts:
-						line = infile.readline().strip()
+						line = infile.readline().strip(); block.append(line+'\n')
 						pts = line.split()
 						for pt in pts: allpts.append(float(pt))
 						iPts += len(pts) 
@@ -4412,8 +4465,9 @@ class fdata(object):						#FEHM data file.
 							print 'WARNING: zone '+str(zind)+' was defined earlier in the input file. PyFEHM assumes unique zone definitions. This zone will be ignored.'
 				
 				if not zind in self.zone.keys(): self._add_zone(new_zone)		
-				line=infile.readline()
+				line=infile.readline(); block.append(line+'\n')
 				if not line.strip(): more = False
+		return block
 	def _read_zonn_file(self,file):								#Reads ZONN from specified file.
 		zone_file = open(file,'r')
 		line = zone_file.readline().strip()

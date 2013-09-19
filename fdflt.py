@@ -37,6 +37,7 @@ class fdflt(object):
 		self.sticky_zones 			= 	True		# print zone definitions immediately before use in input file
 		self.full_connectivity 		=	True	
 		self.sleep_time 			= 	1.
+		self.keep_unknown 			= 	True 		# set true if PyFEHM should preserve unknown macros in future output files
 		
 		# default values for mactro ITER (parameters controlling solver)
 		self.iter = {
