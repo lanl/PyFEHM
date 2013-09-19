@@ -75,7 +75,7 @@ class fnode(object):				#Node object.
 		self._vol = None
 		self._rlpmodel = None
 		self._permmodel = None
-	def __repr__(self): return 'n'+str(self.index)
+	def __repr__(self): return 'nd'+str(self.index)
 	def _get_index(self): return self._index
 	index = property(_get_index) #: (*int*) Integer number denoting the node.	
 	def _get_position(self): return self._position
@@ -261,8 +261,8 @@ class felem(object):				#Element object.
 		self._index = index			
 		self._nodes = nodes			
 	def __repr__(self): 
-		retStr = 'e'+str(self.index)+': '
-		for nd in self.nodes: retStr+='n'+str(nd.index)+', '
+		retStr = 'el'+str(self.index)+': '
+		for nd in self.nodes: retStr+='nd'+str(nd.index)+', '
 		return retStr
 	def _get_index(self): return self._index
 	index = property(_get_index)#: (*int*) Integer number denoting the element.		
