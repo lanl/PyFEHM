@@ -1239,7 +1239,7 @@ class fincon(object): 						#FEHM restart object.
 		self._disp_z = []
 		if inconfilename: self._filename = inconfilename
 		if self._filename: self.read(inconfilename)
-	def read(self,inconfilename):
+	def read(self,inconfilename,if_new = False):
 		'''Parse a restart file for variable information.
 		
 		:param inconfilename: Name of restart file.
@@ -1262,6 +1262,9 @@ class fincon(object): 						#FEHM restart object.
 		ln = infile.readline().strip()
 		self._source = ln
 		ln = infile.readline().strip()
+		new_time = float(ln)
+		if (new_time == self.time) and if_new:
+			return False
 		self.time = float(ln) 			# get time stamp
 		self._changeTime = False
 		ln = infile.readline().strip()
@@ -1311,6 +1314,8 @@ class fincon(object): 						#FEHM restart object.
 		infile.close()
 			
 		if self._parent: self._parent._associate_incon()
+		
+		if if_new: return True
 	def write(self,inconfilename=''):
 		'''Write out a restart file.
 		
@@ -1704,6 +1709,9 @@ class fngas(object): 						#FEHM noncondensible gas transport.
 	ncg_pres = property(_get_ncg_pres) #: (*dict*) dictionary of noncondensible pressures indexed by zone number.
 	def _get_source(self): return self._source
 	source = property(_get_source) #: (*dict*) dictionary of air sources indexed by zone number.
+	def _get_dof(self): return self._dof
+	def _set_dof(self,value): self._dof = value
+	dof = property(_get_dof, _set_dof) #: (*int*) 	degree of freedom (1-3) for the calculation
 class fcarb(object):						#FEHM CO2 module.
 	"""CO2 module object, sets properties for execution of FEHM CO2 module (see macro **CARB**).
 	
@@ -4188,22 +4196,25 @@ class fdata(object):						#FEHM data file.
 		if self.work_dir: os.chdir(self.work_dir)
 		
 		for attempt in range(autorestart+1):
+			modT_old = None
+			untilFlag = False
 			p = Popen(exe)
 			if until is None:
 				p.communicate()
 			else:
 				self._running = True
-				while self._running:
-					sleep(dflt.sleep_time)
-					self.incon.read(self.files.rsto)
-					p.poll()
-					if until(self): 
-						p.terminate()
-						self._running = False
-					if p.returncode == 0:
-						self._running = False
-			
-			
+				while self._running:					# loop for checking if stop condition is met
+					sleep(dflt.sleep_time) 					# wait 
+					is_new = self.incon.read(self.files.rsto, if_new = True) 	# read new input file
+					if is_new: 
+						untilFlag = until(self) 				# check stop condition
+					p.poll() 								# check if run finished on its own
+					if untilFlag:  							# IF stop condition met
+						p.terminate()							# kill the process
+						self._running = False					# break the loop
+					if p.returncode == 0:					# IF run finshed on its own
+						self._running = False					# break the loop
+						
 		if self.work_dir: os.chdir(cwd)
 		if tempRstoFlag: 
 			self.files.incon = ''
