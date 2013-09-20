@@ -2492,7 +2492,7 @@ class fdata(object):						#FEHM data file.
 	__slots__ = ['_filename','_meshfilename','_inconfilename','_sticky_zones','_allMacro','_allModel','_associate','_work_dir',
 			'_bounlist','_cont','_ctrl','_grid','_incon','_hist','_iter','_nfinv','_nobr','_vapl','_adif','_rlpmlist','_pporlist','_vconlist','_sol',
 			'_time','text','times','_time','_zonelist','_writeSubFiles','_strs','_ngas','_carb','_trac','_files','_verbose',
-			'_tf','_ti','_dti','_dtmin','_dtmax','_dtn','_dtx','_sections','_help','_running','_unparsed_blocks']
+			'_tf','_ti','_dti','_dtmin','_dtmax','_dtn','_dtx','_sections','_help','_running','_unparsed_blocks','keep_unknown']
 	def __init__(self,filename='',meshfilename='',inconfilename='',sticky_zones=dflt.sticky_zones,associate=dflt.associate,work_dir = '',
 		full_connectivity=dflt.full_connectivity,skip=[],keep_unknown=dflt.keep_unknown):		#Initialise data file
 		from copy import copy
