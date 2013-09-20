@@ -953,8 +953,8 @@ class fmacro(object): 						#FEHM macro object
 	def _assign_param(self): 
 		'''Assign parameters if supplied on initialisation.'''
 		if self.index: 
-			if self.index in paramDicts[self.type].keys():
-				self._param = dict([(par,None) for par in paramDicts[self.type][self.index]])
+			if self.index in model_list[self.type].keys():
+				self._param = dict([(par,None) for par in model_list[self.type][self.index]])
 				if self.type not in ['stressboun']: self._param = ImmutableDict(self._param)
 			else: 
 				self._param = {}
@@ -963,31 +963,11 @@ class fmacro(object): 						#FEHM macro object
 			if self.type not in ['stressboun']:self._param = ImmutableDict(self._param)
 	def _set_param2(self,param):
 		'''Assign keys in param attribute appropriate to specific macro.'''
-		#vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-		#vvvvvvvvvvvvvvvvvvvvvvv exception for rlp and permmodel vvvvvvvvvvvvvvvvvvvvvvvvvvv
-		if self.type == 'rlp' and self.index not in rlpDicts.keys():					  #v
-			self._param = dict([('param '+str(i+1),par[1]) for i,par in enumerate(param)]) #v
-			self._param = ImmutableDict(self._param)										  #^
-			return																		  #^
-		#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ end exception ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-		#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-		elif len(param) != len(self._param.keys()): return		# return if numbers don't match up
-		if self.index:
-			if self.index in paramDicts[self.type].keys():
-				paramDict = paramDicts[self.type][self.index]
+		for par,key in zip(param,macro_list[self.type]):
+			if isinstance(par,list) or isinstance(par,tuple):
+				self._param[par[0]] = par[1]
 			else:
-				paramDict = ['param'+str(i+1) for i in range(len(self._param.keys()))]
-			for par,key in zip(param,paramDict):
-				if isinstance(par,list) or isinstance(par,tuple):
-					self._param[par[0]] = par[1]
-				else:
-					self._param[key] = par			
-		else:
-			for par,key in zip(param,macro_list[self.type]):
-				if isinstance(par,list) or isinstance(par,tuple):
-					self._param[par[0]] = par[1]
-				else:
-					self._param[key[0]] = par
+				self._param[key[0]] = par
 	def _check_type(self):
 		'''Determine if macro is supported.'''
 		if self.type not in macro_list.keys(): return None
@@ -1155,6 +1135,23 @@ class fmodel(object): 						#FEHM model object.
 			self._param = ImmutableDict(self._param)
 		else: 
 			self._param = {}
+	def _set_param2(self,param):
+		'''Assign keys in param attribute appropriate to specific macro.'''
+		if self.index not in model_list[self.type].keys():					
+			self._param = dict([('param'+str(i+1),par[1]) for i,par in enumerate(param)])
+			self._param = ImmutableDict(self._param)									
+			return																		
+		elif len(param) != len(self._param.keys()): return		# return if numbers don't match up
+		
+		if self.index in model_list[self.type].keys():
+			paramDict = model_list[self.type][self.index]
+		else:
+			paramDict = ['param'+str(i+1) for i in range(len(self._param.keys()))]
+		for par,key in zip(param,paramDict):
+			if isinstance(par,list) or isinstance(par,tuple):
+				self._param[par[0]] = par[1]
+			else:
+				self._param[key] = par			
 	def _check_zone(self):
 		'''Determine if zone definitions are acceptable.'''
 		if not self.zonelist: return
@@ -2636,7 +2633,7 @@ class fdata(object):						#FEHM data file.
 		line=infile.readline()
 		while more:
 			keyword=line[0:4].strip()
-			print keyword
+			#print keyword
 			if keyword in fdata_sections and keyword not in skip:
 				print 'reading '+keyword
 				fn=read_fn[keyword]
@@ -2664,7 +2661,7 @@ class fdata(object):						#FEHM data file.
 				precedingKey = keyword
 			elif line.startswith('stop'): more=False; continue
 			else: 
-				print line
+				#print line
 				# start recording a code block
 				foundKey = False
 				if not precedingZoneKey: block = []
@@ -2682,8 +2679,8 @@ class fdata(object):						#FEHM data file.
 					elif line.startswith('stop'):
 						foundKey = True
 						continue
-				print precedingKey
-				print block
+				#print precedingKey
+				#print block
 				self._unparsed_blocks.update(dict(((precedingKey,block),)))
 				continue
 			line=infile.readline()
@@ -4195,7 +4192,9 @@ class fdata(object):						#FEHM data file.
 
 		if self.work_dir: os.chdir(self.work_dir)
 		
+		breakAutorestart = False
 		for attempt in range(autorestart+1):
+			if breakAutorestart: break
 			modT_old = None
 			untilFlag = False
 			p = Popen(exe)
@@ -4212,6 +4211,7 @@ class fdata(object):						#FEHM data file.
 					if untilFlag:  							# IF stop condition met
 						p.terminate()							# kill the process
 						self._running = False					# break the loop
+						breakAutorestart = True
 					if p.returncode == 0:					# IF run finshed on its own
 						self._running = False					# break the loop
 						
@@ -5169,7 +5169,7 @@ class fdata(object):						#FEHM data file.
 		self._add_model(m)
 	def _add_model(self,model):
 		model._parent = self
-		if isinstance(model.zonelist,list) and len(model.zonelist)==0: macro.zonelist = [self.zone[0]] 	# assign everywhere zone
+		if isinstance(model.zonelist,list) and len(model.zonelist)==0: model.zonelist = [self.zone[0]] 	# assign everywhere zone
 		elif isinstance(model.zonelist,tuple): model.zonelist = [tuple([int(ls) for ls in model.zonelist])]
 		elif isinstance(model.zonelist,(int,str)):
 			if model.zonelist in self.zone.keys(): model.zonelist = [self.zone[model.zonelist]]
