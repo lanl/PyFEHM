@@ -26,7 +26,7 @@ else: copyStr = 'cp'; delStr = 'rm'; slash = '/'
 # list of macros that might be encountered
 fdata_sections = ['cont','pres','zonn','zone','cond','time','ctrl','iter','rock','perm',
 					'boun','flow','strs','text','sol','nfin','hist','node','carb','rlp','grad','nobr',
-					'flxz','rlpm','hflx','trac','vcon','ppor','vapl','adif','ngas']
+					'flxz','rlpm','hflx','trac','vcon','ppor','vapl','adif','ngas','flxo']
 # list of potential CONTOUR output variables
 contour_variables=[['strain','stress'],
 				   ['co2'],
@@ -1119,6 +1119,9 @@ class fmodel(object): 						#FEHM model object.
 		if index: self._index = index
 		self._assign_param()
 		self._parent = None
+		# check param hasn't been misspecified
+		if len(param) ==2:
+			if not isinstance(param[0],tuple): param = (param,)
 		if param: self._set_param2(param)	
 		self._zonelist = []			
 		if zonelist != []: self.zonelist = zonelist
@@ -1137,11 +1140,15 @@ class fmodel(object): 						#FEHM model object.
 			self._param = {}
 	def _set_param2(self,param):
 		'''Assign keys in param attribute appropriate to specific macro.'''
-		if self.index not in model_list[self.type].keys():					
+		if self.index not in model_list[self.type].keys():	
 			self._param = dict([('param'+str(i+1),par[1]) for i,par in enumerate(param)])
-			self._param = ImmutableDict(self._param)									
+			self._param = ImmutableDict(self._param)		
 			return																		
-		elif len(param) != len(self._param.keys()): return		# return if numbers don't match up
+		#elif len(param) != len(self._param.keys()): 									
+		elif param.__len__() != len(self._param.keys()): 
+			print param
+			print param.__len__(), len(self._param.keys()) 	
+			return		# return if numbers don't match up
 		
 		if self.index in model_list[self.type].keys():
 			paramDict = model_list[self.type][self.index]
@@ -1151,7 +1158,7 @@ class fmodel(object): 						#FEHM model object.
 			if isinstance(par,list) or isinstance(par,tuple):
 				self._param[par[0]] = par[1]
 			else:
-				self._param[key] = par			
+				self._param[key] = par		
 	def _check_zone(self):
 		'''Determine if zone definitions are acceptable.'''
 		if not self.zonelist: return
@@ -1428,11 +1435,11 @@ class fincon(object): 						#FEHM restart object.
 			for k in zs.keys():
 				zs[k].sort(key=lambda x: x.position[2],reverse=True)
 				z0 = zs[k][0].position[2]; sz = [0+zgrad]
-				oldRho = zs[k][0].material['density']
+				oldRho = zs[k][0].density
 				oldZ = zs[k][0].position[2]
 				for z in zs[k][1:]:
-					sz.append(sz[-1]+9.81*(oldRho+z.material['density'])*abs(z.position[2]-oldZ)/2/1e6)
-					oldRho = z.material['density']
+					sz.append(sz[-1]+9.81*(oldRho+z.density)*abs(z.position[2]-oldZ)/2/1e6)
+					oldRho = z.density
 					oldZ = z.position[2]
 				for nd,szi in zip(zs[k],sz):
 					self._strs_zz[nd.index-1] = szi			
@@ -2497,7 +2504,7 @@ class fdata(object):						#FEHM data file.
 	__slots__ = ['_filename','_meshfilename','_inconfilename','_sticky_zones','_allMacro','_allModel','_associate','_work_dir',
 			'_bounlist','_cont','_ctrl','_grid','_incon','_hist','_iter','_nfinv','_nobr','_vapl','_adif','_rlpmlist','_pporlist','_vconlist','_sol',
 			'_time','text','times','_time','_zonelist','_writeSubFiles','_strs','_ngas','_carb','_trac','_files','_verbose',
-			'_tf','_ti','_dti','_dtmin','_dtmax','_dtn','_dtx','_sections','_help','_running','_unparsed_blocks','keep_unknown']
+			'_tf','_ti','_dti','_dtmin','_dtmax','_dtn','_dtx','_sections','_help','_running','_unparsed_blocks','keep_unknown','_flxo']
 	def __init__(self,filename='',meshfilename='',inconfilename='',sticky_zones=dflt.sticky_zones,associate=dflt.associate,work_dir = '',
 		full_connectivity=dflt.full_connectivity,skip=[],keep_unknown=dflt.keep_unknown):		#Initialise data file
 		from copy import copy
@@ -2530,7 +2537,8 @@ class fdata(object):						#FEHM data file.
 		self.text=[]					#: (*str*) Information about the model printed at the top of the input file.
 		self._time=ImmutableDict(copy(dflt.time))	
 		self.times=[]					
-		self._zonelist=[]				
+		self._zonelist=[]	
+		self._flxo = []
 		#self._zone={}				
 		self._writeSubFiles = True 		# Boolean indicating macro and zone sub files should be written every time
 		# additional modules
@@ -2556,7 +2564,12 @@ class fdata(object):						#FEHM data file.
 		self._dtx = dflt.ctrl['timestep_multiplier_AIAA']
 		# add 'everything' zone
 		self._add_zone(fzone(index=0))
-		if filename == 'fehmn.files': self.read(filename,full_connectivity=full_connectivity,skip=skip)
+		
+		if slash in filename:
+			if filename.split(slash)[-1] =='fehmn.files':
+				self.read(filename,full_connectivity=full_connectivity,skip=skip)
+		elif filename == 'fehmn.files': 
+			self.read(filename,full_connectivity=full_connectivity,skip=skip)
 		elif self.filename and self.meshfilename and self.inconfilename: self.read(filename,meshfilename,inconfilename,full_connectivity=full_connectivity,skip=skip)
 		elif self.filename and self.meshfilename: self.read(filename,meshfilename,full_connectivity=full_connectivity,skip=skip)
 		elif self.filename: print 'ERROR: meshfile must be specified if reading existing input file.'; return
@@ -2574,15 +2587,22 @@ class fdata(object):						#FEHM data file.
 		:type skip: list
 		
 		'''
+		wd = ''
+		import string
+		if slash in filename:
+			if filename.split(slash)[-1] =='fehmn.files':
+				#print filename.split(slash)[:-1]
+				wd = string.join(filename.split(slash)[:-1],slash)+slash
+				filename = 'fehmn.files'
 		if filename == 'fehmn.files':
 			with open(filename) as f:
 				for ln in f.readlines():
-					if ln.startswith('rsti:'): inconfilename = ln.split('rsti:')[-1].strip()
-					if ln.startswith('grida:'): meshfilename = ln.split('grida:')[-1].strip()
-					if ln.startswith('gridf:'): meshfilename = ln.split('gridf:')[-1].strip()
-					if ln.startswith('input:'): filename = ln.split('input:')[-1].strip()
+					if ln.startswith('rsti:'): inconfilename = wd+ln.split('rsti:')[-1].strip()
+					if ln.startswith('grida:'): meshfilename = wd+ln.split('grida:')[-1].strip()
+					if ln.startswith('gridf:'): meshfilename = wd+ln.split('gridf:')[-1].strip()
+					if ln.startswith('input:'): filename = wd+ln.split('input:')[-1].strip()
 					if ln.startswith('stor:'): 
-						storfilename = ln.split('stor:')[-1].strip()
+						storfilename = wd+ln.split('stor:')[-1].strip()
 						self.files.stor = storfilename
 		if meshfilename and (self.grid.number_nodes==0):
 			print 'reading grid file'
@@ -2615,7 +2635,7 @@ class fdata(object):						#FEHM data file.
 						self._read_nfinv,self._read_hist,self._read_histnode,self._read_carb,self._read_model,
 						 self._read_macro,self._read_nobr,self._read_flxz,self._read_rlpm,self._read_macro,
 						 self._read_trac,self._read_model,self._read_model,self._read_vapl,self._read_adif,
-						 self._read_ngas]))
+						 self._read_ngas,self._read_flxo]))
 		self._sections=[]
 		"""Need to first establish dimensionality of input file. Requires initial read through."""
 		more = True
@@ -2697,7 +2717,7 @@ class fdata(object):						#FEHM data file.
 		'''
 		if writeSubFiles: self._writeSubFiles = writeSubFiles
 		if filename: self._filename=filename
-		if self.filename=='': self.filename='fdata.dat'
+		if self.filename=='': self._filename='fdata.dat'
 		out_flag = self._write_prep()
 		if out_flag: return		
 		if slash in self.filename:
@@ -2713,6 +2733,7 @@ class fdata(object):						#FEHM data file.
 		if self.nobr: self._write_nobr(outfile); self._write_unparsed(outfile,'nobr')
 		if self.vapl: self._write_vapl(outfile); self._write_unparsed(outfile,'vapl')
 		if self.adif != None: self._write_adif(outfile); self._write_unparsed(outfile,'adif')
+		if self.flxo: self._write_flxo(outfile); self._write_unparsed(outfile,'flxo')
 		if len(self.zone)>1 and not self.sticky_zones: 
 			self._write_zonn_all(outfile)
 			self._write_unparsed(outfile,'zone')
@@ -2978,6 +2999,7 @@ class fdata(object):						#FEHM data file.
 		outfile.write('\n')
 	def _add_boun(self,boun=fboun()):							#Adds a BOUN model.
 		boun._parent = self
+		if isinstance(boun.zone,(int,tuple)): boun.zone = [boun.zone]
 		zns = []
 		for zn in boun.zone:
 			if isinstance(zn,tuple): 
@@ -3177,7 +3199,6 @@ class fdata(object):						#FEHM data file.
 			line=infile.readline()		
 	def _read_histnode(self,infile):							#Reads NODE macro.
 		line=infile.readline().strip()
-#		self._hist = fhist()
 		nums = line.split()
 		if nums[0].isdigit():
 			node_num = int(nums[0])
@@ -3317,6 +3338,40 @@ class fdata(object):						#FEHM data file.
 		for var in vars:
 			outfile.write(var+'\n')
 		outfile.write('end\n')
+	def _read_flxo(self,infile): 							#FLXO: Reads FLXO macro.
+		line=infile.readline().strip()
+		nums = line.split()
+		if nums[0].isdigit():
+			node_num = int(nums[0])*2
+			more = True
+			newind = 0
+			numXYZ = 0
+			nds = []
+			ndsXYZ = []
+			while more:
+				line=infile.readline().strip()
+				nums = line.split()
+				for num in nums:
+					nds.append(int(num))
+					if int(num)<0:
+						numXYZ += 1
+					newind += 1
+				if newind == node_num: more = False
+			for i in range(numXYZ):
+				line=infile.readline().strip()
+				nums = line.split()
+				self.grid.node_nearest_point([float(num) for num in nums])
+				nds[np.where(nds<0)[0][0]] = self.grid.node_nearest_point([float(num) for num in nums]).index
+			nds = [self.grid.node[nd] for nd in nds]
+			for i1,i2 in zip(range(0,node_num,2),range(0,node_num,2)):
+				self.flxo.append((nds[i1],nds[i2]))
+	def _write_flxo(self,outfile):								#Writes FLXO macro.
+		outfile.write('flxo\n')
+		outfile.write(str(len(self.flxo))+'\n')
+		for nd1,nd2 in self.flxo:
+			if isinstance(nd1,fnode): nd1 = nd1.index
+			if isinstance(nd2,fnode): nd2 = nd2.index
+			outfile.write(str(nd1)+'\t'+str(nd2)+'\n') 
 	def _read_iter(self,infile):							#ITER: Reads ITER macro.
 		line=infile.readline().strip()
 		nums = line.split()
@@ -4101,7 +4156,7 @@ class fdata(object):						#FEHM data file.
 			self.zone[index]._Pi = Pi
 			self.zone[index]._Ti = Ti
 			self.zone[index]._Si = Si
-	def run(self,input='',grid = '',incon='',exe=dflt.fehm_path,files=dflt.files,until=None,autorestart=0):
+	def run(self,input='',grid = '',incon='',exe=dflt.fehm_path,files=dflt.files,verbose = True, until=None,autorestart=0):
 		'''Run an fehm simulation. This command first writes out the input file, *fehmn.files* and this incon file
 		if changes have been made. A command line call is then made to the FEHM executable at the specified path (defaults
 		to *fehm.exe* in the working directory if not specified).
@@ -4197,7 +4252,12 @@ class fdata(object):						#FEHM data file.
 			if breakAutorestart: break
 			modT_old = None
 			untilFlag = False
-			p = Popen(exe)
+			if verbose:
+				p = Popen(exe)
+			else:
+				fh = open('nul','w')
+				p = Popen(exe,stdout=fh)
+				fh.close()
 			if until is None:
 				p.communicate()
 			else:
@@ -4450,7 +4510,7 @@ class fdata(object):						#FEHM data file.
 					zn_old = self.zone[zind]
 					if zn_old.type != new_zone.type:
 						print 'WARNING: zone '+str(zind)+' was defined earlier in the input file. PyFEHM assumes unique zone definitions. This zone will be ignored.'
-					if new_zone.type == 'rect':
+					elif new_zone.type == 'rect':
 						x0n,x1n = np.min(new_zone.points[0]), np.max(new_zone.points[0])
 						y0n,y1n = np.min(new_zone.points[1]), np.max(new_zone.points[1])
 						z0n,z1n = np.min(new_zone.points[2]), np.max(new_zone.points[2])
@@ -5351,6 +5411,15 @@ class fdata(object):						#FEHM data file.
 	pporlist = property(_get_pporlist)
 	def _get__zone_indices(self): return [z.index for z in self.zonelist]
 	_zone_indices = property(_get__zone_indices)	
+	def _get_flxo(self): 
+		for i,node_pair in enumerate(self._flxo):
+			nd1,nd2 = node_pair
+			if isinstance(nd1,int): nd1 = self.grid.node[nd1]
+			if isinstance(nd2,int): nd2 = self.grid.node[nd2]
+			self._flxo[i] = (nd1,nd2)
+		return self._flxo
+	def _set_flxo(self,value): self._flxo = value
+	flxo = property(_get_flxo, _set_flxo) #: (*lst*) List containing two-item tuples of nodal pairs for which mass flow flux to be output.
 	def _get_zonelist(self): return self._zonelist
 	zonelist = property(_get_zonelist)#: (*lst[fzone]*) List of zone objects in the model.
 	def _get_zone(self):

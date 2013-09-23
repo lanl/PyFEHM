@@ -36,8 +36,8 @@ class fnode(object):				#Node object.
 	"""
 	__slots__ = ['_index','_position','_connections','_elements','_generator','_zone',
 		'_permeability','_conductivity','_density','_specific_heat','_porosity','_youngs_modulus','_poissons_ratio','_thermal_expansion',
-		'_pressure_coupling','_Pi','_Ti','_Si','_S_co2gi','_S_co2li','_co2_aqi','_strsi','_dispi','_P','_T','_S',
-		'_S_co2g','_S_co2l','_co2_aq','_strs','_disp','_vol','_rlpmodel','_permmodel']
+		'_pressure_coupling','_Pi','_Ti','_Si','_S_co2gi','_S_co2li','_co2aqi','_strsi','_dispi','_P','_T','_S',
+		'_S_co2g','_S_co2l','_co2aq','_strs','_disp','_vol','_rlpmodel','_permmodel']
 	def __init__(self,index=None,position=None):		
 		self._index = index			
 		self._position=position	
@@ -61,7 +61,7 @@ class fnode(object):				#Node object.
 		self._Si = None
 		self._S_co2gi = None
 		self._S_co2li = None
-		self._co2_aqi = None
+		self._co2aqi = None
 		self._strsi = None
 		self._dispi = None	
 		self._P = None
@@ -69,7 +69,7 @@ class fnode(object):				#Node object.
 		self._S = None
 		self._S_co2g = None
 		self._S_co2l = None
-		self._co2_aq = None
+		self._co2aq = None
 		self._strs = None
 		self._disp = None		
 		self._vol = None
@@ -212,8 +212,8 @@ class fnode(object):				#Node object.
 	S_co2gi = property(_get_S_co2gi) #: (*fl64*) initial gaseous CO2 saturation at node.
 	def _get_S_co2li(self): return self._S_co2li
 	S_co2li = property(_get_S_co2li) #: (*fl64*) initial liquid CO2 saturation at node.
-	def _get_co2_aqi(self): return self._co2_aqi
-	co2_aqi = property(_get_co2_aqi) #: (*fl64*) initial dissolved CO2 concentration at node.
+	def _get_co2aqi(self): return self._co2aqi
+	co2aqi = property(_get_co2aqi) #: (*fl64*) initial dissolved CO2 concentration at node.
 	def _get_strsi(self): return self._strsi
 	strsi = property(_get_strsi) #: (*fl64*) initial stresses at node.
 	def _get_dispi(self): return self._dispi
@@ -228,8 +228,8 @@ class fnode(object):				#Node object.
 	S_co2g = property(_get_S_co2g) #: (*fl64*) gaseous CO2 saturation at node.
 	def _get_S_co2l(self): return self._S_co2l
 	S_co2l = property(_get_S_co2l) #: (*fl64*) liquid CO2 saturation at node.
-	def _get_co2_aq(self): return self._co2_aq
-	co2_aq = property(_get_co2_aq) #: (*fl64*) dissolved CO2 concentration at node.
+	def _get_co2aq(self): return self._co2aq
+	co2aq = property(_get_co2aq) #: (*fl64*) dissolved CO2 concentration at node.
 	def _get_strs(self): return self._strs
 	strs = property(_get_strs) #: (*list*) stresses at node ([xx,yy,xy] for 2D, [xx,yy,zz,xy,yz,xz] for 3D).
 	def _get_disp(self): return self._disp
