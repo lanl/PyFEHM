@@ -932,14 +932,12 @@ class fmacro(object): 						#FEHM macro object
 	"""FEHM macro object.
 	
 	"""
-	__slots__=['_type','_param','_index','_parent','_zone','_subtype','_file','_attempt_fix','_write_one_macro']
-	def __init__(self,type='',zone=[],param=[],index = None,subtype='',file = None,attempt_fix = True,write_one_macro=False):
+	__slots__=['_type','_param','_parent','_zone','_subtype','_file','_attempt_fix','_write_one_macro']
+	def __init__(self,type='',zone=[],param=[],subtype='',file = None,attempt_fix = True,write_one_macro=False):
 		self._type = type 		
 		if type == 'stressboun' and not subtype: subtype = 'fixed'
 		self._param = None 		
 		self._check_type()
-		self._index = None	
-		if index: self._index = index
 		self._assign_param()
 		self._parent = None
 		if param: self._set_param2(param)	
@@ -952,15 +950,8 @@ class fmacro(object): 						#FEHM macro object
 		self._write_one_macro = write_one_macro
 	def _assign_param(self): 
 		'''Assign parameters if supplied on initialisation.'''
-		if self.index: 
-			if self.index in model_list[self.type].keys():
-				self._param = dict([(par,None) for par in model_list[self.type][self.index]])
-				if self.type not in ['stressboun']: self._param = ImmutableDict(self._param)
-			else: 
-				self._param = {}
-		else: 
-			self._param = dict(macro_list[self.type])
-			if self.type not in ['stressboun']:self._param = ImmutableDict(self._param)
+		self._param = dict(macro_list[self.type])
+		if self.type not in ['stressboun']:self._param = ImmutableDict(self._param)
 	def _set_param2(self,param):
 		'''Assign keys in param attribute appropriate to specific macro.'''
 		for par,key in zip(param,macro_list[self.type]):
@@ -1004,14 +995,8 @@ class fmacro(object): 						#FEHM macro object
 	def _get_param(self): return self._param
 	def _set_param(self,value): self._param = value
 	param = property(_get_param, _set_param) #: (*dict[fl64]*) A dictionary of values defining the operation of the macro. See table below for macro-specific dictionary keys.
-	def _get_index(self): return self._index
-	def _set_index(self,value): self._index = value
-	index = property(_get_index,_set_index)#: (*int*) Model index, required for **PERMMODEL** and **RLP** macros.
 	def _get_zone(self): return self._zone
-	def _set_zone(self,value): 
-		if isinstance(value,fzone) and self.index:
-			self._zone = [value,]
-		else: self._zone = value
+	def _set_zone(self,value): self._zone = value
 	zone = property(_get_zone,_set_zone)#: (*fzone, lst[fzone], tuple[int,int,int], zone key*) The zone, zones or nodes to which the macro is assigned. Note, only permmodel and rlp can be assigned lists of zones. Optionally, a key (index or string) may be passed, in which case the zone will be retrieved when the macro is added to the model.
 	def _get_subtype(self): return self._subtype
 	def _set_subtype(self,value):
@@ -3914,7 +3899,50 @@ class fdata(object):						#FEHM data file.
 		'''Display contents of TIME macro.
 		'''
 		for k in self.time.keys():	print k +': ' + str(self.time[k])
-	def _read_vapl(self,infile):								#VAPL: Reads VAPL macro.
+	def change_timestepping(self,at_time,new_dti=None,new_dtmax=None,new_dtx=None,new_implicitness=None,new_print_out=None):
+		''' Change timestepping during a simulation. Note, if time stepping arguments are ommitted, FEHM will force output
+		to be written at the change time. The default for all optional arguments is no change.
+			
+		:param at_time: Simulation time to change time stepping behaviour.
+		:type at_time: fl64
+		:param new_dti: Initial time step at change time.
+		:type new_dti: fl64
+		:param new_dtmax: New maximum time step after change time.
+		:type new_dtmax: fl64
+		:param new_dtx: New time step multiplier at change time.
+		:type new_dtx: fl64
+		:param new_implicitness: New implicitness factor at change time.
+		:type new_implicitness: fl64
+		:param new_print_out: New time step interval at which to print information. 
+		:type new_print_out: int
+		'''
+		
+		# load old parameters
+		if self.times:
+			DIT1,DIT2,DIT3,ITC,DIT4 = self.times[-1]
+			if DIT2>0: DIT2a = DIT2; DIT2b = -self.dtx
+			else: DIT2b = DIT2; DIT2a = None
+		else:
+			DIT2b = -self.dtx
+			DIT3 = self.ctrl['implicitness_factor_AAW']
+			ITC = self.time['print_interval_IPRTOUT']
+			DIT4 = self.dtmax
+		
+		# assign new parameters
+		DIT1 = at_time
+		if new_dti and new_dtx:
+			print 'WARNING: you cannot specify BOTH a new time step size and time step multiplier. Ignoring the new multiplier...'
+			new_dtx = None
+		if new_dti: DIT2 = new_dti
+		elif new_dtx: DIT2 = -new_dtx
+		else: DIT2 = DIT2b
+		if new_implicitness: DIT3 = new_implicitness
+		if new_print_out: ITC = new_print_out
+		if new_dtmax: DIT4 = new_dtmax
+		
+		self.times.append([DIT1,DIT2,DIT3,ITC,DIT4])		
+		
+	def _read_vapl(self,infile):							#VAPL: Reads VAPL macro.
 		self.vapl=True
 	def _write_vapl(self,outfile):								#Writes VAPL macro.
 		if self.vapl:
