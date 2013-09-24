@@ -514,11 +514,8 @@ class fgrid(object):				#Grid object.
 		elif format == 'avs': self._write_avs(filename)
 	def _write_fehm(self,filename):
 		if self._parent:
-			if self._parent.work_dir and not os.path.isdir(self._parent.work_dir): 
-				if WINDOWS:
-					os.system('mkdir '+self._parent.work_dir)
-				else:
-					os.system('mkdir -p '+self._parent.work_dir)
+			if self._parent.work_dir and not os.path.isdir(self._parent.work_dir): 		
+				os.makedirs(self._parent.work_dir)		
 			outfile = open(self._parent.work_dir+self.filename,'w')
 		else:
 			outfile = open(self.filename,'w')
@@ -552,10 +549,7 @@ class fgrid(object):				#Grid object.
 	def _write_avs(self,filename):
 		if self._parent:
 			if self._parent.work_dir and not os.path.isdir(self._parent.work_dir): 
-				if WINDOWS:
-					os.system('mkdir '+self._parent.work_dir)
-				else:
-					os.system('mkdir -p '+self._parent.work_dir)
+				os.makedirs(self._parent.work_dir)		
 			outfile = open(self._parent.work_dir+self.filename,'w')
 		else:
 			outfile = open(self.filename,'w')
@@ -598,10 +592,7 @@ class fgrid(object):				#Grid object.
 		"""
 		if self._parent:
 			if self._parent.work_dir and not os.path.isdir(self._parent.work_dir): 
-				if WINDOWS:
-					os.system('mkdir '+self._parent.work_dir)
-				else:
-					os.system('mkdir -p '+self._parent.work_dir)
+				os.makedirs(self._parent.work_dir)	
 			fm = fmake(self._parent.work_dir+meshfilename,x,y,z,self._full_connectivity)
 			fm.write()		
 			self.read(self._parent.work_dir+meshfilename)
@@ -855,16 +846,15 @@ class fgrid(object):				#Grid object.
 		extension, save_fname, pdf = save_name(save,variable='grid',time=1)
 		if self._parent:
 			if self._parent.work_dir and not os.path.isdir(self._parent.work_dir): 
-				if WINDOWS:
-					os.system('mkdir '+self._parent.work_dir)
-				else:
-					os.system('mkdir -p '+self._parent.work_dir)
+				os.makedirs(self._parent.work_dir)	
 			plt.savefig(self._parent.work_dir+save_fname, dpi=200, facecolor='w', edgecolor='w',orientation='portrait', 
 			format=extension,transparent=True, bbox_inches=None, pad_inches=0.1)
 		else:
 			plt.savefig(save_fname, dpi=200, facecolor='w', edgecolor='w',orientation='portrait', 
 			format=extension,transparent=True, bbox_inches=None, pad_inches=0.1)
-		if pdf: os.system('epstopdf ' + save_fname); os.system(delStr+' ' + save_fname)			
+		if pdf: 
+			os.system('epstopdf ' + save_fname)
+			os.remove(save_fname)			
 	def add_nodetree(self):
 		""" Constuct octree for node positions. Call to update if changes made to grid.
 		"""

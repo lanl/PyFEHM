@@ -707,7 +707,9 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 		extension, save_fname, pdf = save_name(save,variable=variable,time=time)
 		plt.savefig(save_fname, dpi=100, facecolor='w', edgecolor='w',orientation='portrait', 
 		format=extension,transparent=True, bbox_inches=None, pad_inches=0.1)
-		if pdf: os.system('epstopdf ' + save_fname); os.system(delStr+' ' + save_fname)	
+		if pdf: 
+			os.system('epstopdf ' + save_fname)
+			os.remove(save_fname)	
 	def slice_plot(self,variable=None,time=None,slice='',divisions=[20,20],levels=10,cbar=False,xlims=[],
 		ylims=[],colors='k',linestyle='-',save='',	xlabel='x / m',ylabel='y / m',title='', font_size='medium', method='nearest',
 		equal_axes=True,mesh_lines = None,perm_contrasts=None, scale = 1.):		
@@ -838,7 +840,9 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 		extension, save_fname, pdf = save_name(save=save,variable=variable,time=time)
 		plt.savefig(save_fname, dpi=100, facecolor='w', edgecolor='w',orientation='portrait', 
 		format=extension,transparent=True, bbox_inches=None, pad_inches=0.1)
-		if pdf: os.system('epstopdf ' + save_fname); os.system(delStr+' ' + save_fname)	
+		if pdf: 
+			os.system('epstopdf ' + save_fname)
+			os.remove(save_fname)	
 	def profile(self, variable, profile, time=None, divisions=30, method='nearest'):
 		'''Return variable data along the specified line in 3-D space. If only two points are supplied,
 		the profile is assumed to be a straight line between them.
@@ -970,7 +974,9 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 		extension, save_fname, pdf = save_name(save,variable=variable,time=time)
 		plt.savefig(save_fname, dpi=100, facecolor='w', edgecolor='w',orientation='portrait', 
 		format=extension,transparent=True, bbox_inches=None, pad_inches=0.1)
-		if pdf: os.system('epstopdf ' + save_fname); os.system(delStr+' ' + save_fname)	
+		if pdf: 
+			os.system('epstopdf ' + save_fname)
+			os.remove(save_fname)	
 	def cutaway_plot(self,variable=None,time=None,divisions=[20,20,20],levels=10,cbar=False,angle=[45,45],xlims=[],method='nearest',
 		ylims=[],zlims=[],colors='k',linestyle='-',save='',	xlabel='x / m', ylabel='y / m', zlabel='z / m', title='', 
 		font_size='medium',equal_axes=True,grid_lines=None):
@@ -1380,7 +1386,9 @@ class fhistory(object):						# Reading and plotting methods associated with hist
 		extension, save_fname, pdf = save_name(save,variable=variable,node=node)
 		plt.savefig(save_fname, dpi=100, facecolor='w', edgecolor='w',orientation='portrait', 
 		format=extension,transparent=True, bbox_inches=None, pad_inches=0.1)
-		if pdf: os.system('epstopdf ' + save_fname); os.system(delStr+' ' + save_fname)	
+		if pdf: 
+			os.system('epstopdf ' + save_fname)
+			os.remove(save_fname)	
 	def _get_variables(self): return self._variables
 	variables = property(_get_variables)#: (*lst[str]*) List of variables for which output data are available.
 	def _get_format(self): return self._format

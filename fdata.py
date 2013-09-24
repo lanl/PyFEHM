@@ -2,7 +2,7 @@
 
 import numpy as np
 from copy import copy, deepcopy
-import os,time,platform
+import os,time,platform,shutil
 from subprocess import Popen
 from time import sleep
 try:
@@ -473,7 +473,9 @@ class fzone(object):						#FEHM zone object.
 		extension, save_fname, pdf = save_name(save,variable='zone'+str(self.index),time=1)
 		plt.savefig(save_fname, dpi=200, facecolor='w', edgecolor='w',orientation='portrait', 
 		format=extension,transparent=True, bbox_inches=None, pad_inches=0.1)
-		if pdf: os.system('epstopdf ' + save_fname); os.system(delStr+' ' + save_fname)			
+		if pdf: 
+			os.system('epstopdf ' + save_fname)
+			os.remove(save_fname)			
 	def topo(self,save='',cbar=True,equal_axes=True, method = 'nearest', divisions=[30,30], xlims=[],
 			ylims=[], clims=[], levels=10,clabel='',
 			xlabel='x / m',ylabel='y / m',zlabel='z / m',title='',font_size='small'): 		#generates a 2-D topographical plot of the zone.
@@ -1327,11 +1329,8 @@ class fincon(object): 						#FEHM restart object.
 			self._filename = inconfilename
 			self._parent.files._incon = inconfilename
 		if self._parent:
-			if self._parent.work_dir and not os.path.isdir(self._parent.work_dir): 
-				if WINDOWS:
-					os.system('mkdir '+self._parent.work_dir)
-				else:
-					os.system('mkdir -p '+self._parent.work_dir)
+			if self._parent.work_dir and not os.path.isdir(self._parent.work_dir): 	
+				os.makedirs(self._parent.work_dir)
 			outfile = open(self._parent.work_dir+self.filename,'w')
 		else:
 			outfile = open(self.filename,'w')
@@ -2449,12 +2448,13 @@ class files(object):						#FEHM file constructor.
 			if not self.stor: self.stor = self.root+'.stor'
 			fehmn.write(' '+self.stor)
 			# move stor file to work directory
-			if self._parent.work_dir:
-				if not os.path.isfile(self._parent.work_dir + self.stor) and os.path.isfile(self.stor):
-					os.system(copyStr+' '+self.stor+' '+self._parent.work_dir + self.stor)
+			#if self._parent.work_dir:
+			#	if not os.path.isfile(self._parent.work_dir + self.stor) and os.path.isfile(self.stor):
+			#		shutil.copyfile(self.stor,self._parent.work_dir +slash+self.stor)
 			# if asking FEHM to calculate stor file, remove old version if exists
-			if self._parent.ctrl['stor_file_LDA'] == -1 and os.path.isfile(self.stor):
-				os.system(delStr+' '+self.stor)
+			#if self._parent.ctrl['stor_file_LDA'] == -1 and os.path.isfile(self.stor):
+			#	os.remove(self.stor)
+			#	#os.system(delStr+' '+self.stor)
 			fehmn.write('\n')
 		if self.root: fehmn.write('root:'+self.root+'\n')		
 		fehmn.write('\nall\n')
@@ -2519,11 +2519,7 @@ class fdata(object):						#FEHM data file.
 		self._associate = associate 
 		self._work_dir = work_dir
 		if work_dir:
-			if not os.path.isdir(work_dir): 			
-				if WINDOWS:
-					os.system('mkdir '+work_dir)
-				else:
-					os.system('mkdir -p '+work_dir)
+			if not os.path.isdir(work_dir): os.makedirs(work_dir)		
 		# model objects
 		self._bounlist = []				
 		self._cont = fcont()				
@@ -2730,11 +2726,7 @@ class fdata(object):						#FEHM data file.
 		if slash in self.filename:
 			make_directory(self.filename)
 		if self.work_dir:
-			if not os.path.isdir(self.work_dir): 		
-				if WINDOWS:
-					os.system('mkdir '+self.work_dir)
-				else:
-					os.system('mkdir -p '+self.work_dir)
+			if not os.path.isdir(self.work_dir): os.makedirs(self.work_dir)			
 		outfile = open(self.work_dir+self.filename,'w')
 		outfile.write('# '+self.filename+'\n')
 		self._write_unparsed(outfile,'start')
@@ -3944,6 +3936,7 @@ class fdata(object):						#FEHM data file.
 		'''
 		
 		# load old parameters
+		self._output_times = []
 		if self.times:
 			DIT1,DIT2,DIT3,ITC,DIT4 = self.times[-1]
 			if DIT2>0: DIT2a = DIT2; DIT2b = -self.dtx
@@ -4240,11 +4233,8 @@ class fdata(object):						#FEHM data file.
 		if until is not None and self.files.rsto == '':	tempRstoFlag = True
 		
 		if self.work_dir: 				# if working directory does not exist, make it
-			if not os.path.isdir(self.work_dir): 		
-				if WINDOWS:
-					os.system('mkdir '+self.work_dir)
-				else:
-					os.system('mkdir -p '+self.work_dir)
+			if not os.path.isdir(self.work_dir): os.makedirs(self.work_dir)
+			
 		if input: self._filename = input; self.files.input = input
 		
 		if self.work_dir: 	# if grid and incon files not in work dir, write them out
@@ -4287,7 +4277,6 @@ class fdata(object):						#FEHM data file.
 			if file == 'hist': self.files._use_hist = True
 			if file == 'outp': self.files._use_outp = True
 		if self.ctrl['stor_file_LDA']: self.files._use_stor = True
-		if self.work_dir: os.system(copyStr + self.files.stor +self.work_dir + slash + self.files.stor)
 		
 		if not self.files.input: self.files.input = self.filename
 		if not self.files.grid: 
@@ -5602,11 +5591,11 @@ class fdata(object):						#FEHM data file.
 	help = property(_get_help, _set_help) #: (*fhelp*) Module for interactive assistance.
 	def _get_output_times(self): return self._output_times
 	def _set_output_times(self,value): 
-		self._output_times = value
 		if isinstance(self._output_times,(int,float)): self._output_times = [self._output_times]
 		if isinstance(self._output_times,(list,tuple)): self._output_times = np.array(self._output_times)
 		self._times = []
 		for t in self._output_times: self.change_timestepping(t)
 		if np.max(self._output_times)>self.tf:
 			print 'WARNING: output requested for times after the simulation end time.'
+		self._output_times = value
 	output_times = property(_get_output_times, _set_output_times) #: (*lst*) List of times at which FEHM should produce output.
