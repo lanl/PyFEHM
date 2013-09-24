@@ -2433,7 +2433,6 @@ class files(object):						#FEHM file constructor.
 			if not self.check: self.check = self.root+'.chk'
 			fehmn.write('check: '+self.check+'\n')
 		if self._use_incon: fehmn.write('rsti:'+self.incon+'\n')
-		#if self.rsto: fehmn.write('rsto:'+self.rsto+'\n')
 		if self._use_hist: 
 			fehmn.write('hist: '+self.hist+'\n')
 		if self._parent.carb.iprtype != 1 and not self.co2in: 
@@ -4374,9 +4373,11 @@ class fdata(object):						#FEHM data file.
 		# WARNING: stress perm module specified without calling excess_she
 		if self.permmodellist:
 			for pm in self.permmodellist:
-				if pm.index in [22,25] and self.strs.excess_she['PAR1']==None:
-					warnings.append('Perm model specified without accompanying excess_she macro')
-					return True
+				if pm.index in [22,24,25] and self.strs.excess_she['PAR1']==None:
+					warnings.append('Perm model specified without accompanying excess_she macro - assigning defaults.')
+					self.strs.excess_she['PAR1']=0.9
+					self.strs.excess_she['PAR2']=10.
+					self.strs.excess_she['PAR3']=1.
 		for boun in self.bounlist: boun._check()
 		for zone in self.zonelist: zone._check()
 		for key in self._allMacro.keys():

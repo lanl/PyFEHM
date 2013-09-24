@@ -33,6 +33,22 @@ nbr_update = dict((
 def repair_grid(gridfilename):
 	geo = fgrid()
 	geo._read_inp(gridfilename)
+	print 'The following duplicates were removed...'
+	# with the repair flag, duplicate nodes will be deleted
+	geo.add_nodetree(repair = geo)
+	# now need to renumber nodes
+	i0 = geo._nodelist[0].index
+	for i,nd in enumerate(geo._nodelist[1:]):
+		di = nd.index - 1 - i0
+		if di != 0:
+			for nd2 in geo._nodelist[i+1:]:
+				nd2._index -= di
+		i0 = nd.index
+	
+	newgridfilename = gridfilename.split('.')[0]+'.repaired' 
+	print 'Writing repaired grid file '+newgridfilename
+	geo.write(newgridfilename)
+	geo.read(newgridfilename)
 	return geo
 class fnode(object):				#Node object.
 	""" FEHM grid node object.
@@ -308,7 +324,7 @@ class octree(object):				#Octree object.
 	If a compartment contains more than one point then it continues to sub-divide until there is no more than one point
 	per compartment.
 	"""
-	def __init__(self,bounds,elements,parent=None):
+	def __init__(self,bounds,elements,parent=None,repair=False):
 		self.parent=parent		#: Parent compartment to which the compartment belongs.
 		self.bounds=bounds		#: Bounding box defining the compartment.
 		self.elements=elements	#: (*fnode*) Objects contained in the compartment.
@@ -321,30 +337,56 @@ class octree(object):				#Octree object.
 			self.generation=0
 			self.all_elements=set(elements)
 		if self.generation>50:
-			pos0 = self.elements[0].position
-			multipleFlag = False
-			for elt in self.elements[1:]:
-				pos = elt.position
-				dist = np.array(pos)-np.array(pos0)
-				dist = np.sqrt(dist[0]**2+dist[1]**2+dist[2]**2)
-				if dist == 0: multipleFlag = True; break
-			if multipleFlag:
-				print 'ERROR: multiple nodes specified at same location. See below for details.'
-				elt = self.elements[0]
-				print ''
-				print 'Node '+str(elt.index)+': '+str(elt.position)
+			if not repair:
+				pos0 = self.elements[0].position
+				multipleFlag = False
 				for elt in self.elements[1:]:
 					pos = elt.position
 					dist = np.array(pos)-np.array(pos0)
 					dist = np.sqrt(dist[0]**2+dist[1]**2+dist[2]**2)
-					if dist == 0: 
-						print 'Node '+str(elt.index)+': '+str(elt.position)
-				print ''
-				print 'Run repair_grid() to attempt fix.'
-				return
-					
-			for elt in self.elements:
-				print elt.index, elt.position
+					if dist == 0: multipleFlag = True; break
+				if multipleFlag:
+					print 'ERROR: multiple nodes specified at same location. See below for details.'
+					elt = self.elements[0]
+					print ''
+					print 'Node '+str(elt.index)+': '+str(elt.position)
+					for elt in self.elements[1:]:
+						pos = elt.position
+						dist = np.array(pos)-np.array(pos0)
+						dist = np.sqrt(dist[0]**2+dist[1]**2+dist[2]**2)
+						if dist == 0: 
+							print 'Node '+str(elt.index)+': '+str(elt.position)
+					print ''
+					print 'Run repair_grid() to attempt fix.'
+					return
+			else:
+				pos0 = self.elements[0].position
+				multipleFlag = False
+				for elt in self.elements[1:]:
+					pos = elt.position
+					dist = np.array(pos)-np.array(pos0)
+					dist = np.sqrt(dist[0]**2+dist[1]**2+dist[2]**2)
+					if dist == 0: multipleFlag = True; break
+				if multipleFlag:
+					nds = self.elements
+					# find node with minimum index - this takes priority
+					nd1 = nds[0]
+					for nd2 in nds:
+						if nd2.index < nd1.index: nd1 = nd2
+					nds.remove(nd1)
+					# for all other nodes, clean from parent grid
+					nd1 = repair.node[nd1.index]					
+					for nd2 in nds:
+						nd2 = repair.node[nd2.index]
+						for el in nd2._elements:
+							el._nodes = [nd1 if nd.index == nd2.index else nd for nd in el._nodes]
+							
+						# remove node from nodelist
+						ind = repair._nodelist.index(nd2)
+						repair._nodelist.remove(nd2)
+							
+						print '  ',nd2,' duplicated ',nd1
+					self.elements = [nd1]
 		if self.num_elements>1: 	# if more than one element in a cube, sub-divide
 			cubes=sub_cubes(self.bounds)
 			# update neighbour locations
@@ -357,7 +399,10 @@ class octree(object):				#Octree object.
 			nbrs=[]
 			for cube,elts in zip(cubes,cube_elements):
 				if len(elts)>0: 
-					self.child.append(octree(cube,elts,self))
+					if repair:
+						self.child.append(octree(cube,elts,self,repair))
+					else:
+						self.child.append(octree(cube,elts,self))
 					nbrs.append(1)
 				else: nbrs.append(0)
 			self.assign_neighbours(nbrs)
@@ -855,10 +900,10 @@ class fgrid(object):				#Grid object.
 		if pdf: 
 			os.system('epstopdf ' + save_fname)
 			os.remove(save_fname)			
-	def add_nodetree(self):
+	def add_nodetree(self,repair=False):
 		""" Constuct octree for node positions. Call to update if changes made to grid.
 		"""
-		self.octree=octree(self.bounding_box,self.nodelist)	
+		self.octree=octree(self.bounding_box,self.nodelist,repair=self)	
 	def _summary(self):		
 		L = 62
 		print ''
