@@ -30,14 +30,17 @@ nbr_update = dict((
 	(6,[[0,3,5],[7,4,2]]),
 	(7,[[1,3,5],[6,5,3]])
 	))
-
+def repair_grid(gridfilename):
+	geo = fgrid()
+	geo._read_inp(gridfilename)
+	return geo
 class fnode(object):				#Node object.
 	""" FEHM grid node object.
 	"""
 	__slots__ = ['_index','_position','_connections','_elements','_generator','_zone',
 		'_permeability','_conductivity','_density','_specific_heat','_porosity','_youngs_modulus','_poissons_ratio','_thermal_expansion',
 		'_pressure_coupling','_Pi','_Ti','_Si','_S_co2gi','_S_co2li','_co2aqi','_strsi','_dispi','_P','_T','_S',
-		'_S_co2g','_S_co2l','_co2aq','_strs','_disp','_vol','_rlpmodel','_permmodel']
+		'_S_co2g','_S_co2l','_co2aq','_strs','_disp','_vol','_rlpmodel','_permmodel','_pormodel','_condmodel']
 	def __init__(self,index=None,position=None):		
 		self._index = index			
 		self._position=position	
@@ -75,6 +78,8 @@ class fnode(object):				#Node object.
 		self._vol = None
 		self._rlpmodel = None
 		self._permmodel = None
+		self._pormodel = None
+		self._condmodel = None
 	def __repr__(self): return 'nd'+str(self.index)
 	def _get_index(self): return self._index
 	index = property(_get_index) #: (*int*) Integer number denoting the node.	
@@ -235,9 +240,13 @@ class fnode(object):				#Node object.
 	def _get_disp(self): return self._disp
 	disp = property(_get_disp) #: (*list*) displacements at node ([x,y] for 2D, [x,y,z] for 3D).
 	def _get_rlpmodel(self): return self._rlpmodel
-	rlpmodel = property(_get_rlpmodel) #: (*int*) index of relative permeability model assigned to ndoe
+	rlpmodel = property(_get_rlpmodel) #: (*int*) index of relative permeability model assigned to node
 	def _get_permmodel(self): return self._permmodel
 	permmodel = property(_get_permmodel) #: (*int*) index of stress-permeability model assigned to node.
+	def _get_pormodel(self): return self._pormodel
+	pormodel = property(_get_pormodel) #: (*int*) index of variable porosity model assigned to node.
+	def _get_condmodel(self): return self._condmodel
+	condmodel = property(_get_condmodel) #: (*int*) index of variable conductivity model assigned to node.
 class fconn(object):				#Connection object.
 	"""Connection object, comprising two connected nodes, separated by some distance.
 
@@ -311,6 +320,31 @@ class octree(object):				#Octree object.
 		else: 					# if not a parent, generation 0, elements only those existing
 			self.generation=0
 			self.all_elements=set(elements)
+		if self.generation>50:
+			pos0 = self.elements[0].position
+			multipleFlag = False
+			for elt in self.elements[1:]:
+				pos = elt.position
+				dist = np.array(pos)-np.array(pos0)
+				dist = np.sqrt(dist[0]**2+dist[1]**2+dist[2]**2)
+				if dist == 0: multipleFlag = True; break
+			if multipleFlag:
+				print 'ERROR: multiple nodes specified at same location. See below for details.'
+				elt = self.elements[0]
+				print ''
+				print 'Node '+str(elt.index)+': '+str(elt.position)
+				for elt in self.elements[1:]:
+					pos = elt.position
+					dist = np.array(pos)-np.array(pos0)
+					dist = np.sqrt(dist[0]**2+dist[1]**2+dist[2]**2)
+					if dist == 0: 
+						print 'Node '+str(elt.index)+': '+str(elt.position)
+				print ''
+				print 'Run repair_grid() to attempt fix.'
+				return
+					
+			for elt in self.elements:
+				print elt.index, elt.position
 		if self.num_elements>1: 	# if more than one element in a cube, sub-divide
 			cubes=sub_cubes(self.bounds)
 			# update neighbour locations
@@ -480,7 +514,11 @@ class fgrid(object):				#Grid object.
 		elif format == 'avs': self._write_avs(filename)
 	def _write_fehm(self,filename):
 		if self._parent:
-			if self._parent.work_dir and not os.path.isdir(self._parent.work_dir): os.system('mkdir '+self._parent.work_dir)
+			if self._parent.work_dir and not os.path.isdir(self._parent.work_dir): 
+				if WINDOWS:
+					os.system('mkdir '+self._parent.work_dir)
+				else:
+					os.system('mkdir -p '+self._parent.work_dir)
 			outfile = open(self._parent.work_dir+self.filename,'w')
 		else:
 			outfile = open(self.filename,'w')
@@ -513,7 +551,11 @@ class fgrid(object):				#Grid object.
 		outfile.close()
 	def _write_avs(self,filename):
 		if self._parent:
-			if self._parent.work_dir and not os.path.isdir(self._parent.work_dir): os.system('mkdir '+self._parent.work_dir)
+			if self._parent.work_dir and not os.path.isdir(self._parent.work_dir): 
+				if WINDOWS:
+					os.system('mkdir '+self._parent.work_dir)
+				else:
+					os.system('mkdir -p '+self._parent.work_dir)
 			outfile = open(self._parent.work_dir+self.filename,'w')
 		else:
 			outfile = open(self.filename,'w')
@@ -555,7 +597,11 @@ class fgrid(object):				#Grid object.
 		:type z: list[fl64]
 		"""
 		if self._parent:
-			if self._parent.work_dir and not os.path.isdir(self._parent.work_dir): os.system('mkdir '+self._parent.work_dir)
+			if self._parent.work_dir and not os.path.isdir(self._parent.work_dir): 
+				if WINDOWS:
+					os.system('mkdir '+self._parent.work_dir)
+				else:
+					os.system('mkdir -p '+self._parent.work_dir)
 			fm = fmake(self._parent.work_dir+meshfilename,x,y,z,self._full_connectivity)
 			fm.write()		
 			self.read(self._parent.work_dir+meshfilename)
@@ -808,7 +854,11 @@ class fgrid(object):				#Grid object.
 		
 		extension, save_fname, pdf = save_name(save,variable='grid',time=1)
 		if self._parent:
-			if self._parent.work_dir and not os.path.isdir(self._parent.work_dir): os.system('mkdir '+self._parent.work_dir)
+			if self._parent.work_dir and not os.path.isdir(self._parent.work_dir): 
+				if WINDOWS:
+					os.system('mkdir '+self._parent.work_dir)
+				else:
+					os.system('mkdir -p '+self._parent.work_dir)
 			plt.savefig(self._parent.work_dir+save_fname, dpi=200, facecolor='w', edgecolor='w',orientation='portrait', 
 			format=extension,transparent=True, bbox_inches=None, pad_inches=0.1)
 		else:

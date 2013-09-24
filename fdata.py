@@ -1173,16 +1173,16 @@ class fmodel(object): 						#FEHM model object.
 				print 'ERROR: model index not known.'
 				return
 			self.param = ImmutableDict(param_dicts[self.index])
-	type = property(_get_type, _set_type) #: (**)
+	type = property(_get_type, _set_type) #: (*str*) Name of the macro for this model. Macro names are identical to those invoked in FEHM.
 	def _get_param(self): return self._param
 	def _set_param(self,value): self._param = value
-	param = property(_get_param, _set_param) #: (**)
+	param = property(_get_param, _set_param) #: (*dict[fl64]*) A dictionary of values defining the operation of the macro. See table below for macro-specific dictionary keys.
 	def _get_index(self): return self._index
 	def _set_index(self,value): self._index = value
-	index = property(_get_index, _set_index) #: (**)
+	index = property(_get_index, _set_index) #: (*int*) Index of the model to be invoked.
 	def _get_zonelist(self): return self._zonelist
 	def _set_zonelist(self,value): self._zonelist = value
-	zonelist = property(_get_zonelist, _set_zonelist) #: (**)
+	zonelist = property(_get_zonelist, _set_zonelist) #: (*list*) A list of zones to which the model is applied.
 	def _get_zone(self): 
 		tempdict = []
 		for zn in self.zonelist:
@@ -1247,24 +1247,36 @@ class fincon(object): 						#FEHM restart object.
 		if self._parent: 
 			self._parent.files.incon = inconfilename
 			if slash in self._parent.files.incon: self._parent.files.incon = self._parent.files.incon.split(slash)[-1]
-		ln = infile.readline().strip()
-		ln = infile.readline().strip()
+		lns = infile.readlines()
+		infile.close()
+		# check if incon file finished writing
+		if not (lns[-1].startswith('no fluxes') or lns[-2].startswith('no fluxes') or lns[-3].startswith('no fluxes')):
+			return
+		cnt = 0
+		#ln = infile.readline().strip()
+		ln = lns[cnt].strip(); cnt +=1
+		#ln = infile.readline().strip()
+		ln = lns[cnt].strip(); cnt +=1
 		self._source = ln
-		ln = infile.readline().strip()
+		#ln = infile.readline().strip()
+		ln = lns[cnt].strip(); cnt +=1
 		new_time = float(ln)
 		if (new_time == self.time) and if_new:
 			return False
 		self.time = float(ln) 			# get time stamp
 		self._changeTime = False
-		ln = infile.readline().strip()
+		#ln = infile.readline().strip()
+		ln = lns[cnt].strip(); cnt +=1
 		node_number = int(ln.split('nddp')[0])
 		while True:
-			var = infile.readline()	# get variable name
+			#var = infile.readline()	# get variable name
+			var = lns[cnt]; cnt +=1
 			if var.startswith('no fluxes') or var == -1: break
 			# read in data
 			values = []
 			while len(values) != node_number:
-				values += infile.readline().strip().split()				
+				#values += infile.readline().strip().split()				
+				values += lns[cnt].strip().split(); cnt +=1
 			# save to attribute
 			if var.startswith('temperature') or var.startswith('co2temperat'): 
 				self._T = np.array([float(v) for v in values])
@@ -1315,7 +1327,11 @@ class fincon(object): 						#FEHM restart object.
 			self._filename = inconfilename
 			self._parent.files._incon = inconfilename
 		if self._parent:
-			if self._parent.work_dir and not os.path.isdir(self._parent.work_dir): os.system('mkdir '+self._parent.work_dir)
+			if self._parent.work_dir and not os.path.isdir(self._parent.work_dir): 
+				if WINDOWS:
+					os.system('mkdir '+self._parent.work_dir)
+				else:
+					os.system('mkdir -p '+self._parent.work_dir)
 			outfile = open(self._parent.work_dir+self.filename,'w')
 		else:
 			outfile = open(self.filename,'w')
@@ -2489,7 +2505,8 @@ class fdata(object):						#FEHM data file.
 	__slots__ = ['_filename','_meshfilename','_inconfilename','_sticky_zones','_allMacro','_allModel','_associate','_work_dir',
 			'_bounlist','_cont','_ctrl','_grid','_incon','_hist','_iter','_nfinv','_nobr','_vapl','_adif','_rlpmlist','_pporlist','_vconlist','_sol',
 			'_time','text','times','_time','_zonelist','_writeSubFiles','_strs','_ngas','_carb','_trac','_files','_verbose',
-			'_tf','_ti','_dti','_dtmin','_dtmax','_dtn','_dtx','_sections','_help','_running','_unparsed_blocks','keep_unknown','_flxo']
+			'_tf','_ti','_dti','_dtmin','_dtmax','_dtn','_dtx','_sections','_help','_running','_unparsed_blocks','keep_unknown','_flxo',
+			'_output_times']
 	def __init__(self,filename='',meshfilename='',inconfilename='',sticky_zones=dflt.sticky_zones,associate=dflt.associate,work_dir = '',
 		full_connectivity=dflt.full_connectivity,skip=[],keep_unknown=dflt.keep_unknown):		#Initialise data file
 		from copy import copy
@@ -2502,7 +2519,11 @@ class fdata(object):						#FEHM data file.
 		self._associate = associate 
 		self._work_dir = work_dir
 		if work_dir:
-			if not os.path.isdir(work_dir): os.system('mkdir '+work_dir)
+			if not os.path.isdir(work_dir): 			
+				if WINDOWS:
+					os.system('mkdir '+work_dir)
+				else:
+					os.system('mkdir -p '+work_dir)
 		# model objects
 		self._bounlist = []				
 		self._cont = fcont()				
@@ -2547,6 +2568,7 @@ class fdata(object):						#FEHM data file.
 		self._dtmax = dflt.ctrl['max_timestep_DAYMAX']
 		self._dtn = dflt.time['max_timestep_NSTEP']
 		self._dtx = dflt.ctrl['timestep_multiplier_AIAA']
+		self._output_times = []
 		# add 'everything' zone
 		self._add_zone(fzone(index=0))
 		
@@ -2708,7 +2730,11 @@ class fdata(object):						#FEHM data file.
 		if slash in self.filename:
 			make_directory(self.filename)
 		if self.work_dir:
-			if not os.path.isdir(self.work_dir): os.system('mkdir '+self.work_dir)
+			if not os.path.isdir(self.work_dir): 		
+				if WINDOWS:
+					os.system('mkdir '+self.work_dir)
+				else:
+					os.system('mkdir -p '+self.work_dir)
 		outfile = open(self.work_dir+self.filename,'w')
 		outfile.write('# '+self.filename+'\n')
 		self._write_unparsed(outfile,'start')
@@ -3941,7 +3967,6 @@ class fdata(object):						#FEHM data file.
 		if new_dtmax: DIT4 = new_dtmax
 		
 		self.times.append([DIT1,DIT2,DIT3,ITC,DIT4])		
-		
 	def _read_vapl(self,infile):							#VAPL: Reads VAPL macro.
 		self.vapl=True
 	def _write_vapl(self,outfile):								#Writes VAPL macro.
@@ -4215,7 +4240,11 @@ class fdata(object):						#FEHM data file.
 		if until is not None and self.files.rsto == '':	tempRstoFlag = True
 		
 		if self.work_dir: 				# if working directory does not exist, make it
-			if not os.path.isdir(self.work_dir): os.system('mkdir '+self.work_dir)
+			if not os.path.isdir(self.work_dir): 		
+				if WINDOWS:
+					os.system('mkdir '+self.work_dir)
+				else:
+					os.system('mkdir -p '+self.work_dir)
 		if input: self._filename = input; self.files.input = input
 		
 		if self.work_dir: 	# if grid and incon files not in work dir, write them out
@@ -5262,6 +5291,7 @@ class fdata(object):						#FEHM data file.
 		elif isinstance(model.zonelist,(int,str)):
 			if model.zonelist in self.zone.keys(): model.zonelist = [self.zone[model.zonelist]]
 			else: print 'ERROR: Specified zone '+str(model.zonelist)+' for model '+model.type+' does not exist.'
+		elif isinstance(model.zonelist,fzone): model.zonelist = [model.zonelist]
 		newlist = []
 		for zn in model.zonelist:
 			if isinstance(zn,(tuple,fzone)): newlist.append(zn)
@@ -5570,3 +5600,13 @@ class fdata(object):						#FEHM data file.
 	def _get_help(self): return self._help
 	def _set_help(self,value): self._help = value
 	help = property(_get_help, _set_help) #: (*fhelp*) Module for interactive assistance.
+	def _get_output_times(self): return self._output_times
+	def _set_output_times(self,value): 
+		self._output_times = value
+		if isinstance(self._output_times,(int,float)): self._output_times = [self._output_times]
+		if isinstance(self._output_times,(list,tuple)): self._output_times = np.array(self._output_times)
+		self._times = []
+		for t in self._output_times: self.change_timestepping(t)
+		if np.max(self._output_times)>self.tf:
+			print 'WARNING: output requested for times after the simulation end time.'
+	output_times = property(_get_output_times, _set_output_times) #: (*lst*) List of times at which FEHM should produce output.
