@@ -2435,13 +2435,17 @@ class files(object):						#FEHM file constructor.
 		if self._use_incon: fehmn.write('rsti:'+self.incon+'\n')
 		if self._use_hist: 
 			fehmn.write('hist: '+self.hist+'\n')
+			
 		if self._parent.carb.iprtype != 1 and not self.co2in: 
-			if WINDOWS:
-				self.co2in = 'c:\\users\\264485\\python\\pyfehm\\co2_interp_table.txt'
-			else:
-				self.co2in = '/home/ddempsey/python/pyfehm/co2_interp_table.txt'
+			if WINDOWS:	self.co2in = dflt.co2_interp_path.replace('/',slash)
+			else: self.co2in = dflt.co2_interp_path.replace('\\',slash)
+			if not os.path.isfile(self.co2in):
+				if WINDOWS:	self.co2in = dflt.co2_interp_path_2.replace('/',slash)
+				else: self.co2in = dflt.co2_interp_path_2.replace('\\',slash)
+				
 		if self._use_co2in: 
 			fehmn.write('co2in: '+self.co2in+'\n')	
+			
 		if self._use_stor: 
 			fehmn.write('stor:')	
 			if not self.stor: self.stor = self.root+'.stor'
@@ -2501,16 +2505,16 @@ class fdata(object):						#FEHM data file.
 	"""Class for FEHM data file. 
 	
 	"""		
-	__slots__ = ['_filename','_meshfilename','_inconfilename','_sticky_zones','_allMacro','_allModel','_associate','_work_dir',
+	__slots__ = ['_filename','_gridfilename','_inconfilename','_sticky_zones','_allMacro','_allModel','_associate','_work_dir',
 			'_bounlist','_cont','_ctrl','_grid','_incon','_hist','_iter','_nfinv','_nobr','_vapl','_adif','_rlpmlist','_pporlist','_vconlist','_sol',
 			'_time','text','times','_time','_zonelist','_writeSubFiles','_strs','_ngas','_carb','_trac','_files','_verbose',
 			'_tf','_ti','_dti','_dtmin','_dtmax','_dtn','_dtx','_sections','_help','_running','_unparsed_blocks','keep_unknown','_flxo',
 			'_output_times']
-	def __init__(self,filename='',meshfilename='',inconfilename='',sticky_zones=dflt.sticky_zones,associate=dflt.associate,work_dir = '',
+	def __init__(self,filename='',gridfilename='',inconfilename='',sticky_zones=dflt.sticky_zones,associate=dflt.associate,work_dir = '',
 		full_connectivity=dflt.full_connectivity,skip=[],keep_unknown=dflt.keep_unknown):		#Initialise data file
 		from copy import copy
 		self._filename=filename			
-		self._meshfilename=meshfilename	
+		self._gridfilename=gridfilename	
 		self._inconfilename=inconfilename 
 		self._sticky_zones = sticky_zones
 		self._allMacro = dict([(key,[]) for key in macro_list.keys()])
@@ -2572,17 +2576,17 @@ class fdata(object):						#FEHM data file.
 				self.read(filename,full_connectivity=full_connectivity,skip=skip)
 		elif filename == 'fehmn.files': 
 			self.read(filename,full_connectivity=full_connectivity,skip=skip)
-		elif self.filename and self.meshfilename and self.inconfilename: self.read(filename,meshfilename,inconfilename,full_connectivity=full_connectivity,skip=skip)
-		elif self.filename and self.meshfilename: self.read(filename,meshfilename,full_connectivity=full_connectivity,skip=skip)
+		elif self.filename and self.gridfilename and self.inconfilename: self.read(filename,gridfilename,inconfilename,full_connectivity=full_connectivity,skip=skip)
+		elif self.filename and self.gridfilename: self.read(filename,gridfilename,full_connectivity=full_connectivity,skip=skip)
 		elif self.filename: print 'ERROR: meshfile must be specified if reading existing input file.'; return
 	def __repr__(self): return self.filename			#Print out details
-	def read(self,filename='',meshfilename='',inconfilename='',full_connectivity=dflt.full_connectivity,skip=[]):			#Reads data from file.
+	def read(self,filename='',gridfilename='',inconfilename='',full_connectivity=dflt.full_connectivity,skip=[]):			#Reads data from file.
 		'''Read FEHM input file and construct fdata object.
 		
 		:param filename: Name of FEHM input file. Alternatively, supplying 'fehmn.files' will cause PyFEHM to query this file for input, grid and restart file names if they are available.
 		:type filename: str
-		:param meshfilename: Name of FEHM grid file.
-		:type meshfilename: str
+		:param gridfilename: Name of FEHM grid file.
+		:type gridfilename: str
 		:param inconfilename: Name of FEHM restart file.
 		:type inconfilename: str
 		:param skip: List of macro strings to ignore when reading an input file.
@@ -2600,19 +2604,19 @@ class fdata(object):						#FEHM data file.
 			with open(filename) as f:
 				for ln in f.readlines():
 					if ln.startswith('rsti:'): inconfilename = wd+ln.split('rsti:')[-1].strip()
-					if ln.startswith('grida:'): meshfilename = wd+ln.split('grida:')[-1].strip()
-					if ln.startswith('gridf:'): meshfilename = wd+ln.split('gridf:')[-1].strip()
+					if ln.startswith('grida:'): gridfilename = wd+ln.split('grida:')[-1].strip()
+					if ln.startswith('gridf:'): gridfilename = wd+ln.split('gridf:')[-1].strip()
 					if ln.startswith('input:'): filename = wd+ln.split('input:')[-1].strip()
 					if ln.startswith('stor:'): 
 						storfilename = wd+ln.split('stor:')[-1].strip()
 						self.files.stor = storfilename
-		if meshfilename and (self.grid.number_nodes==0):
+		if gridfilename and (self.grid.number_nodes==0):
 			print 'reading grid file'
-			self.meshfilename=meshfilename
-			if isinstance(meshfilename,str):
-				self.grid.read(meshfilename,full_connectivity=full_connectivity)
+			self.gridfilename=gridfilename
+			if isinstance(gridfilename,str):
+				self.grid.read(gridfilename,full_connectivity=full_connectivity)
 				self.grid._parent=self
-				self.files.grid = meshfilename
+				self.files.grid = gridfilename
 		if inconfilename:
 			print 'reading incon file'
 			self.inconfilename=inconfilename
@@ -4235,39 +4239,62 @@ class fdata(object):						#FEHM data file.
 			if not os.path.isdir(self.work_dir): os.makedirs(self.work_dir)
 			
 		if input: self._filename = input; self.files.input = input
-		
+				
 		if self.work_dir: 	# if grid and incon files not in work dir, write them out
-			if not os.path.isfile(self.work_dir+self.grid.filename): 
-				tname = self.grid.filename
-				self.grid.write()
-				self.grid._filename = tname
-				self.meshfilename = tname
+			#if not os.path.isfile(self.work_dir+self.grid.filename): 
+			#	tname = self.grid.filename
+			#	self.grid.write()
+			#	self.grid._filename = tname
+			#	self.gridfilename = tname
 			if self.files.incon and not os.path.isfile(self.work_dir+self.files.incon): 
 				tname = self.incon.filename
 				self.incon.write()
 				self.incon._filename = tname
 				self.inconfilename = tname
 		
-		if grid: self.grid.write(grid); self.files.grid=grid
+		if grid: 
+			if self.work_dir:
+				self.grid.write(self.work_dir + grid)
+			else:
+				self.grid.write(grid)
+			self.files.grid=grid
 		if self.incon._writeOut == True: 
 			print 'Changes made in to incon file, writing out new.'
 			self.incon.write()
 		if incon: self.files.incon = incon; self.files._use_incon = True
 		self.files.exe = exe
 		cwd = os.getcwd()
-		
-		# if executable path given relative to current directory, will need to modify for if using work_dir
+				
+		# if executable, grid, stor path given relative to current directory, will need to modify for if using work_dir
 		if self.work_dir: 		
 			if WINDOWS:
 				if exe[1] != ':':
 					exe = cwd+slash+exe
+				if self.gridfilename[1] != ':':
+					self.files.grid = cwd+slash+self.gridfilename
+				if self.files.stor:
+					if self.files.stor[1] != ':':
+						self.files.stor = cwd+slash+self.files.stor
 			else:
 				os.chdir(self.work_dir)
+				if not os.path.isfile(self.gridfilename): 
+					self.files.grid = cwd + slash + self.files.grid
+					if not os.path.isfile(self.files.grid):
+						print 'ERROR: cannot establish grid file path, aborting...'
+						return
+				
 				if not os.path.isfile(exe): 
 					exe = cwd + slash + exe
 					if not os.path.isfile(exe):
 						print 'ERROR: cannot establish executable path, aborting...'
 						return
+				if self.files.stor:
+					if not os.path.isfile(self.files.stor): 
+						self.files.stor = cwd + slash + self.files.stor
+						if not os.path.isfile(self.files.stor):
+							print 'ERROR: cannot establish stor file path, aborting...'
+							return
+						
 				os.chdir(cwd)
 		
 		for file in files:
@@ -4279,7 +4306,7 @@ class fdata(object):						#FEHM data file.
 		
 		if not self.files.input: self.files.input = self.filename
 		if not self.files.grid: 
-			if self.meshfilename: self.files.grid = self.meshfilename
+			if self.gridfilename: self.files.grid = self.gridfilename
 			elif self.grid.filename: self.files.filename = self.grid.filename
 			else: print 'WARNING: no grid file specified'
 		
@@ -4288,6 +4315,7 @@ class fdata(object):						#FEHM data file.
 		if self.files.incon: self.incon._summary()
 		self._summary()		
 		self.write()
+		
 		self.files.write()
 
 		if self.work_dir: os.chdir(self.work_dir)
@@ -5481,9 +5509,9 @@ class fdata(object):						#FEHM data file.
 	rlpm = property(_get_rlpm)
 	def _get_filename(self): return self._filename
 	filename = property(_get_filename)#: (*str*) File name for reading and writing FEHM input text file.
-	def _get_meshfilename(self): return self._meshfilename
-	def _set_meshfilename(self,value): self._meshfilename = value
-	meshfilename = property(_get_meshfilename, _set_meshfilename) #: (*str*) File name of FEHM grid file.
+	def _get_gridfilename(self): return self._gridfilename
+	def _set_gridfilename(self,value): self._gridfilename = value
+	gridfilename = property(_get_gridfilename, _set_gridfilename) #: (*str*) File name of FEHM grid file.
 	def _get_inconfilename(self): return self._inconfilename
 	def _set_inconfilename(self,value): self._inconfilename = value
 	inconfilename = property(_get_inconfilename, _set_inconfilename) #: (*str*) File name of FEHM restart file.

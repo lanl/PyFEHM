@@ -459,32 +459,32 @@ class fgrid(object):				#Grid object.
 		self._parent = None
 		self._full_connectivity = full_connectivity
 	def __repr__(self): return self.filename
-	def read(self,meshfilename,full_connectivity=False): 
+	def read(self,gridfilename,full_connectivity=False): 
 		"""Read data from an FEHM grid file.
 
-		:param meshfilename: name of FEHM grid file, including path specification.
-		:type meshfilename: str
+		:param gridfilename: name of FEHM grid file, including path specification.
+		:type gridfilename: str
 		:param full_connectivity: read element and conection data and construct corresponding objects. Consumes siginifcant time and memory and is rarely used.
 		:type full_connectivity: bool
 		"""
 		self._full_connectivity = full_connectivity
-		self._filename = meshfilename 
-		if meshfilename.endswith('.stor'):
-			self.read_stor(meshfilename)
+		self._filename = gridfilename 
+		if gridfilename.endswith('.stor'):
+			self.read_stor(gridfilename)
 		else:
-			self._read_inp(meshfilename)
+			self._read_inp(gridfilename)
 			self.add_nodetree()
 		if self._parent: self._parent._add_boundary_zones()
-	def _read_inp(self,meshfilename): 		#Read in fehm meshfile for node,element data .
+	def _read_inp(self,gridfilename): 		#Read in fehm meshfile for node,element data .
 		self._nodelist = []
 		self._connlist = []
 		self._elemlist = []
-		infile = open(meshfilename)
+		infile = open(gridfilename)
 		if self._parent:
-			if slash in meshfilename: meshfilename = meshfilename.split(slash)[-1]
-			self._parent.meshfilename = meshfilename
-			self._filename = meshfilename
-			self._parent.files.grid = meshfilename
+			#if slash in gridfilename: gridfilename = gridfilename.split(slash)[-1]
+			self._parent.gridfilename = gridfilename
+			self._filename = gridfilename
+			self._parent.files.grid = gridfilename
 			
 		ln = infile.readline()
 		N = int(infile.readline())
@@ -621,13 +621,13 @@ class fgrid(object):				#Grid object.
 					outfile.write(str(nd)+'   ')
 				outfile.write('\n')
 		outfile.close()
-	def make(self,meshfilename,x,y,z):
+	def make(self,gridfilename,x,y,z):
 		""" Generates an orthogonal mesh for input node positions. 
 		
 		The mesh is constructed using the ``fgrid.``\ **fmake** object and an FEHM grid file is written for the mesh.
 		
-		:param meshfilename: Name to which to save the grid file.
-		:type meshfilename: str
+		:param gridfilename: Name to which to save the grid file.
+		:type gridfilename: str
 		:param x: Unique set of x-coordinates.
 		:type x: list[fl64]
 		:param y: Unique set of y-coordinates.
@@ -638,14 +638,14 @@ class fgrid(object):				#Grid object.
 		if self._parent:
 			if self._parent.work_dir and not os.path.isdir(self._parent.work_dir): 
 				os.makedirs(self._parent.work_dir)	
-			fm = fmake(self._parent.work_dir+meshfilename,x,y,z,self._full_connectivity)
+			fm = fmake(self._parent.work_dir+gridfilename,x,y,z,self._full_connectivity)
 			fm.write()		
-			self.read(self._parent.work_dir+meshfilename)
+			self.read(self._parent.work_dir+gridfilename)
 			self._parent._add_boundary_zones()
 		else:
-			fm = fmake(meshfilename,x,y,z)
+			fm = fmake(gridfilename,x,y,z)
 			fm.write()		
-			self.read(meshfilename)
+			self.read(gridfilename)
 	def volumes(self,volumefilename):
 		""" Reads a lagrit generated file containing control volume information.
 		
