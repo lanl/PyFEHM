@@ -1276,29 +1276,23 @@ class fincon(object): 						#FEHM restart object.
 		if not (lns[-1].startswith('no fluxes') or lns[-2].startswith('no fluxes') or lns[-3].startswith('no fluxes')):
 			return
 		cnt = 0
-		#ln = infile.readline().strip()
 		ln = lns[cnt].strip(); cnt +=1
-		#ln = infile.readline().strip()
 		ln = lns[cnt].strip(); cnt +=1
 		self._source = ln
-		#ln = infile.readline().strip()
 		ln = lns[cnt].strip(); cnt +=1
 		new_time = float(ln)
 		if (new_time == self.time) and if_new:
 			return False
 		self.time = float(ln) 			# get time stamp
 		self._changeTime = False
-		#ln = infile.readline().strip()
 		ln = lns[cnt].strip(); cnt +=1
 		node_number = int(ln.split('nddp')[0])
 		while True:
-			#var = infile.readline()	# get variable name
 			var = lns[cnt]; cnt +=1
 			if var.startswith('no fluxes') or var == -1: break
 			# read in data
 			values = []
 			while len(values) != node_number:
-				#values += infile.readline().strip().split()				
 				values += lns[cnt].strip().split(); cnt +=1
 			# save to attribute
 			if var.startswith('temperature') or var.startswith('co2temperat'): 
@@ -4368,6 +4362,9 @@ class fdata(object):						#FEHM data file.
 						breakAutorestart = True
 					if p.returncode == 0:					# IF run finshed on its own
 						self._running = False					# break the loop
+			
+			self.incon.read(self.files.rsto) 		# read fin file for autorestart
+			if abs((self.incon.time - self.tf)/self.tf)<0.001: breakAutorestart = True
 						
 		if self.work_dir: os.chdir(cwd)
 		if tempRstoFlag: 
@@ -4418,7 +4415,7 @@ class fdata(object):						#FEHM data file.
 		for var in list(flatten(self.cont.variables)):
 			if var.startswith('p') and not var.startswith('po') and not var.startswith('pe'): hasPres = True
 			if var.startswith('l') or var.startswith('va'): hasState=True
-		self.cont.variables.append(['liquid','vapor'])
+		if hasPres and not hasState: self.cont.variables.append(['liquid','vapor'])
 		# WARNING: stress perm module specified without calling excess_she
 		if self.permmodellist:
 			for pm in self.permmodellist:
