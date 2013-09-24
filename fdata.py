@@ -1228,7 +1228,7 @@ class fincon(object): 						#FEHM restart object.
 		self._filename = ''
 		self._source = ''
 		self._parent = None
-		self._time = 0.
+		self._time = None
 		self._changeTime = False
 		self._writeOut = False 		# flag that changes have been made and the incon file should be rewritten
 		self._stressgradCalled = False
@@ -1257,6 +1257,9 @@ class fincon(object): 						#FEHM restart object.
 		:param inconfilename: Name of restart file.
 		:type inconfilename: str
 		'''
+		
+		if if_new and not os.path.isfile(inconfilename): return False
+		
 		self._filename = inconfilename
 		if slash in self._filename: self._filename = self._filename.split(slash)[-1]
 		if self._parent.work_dir:
@@ -1618,7 +1621,6 @@ class fincon(object): 						#FEHM restart object.
 	strs_xz = property(_get_strs_xz) #: (*lst[fl64]*) Initial node xz stress, ordered by node index
 	def _get_strs_yz(self): return self._strs_yz
 	strs_yz = property(_get_strs_yz) #: (*lst[fl64]*) Initial node yz stress, ordered by node index
-	
 	def _get_source(self): return self._source
 	source = property(_get_source)					#: (*str*) Name of input file that generated the restart.
 class fstrs(object):						#FEHM stress module.
@@ -4325,6 +4327,19 @@ class fdata(object):						#FEHM data file.
 			elif self.grid.filename: self.files.filename = self.grid.filename
 			else: print 'WARNING: no grid file specified'
 		
+		# if using 'until' to break a simulation, we require a restart file to be written each timestep
+		# restart files are written at the same frequency as contour output, hence contour output will
+		# need to be written every timestep - manage this data by deleting it
+		contUnchanged = True 			# flag to indicate whether we have modified cont
+		if until:
+			if self.cont.timestep_interval == 1 and self.cont.variables: contUnchanged = True
+			else:
+				from copy import deepcopy
+				oldCont = deepcopy(self.cont)
+				if not self.cont.variables: self.cont.variables.append('temperature')
+				self.cont.timestep_interval = 1
+				contUnchanged = False
+		
 		# summarize simulation
 		self.grid._summary()
 		if self.files.incon: self.incon._summary()
@@ -4335,10 +4350,13 @@ class fdata(object):						#FEHM data file.
 
 		if self.work_dir: os.chdir(self.work_dir)
 		
+		# remove restart file if left over from old simulation
+		if until and self.incon.time == None and os.path.isfile(self.files.rsto):
+			os.remove(self.files.rsto)
+		# run the simulation
 		breakAutorestart = False
-		for attempt in range(autorestart+1):
+		for attempt in range(autorestart+1): 	# restart execution
 			if breakAutorestart: break
-			modT_old = None
 			untilFlag = False
 			if verbose:
 				p = Popen(exe)
@@ -4350,11 +4368,44 @@ class fdata(object):						#FEHM data file.
 				p.communicate()
 			else:
 				self._running = True
+				interval = 0
+				delFiles = []
 				while self._running:					# loop for checking if stop condition is met
 					sleep(dflt.sleep_time) 					# wait 
 					is_new = self.incon.read(self.files.rsto, if_new = True) 	# read new input file
 					if is_new: 
 						untilFlag = until(self) 				# check stop condition
+						if not contUnchanged: #delete cont file that was created
+							
+							if delFiles: 
+								for delFile in delFiles: os.remove(delFile)
+							delFiles = []
+								
+							interval += 1
+							if interval%oldCont.timestep_interval == 0: continue
+							
+							if self.cont.type == 'surf': suffix = 'csv'
+							elif self.cont.type == 'tec': suffix = 'dat'
+							elif self.cont.type == 'avsx': suffix = 'avsx'
+							
+							# use glob to find most recently created file							
+							from glob import glob
+							outtypes = ['_vec','_sca','_con']
+							for outtype in outtypes:
+								files = filter(os.path.isfile, glob(self.files.root+'*'+outtype+'*.'+suffix))
+								if not files: continue
+								files.sort(key=lambda x: os.path.getmtime(x))
+								files = files[-2:]
+							
+								# delete file if 
+								ts = [fl.split(outtype)[0] for fl in files]
+								ts = [fl.split('_days')[0] for fl in ts]
+								ts = [fl.split('.')[-2:] for fl in ts]
+								ts = [float(tsi[0]+'.'+tsi[1]) for tsi in ts]
+								
+								if (1-(abs(ts[0]-ts[1])/oldCont.time_interval)) <0.001: continue
+								delFiles.append(files[-1])
+							
 					p.poll() 								# check if run finished on its own
 					if untilFlag:  							# IF stop condition met
 						p.terminate()							# kill the process
@@ -4366,7 +4417,20 @@ class fdata(object):						#FEHM data file.
 			self.incon.read(self.files.rsto) 		# read fin file for autorestart
 			if abs((self.incon.time - self.tf)/self.tf)<0.001: breakAutorestart = True
 						
+		if not contUnchanged: 
+			if self.cont.type == 'surf': suffix = 'csv'
+			elif self.cont.type == 'tec': suffix = 'dat'
+			elif self.cont.type == 'avsx': suffix = 'avsx'
+			self._cont = oldCont
+			if len(self.cont.variables) == 0:
+				outtypes = ['_vec','_sca','_con']
+				for outtype in outtypes:
+					files = filter(os.path.isfile, glob(self.files.root+'*'+outtype+'*.'+suffix))
+					if files:
+						for file in files: os.remove(file)
+				
 		if self.work_dir: os.chdir(cwd)
+		
 		if tempRstoFlag: 
 			self.files.incon = ''
 			self.files.write()
