@@ -1,3 +1,5 @@
+"""For reading FEHM output files."""
+
 """
 Copyright 2013.
 Los Alamos National Security, LLC. 
@@ -18,8 +20,6 @@ will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General 
 Public License for more details.
 """
-
-"""For reading FEHM output files."""
 
 import numpy as np
 import os
@@ -656,7 +656,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 	def slice_plot_line(self,variable=None,time=None,slice='',divisions=[20,20],labels=False, label_size=10.,levels=10,xlims=[],	
 		ylims=[],colors='k',linestyle='-',save='',	xlabel='x / m',ylabel='y / m',title='', font_size='medium', method='nearest',
 		equal_axes=True):	
-		'''Returns a line plot of contour data. Invokes the ``slice_plot_data`` function to interpolate slice data for plotting.
+		'''Returns a line plot of contour data. Invokes the ``slice()`` method to interpolate slice data for plotting.
 		
 		:param variable: Output data variable, for example 'P' = pressure.
 		:type variable: str
@@ -734,7 +734,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 	def slice_plot(self,variable=None,time=None,slice='',divisions=[20,20],levels=10,cbar=False,xlims=[],
 		ylims=[],colors='k',linestyle='-',save='',	xlabel='x / m',ylabel='y / m',title='', font_size='medium', method='nearest',
 		equal_axes=True,mesh_lines = None,perm_contrasts=None, scale = 1.):		
-		'''Returns a filled plot of contour data. Invokes the ``slice_plot_data`` function to interpolate slice data for plotting.
+		'''Returns a filled plot of contour data. Invokes the ``slice()`` method to interpolate slice data for plotting.
 		
 		:param variable: Output data variable, for example 'P' = pressure.
 		:type variable: str
@@ -748,13 +748,13 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 		:type method: str
 		:param levels: Contour levels to plot. Can specify specific levels in list form, or a single integer indicating automatic assignment of levels. 
 		:type levels: lst[fl64], int
-		:param cbar: Add colorbar to plot.
+		:param cbar: Add colour bar to plot.
 		:type cbar: bool
 		:param xlims: Plot limits on x-axis.
 		:type xlims: [fl64, fl64]
 		:param ylims: Plot limits on y-axis.
 		:type ylims: [fl64, fl64]
-		:param colors: Specify color string for contour levels.
+		:param colors: Specify colour string for contour levels.
 		:type colors: lst[str]
 		:param linestyle: Style of contour lines, e.g., 'k-' = solid black line, 'r:' red dotted line.
 		:type linestyle: str
@@ -925,7 +925,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 		:type xlims: [fl64, fl64]
 		:param ylims: Plot limits on y-axis.
 		:type ylims: [fl64, fl64]
-		:param color: Color of profile.
+		:param color: Colour of profile.
 		:type color: str
 		:param marker: Style of line, e.g., 'x-' = solid line with crosses, 'o:' dotted line with circles.
 		:type marker: str
@@ -1001,7 +1001,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 	def cutaway_plot(self,variable=None,time=None,divisions=[20,20,20],levels=10,cbar=False,angle=[45,45],xlims=[],method='nearest',
 		ylims=[],zlims=[],colors='k',linestyle='-',save='',	xlabel='x / m', ylabel='y / m', zlabel='z / m', title='', 
 		font_size='medium',equal_axes=True,grid_lines=None):
-		'''Returns a filled plot of contour data on each of 3 planes in a cutaway plot. Invokes the ``slice_plot_data`` function to interpolate slice data for plotting.
+		'''Returns a filled plot of contour data on each of 3 planes in a cutaway plot. Invokes the ``slice()`` method to interpolate slice data for plotting.
 		
 		:param variable: Output data variable, for example 'P' = pressure.
 		:type variable: str
@@ -1011,7 +1011,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 		:type divisions: [int,int,int]
 		:param levels: Contour levels to plot. Can specify specific levels in list form, or a single integer indicating automatic assignment of levels. 
 		:type levels: lst[fl64], int
-		:param cbar: Include colorbar.
+		:param cbar: Include colour bar.
 		:type cbar: bool
 		:param angle: 	View angle of zone. First number is tilt angle in degrees, second number is azimuth. Alternatively, if angle is 'x', 'y', 'z', view is aligned along the corresponding axis.
 		:type angle: [fl64,fl64], str
@@ -1023,7 +1023,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 		:type ylims: [fl64, fl64]
 		:param zlims: Plot limits on z-axis.
 		:type zlims: [fl64, fl64]
-		:param colors: Specify color string for contour levels.
+		:param colors: Specify colour string for contour levels.
 		:type colors: lst[str]
 		:param linestyle: Style of contour lines, e.g., 'k-' = solid black line, 'r:' red dotted line.
 		:type linestyle: str
@@ -1352,7 +1352,7 @@ class fhistory(object):						# Reading and plotting methods associated with hist
 		:type var_lim: lst[fl64,fl64]
 		:param marker: String denoting marker and linetype, e.g., ':s', 'o--'. Default is 'x-' (solid line with crosses).
 		:type marker: str
-		:param color: String denoting color. Default is 'k' (black).
+		:param color: String denoting colour. Default is 'k' (black).
 		:type color: str
 		:param save: Name to save plot.
 		:type save: str

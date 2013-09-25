@@ -1,3 +1,5 @@
+"""Functions for FEHM thermodynamic variables calculations."""
+
 """
 Copyright 2013.
 Los Alamos National Security, LLC. 
@@ -18,8 +20,6 @@ will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General 
 Public License for more details.
 """
-
-"""Functions for FEHM thermodynamic variables calculations."""
 
 import numpy as np
 from ftool import*

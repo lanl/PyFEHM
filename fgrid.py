@@ -1,3 +1,5 @@
+"""For manipulating FEHM grids."""
+
 """
 Copyright 2013.
 Los Alamos National Security, LLC. 
@@ -18,8 +20,6 @@ will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General 
 Public License for more details.
 """
-
-"""For manipulating FEHM grids."""
 
 import numpy as np
 import os,math
@@ -128,12 +128,6 @@ class fnode(object):				#Node object.
 	def _get_generator(self): return self._generator
 	def _set_generator(self,value): self._generator = value
 	generator = property(_get_generator, _set_generator) #: (*dict*) Dictionary of generator properties associated with node.
-	#def _get_variable(self): return self._variable
-	#def _set_variable(self,value): self._variable = value
-	#variable = property(_get_variable, _set_variable) #: (*dict*) Dictionary of thermodynamic properties associated with node. Only accessible when initial conditions files are loaded in conjunction with the input file and grid.
-	#def _get_material(self): return self._material
-	#def _set_material(self,value): self._material = value
-	#material = property(_get_material, _set_material) #: (*dict*) Dictionary of material properties associated with node.
 	def _get_info(self):
 		prntStr='\n Node number: '+str(self.index)+'\n'
 		prntStr+='\nGeometric properties.......\n'
@@ -217,7 +211,7 @@ class fnode(object):				#Node object.
 			for nd in con.nodes:
 				if nd != self: ndlist.append(nd)
 		return ndlist
-	connected_nodes = property(_get_connected_nodes)		#: (*lst[fnode]*) List of node objects connected to this node.
+	connected_nodes = property(_get_connected_nodes)		#: (*lst[fnode]*) List of node objects connected to this node. This information only available if full_connectivity=True passed to fgrid.read()
 	def _get_connections(self): return self._connections
 	connections = property(_get_connections)#: (*lst[fconn]*) List of connection objects of which the node is a member.
 	def _get_elements(self): return self._elements
@@ -261,7 +255,7 @@ class fnode(object):				#Node object.
 	def _get_dispi(self): return self._dispi
 	dispi = property(_get_dispi) #: (*fl64*) initial displacements at node.
 	def _get_P(self): return self._P
-	P = property(_get_P) #: (*fl64*) pressure at node.
+	P = property(_get_P) #: (*fl64*) pressure at node during a simulation.
 	def _get_T(self): return self._T
 	T = property(_get_T) #: (*fl64*) temperature at node.
 	def _get_S(self): return self._S
@@ -485,7 +479,7 @@ class fgrid(object):				#Grid object.
 
 		:param gridfilename: name of FEHM grid file, including path specification.
 		:type gridfilename: str
-		:param full_connectivity: read element and conection data and construct corresponding objects. Consumes siginifcant time and memory and is rarely used.
+		:param full_connectivity: read element and connection data and construct corresponding objects. Defaults to False. Use if access to connectivity information will be useful.
 		:type full_connectivity: bool
 		"""
 		self._full_connectivity = full_connectivity
@@ -728,7 +722,7 @@ class fgrid(object):				#Grid object.
 		:type save: str
 		:param angle: 	View angle of zone. First number is tilt angle in degrees, second number is azimuth. Alternatively, if angle is 'x', 'y', 'z', view is aligned along the corresponding axis.
 		:type angle: [fl64,fl64], str
-		:param color: Color of zone.
+		:param color: Colour of zone.
 		:type color: str, [fl64,fl64,fl64]
 		:param connections: Plot connections. If ``True`` all connections plotted. If between 0 and 1, random proportion plotted. If greater than 1, specified number plotted.
 		:type connections: bool
@@ -1068,10 +1062,6 @@ class fmake(object): 				#Rectilinear grid constructor.
 		self._meshname = ''
 		self._full_connectivity = full_connectivity
 		if meshname: self._meshname = meshname
-	def seed(self,edge='x',method='equal', number = None, size = None, bias = None):
-		"""Allocate mesh seeds to edges. NOT FINISHED (not started...)
-		"""
-		
 	def write(self,meshname=''):
 		"""Write out the grid file.
 		

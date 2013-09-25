@@ -4,7 +4,7 @@
 from fdata import*
 from fpost import*
 
-dat = fdata()
+dat = fdata(work_dir = 'tutorial2')
 
 # 7.2.2 Grid generation
 X0,X1 = 0,1.e3
@@ -30,19 +30,24 @@ dat.grid.make('quarterGrid.inp', x= X, y = X, z = Z)
 dat.grid.plot('quarterGrid.png', angle = [45,45], color = 'b', cutaway = [proX,proY,-1000])
 
 # 7.2.3 Zone creation
-zone_res=fzone(index=10,name='reservoir')
-zone_res.rect([X0-0.1,X0-0.1,Za_base+0.1], [X1+0.1,X1+0.1,Za_top-0.1])
-dat.add(zone_res)
+#zone_res=fzone(index=10,name='reservoir')
+#zone_res.rect()
+#dat.add(zone_res)
+
+dat.new_zone(10,name='reservoir',rect = [[X0-0.1,X0-0.1,Za_base+0.1], [X1+0.1,X1+0.1,Za_top-0.1]])
 
 dat.zone['reservoir'].plot('reservoirZone.png',angle = [30,30], equal_axes=False,color = 'g')
 
-zone_con = fzone(index = 20, name='confining_lower')
-zone_con.rect([X0-0.1,X0-0.1,Z0-0.1], [X1+0.1,X1+0.1,Za_base+0.1])
-dat.add(zone_con)
+#zone_con = fzone(index = 20, name='confining_lower')
+#zone_con.rect()
+#dat.add(zone_con)
+dat.new_zone(20,name='confining_lower',rect = [[X0-0.1,X0-0.1,Z0-0.1], [X1+0.1,X1+0.1,Za_base+0.1]])
+dat.new_zone(21,name='confining_upper',rect = [[X0-0.1,X0-0.1,Za_top-0.1], [X1+0.1,X1+0.1,Z1+0.1]])
 
-zone_con = fzone(index = 21, name='confining_upper')
-zone_con.rect([X0-0.1,X0-0.1,Za_top-0.1], [X1+0.1,X1+0.1,Z1+0.1])
-dat.add(zone_con)
+
+#zone_con = fzone(index = 21, name='confining_upper')
+#zone_con.rect()
+#dat.add(zone_con)
 
 # 7.2.4 Material property assignment
 perm_res, perm_con = 1.e-14, 1.e-16
@@ -51,6 +56,7 @@ phi_res, phi_con = 0.1, 0.01
 cond = 2.5
 H = 1.e3
 
+# method 1
 perm = fmacro('perm')
 perm.zone = 'reservoir'
 perm.param['kx'] = perm_res
@@ -58,25 +64,33 @@ perm.param['ky'] = perm_res
 perm.param['kz'] = perm_res
 dat.add(perm)
 
+# method 2
 perm=fmacro('perm', zone=21, param=(('kx',perm_con), ('ky',perm_con), ('kz',perm_con)))
 dat.add(perm)
 
-dat.add(fmacro('perm', zone=dat.zone['confining_lower'], param=(('kx',perm_con), ('ky',perm_con), ('kz',perm_con))))
+# method 3
+dat.zone['confining_lower'].permeability = perm_con
 
 dat.add(fmacro('rock', zone=dat.zone['reservoir'], param=(('density',rho_con), ('specific_heat',H), ('porosity',phi_res))))
 dat.add(fmacro('rock', zone=dat.zone['confining_lower'], param=(('density',rho_con), ('specific_heat',H), ('porosity',phi_con))))
-dat.add(fmacro('rock', zone=dat.zone['confining_upper'], param=(('density',rho_con), ('specific_heat',H), ('porosity',phi_con))))
 
-dat.add(fmacro('cond', param=(('cond_x',cond), ('cond_y',cond), ('cond_z',cond))))
+dat.zone['confining_upper'].density = rho_con
+dat.zone['confining_upper'].specific_heat = H
+dat.zone['confining_upper'].porosity = phi_con
+
+dat.zone[0].conductivity = cond
 
 # 7.2.5 Injectors and producers
-inj_zone = fzone(index=30, name='injection')
-inj_zone.rect([injX-0.1,injY-0.1,-1000.1],[injX+0.1,injY+0.1,-899.9])
-dat.add(inj_zone)
+#inj_zone = fzone(index=30, name='injection')
+#inj_zone.rect()
+#dat.add(inj_zone)
+
+dat.new_zone(30,'injection',rect = [[injX-0.1,injY-0.1,-1000.1],[injX+0.1,injY+0.1,-899.9]])
 
 pro_node=dat.grid.node_nearest_point([proX,proY,-950])
-pro_zone=fzone(index=40, name='production', type='nnum', nodelist=[pro_node])
-dat.add(pro_zone)
+dat.new_zone(40,'production',nodelist = pro_node)
+#pro_zone=fzone(index=40, name='production', type='nnum', nodelist=[pro_node])
+#dat.add(pro_zone)
 
 flow=fmacro('flow', zone = 'production', param=(('rate',6), ('energy',30), ('impedance',1.)))
 dat.add(flow)
@@ -94,12 +108,13 @@ dat.add(fmacro('grad',zone=0,param=(('reference_coord',0.),('direction',3),
 dat.add(fmacro('grad',zone=0,param=(('reference_coord',0.),('direction',3),
 ('variable',1),('reference_value',0.1),('gradient',-9.81*1e3/1e6))))
 
-upper_zone = fzone(index=50,name='zmax')
-upper_zone.rect([X0-0.1,X0-0.1,Z1-0.1],[X1+0.1,X1+0.1,Z1+0.1])
-dat.add(upper_zone)
+#upper_zone = fzone(index=50,name='zmax')
+#upper_zone.rect([X0-0.1,X0-0.1,Z1-0.1],[X1+0.1,X1+0.1,Z1+0.1])
+#dat.add(upper_zone)
 
-upper_flow = fmacro('flow',zone='zmax',param=(('rate',0.1+Z1*-9.81*1e3/1e6),('energy',-(25.+Z1*-0.06)),('impedance',100.)))
-dat.add(upper_flow)
+#upper_flow = fmacro('flow',zone='ZMAX',param=(('rate',0.1+Z1*-9.81*1e3/1e6),('energy',-(25.+Z1*-0.06)),('impedance',100.)))
+#dat.add(upper_flow)
+dat.zone['ZMAX'].fix_pressure(P=0.1+Z1*-9.81*1e3/1e6,T=25.+Z1*-0.06)
 
 # 7.2.7 Setting up stresses
 dat.dtn = 1
@@ -113,20 +128,30 @@ dat.incon.stressgrad(xgrad=0.6,ygrad=0.8,zgrad=2500*abs(Z1)*9.81/1e6,calculate_v
 dat.strs.on()
 E_res,E_con = 2e3,2e4
 nu_res,nu_con = 0.15,0.35
-dat.add(fmacro('elastic',zone='reservoir',param=(('youngs_modulus',E_res),('poissons_ratio',nu_res))))
-dat.add(fmacro('elastic',zone='confining_lower',param=(('youngs_modulus',E_con),('poissons_ratio',nu_con))))
-dat.add(fmacro('elastic',zone='confining_upper',param=(('youngs_modulus',E_con),('poissons_ratio',nu_con))))
-dat.add(fmacro('biot',param=(('thermal_expansion',3e-5),('pressure_coupling',1.))))
+#dat.add(fmacro('elastic',zone='reservoir',param=(('youngs_modulus',E_res),('poissons_ratio',nu_res))))
+#dat.add(fmacro('elastic',zone='confining_lower',param=(('youngs_modulus',E_con),('poissons_ratio',nu_con))))
+#dat.add(fmacro('elastic',zone='confining_upper',param=(('youngs_modulus',E_con),('poissons_ratio',nu_con))))
+#dat.add(fmacro('biot',param=(('thermal_expansion',3e-5),('pressure_coupling',1.))))
 
-zn = fzone(index=60,name='xmin'); zn.rect([X0-0.1,X0-0.1,Z0-0.1],[X0+0.1,X1+0.1,Z1+0.1]); dat.add(zn)
-zn = fzone(index=61,name='ymin'); zn.rect([X0-0.1,X0-0.1,Z0-0.1],[X1+0.1,X0+0.1,Z1+0.1]); dat.add(zn)
-zn = fzone(index=62,name='zmin'); zn.rect([X0-0.1,X0-0.1,Z0-0.1],[X1+0.1,X1+0.1,Z0+0.1]); dat.add(zn)
-dat.strs.fem = 1.
-dat.strs.bodyforce=0.	
-dat.sol['element_integration_INTG'] = -1
-dat.add(fmacro('stressboun',zone=60,subtype='fixed',param=(('direction',1),('value',0))))
-dat.add(fmacro('stressboun',zone=61,subtype='fixed',param=(('direction',2),('value',0))))
-dat.add(fmacro('stressboun',zone=62,subtype='fixed',param=(('direction',3),('value',0))))
+dat.zone['reservoir'].youngs_modulus = E_res
+dat.zone['confining_lower'].youngs_modulus = E_con
+dat.zone['confining_upper'].youngs_modulus = E_con
+
+dat.zone['reservoir'].poissons_ratio = nu_res
+dat.zone['confining_lower'].poissons_ratio = nu_con
+dat.zone['confining_upper'].poissons_ratio = nu_con
+
+dat.zone[0].thermal_expansion = 3e-5
+dat.zone[0].pressure_coupling = 1.
+
+#zn = fzone(index=60,name='xmin'); zn.rect([X0-0.1,X0-0.1,Z0-0.1],[X0+0.1,X1+0.1,Z1+0.1]); dat.add(zn)
+#zn = fzone(index=61,name='ymin'); zn.rect([X0-0.1,X0-0.1,Z0-0.1],[X1+0.1,X0+0.1,Z1+0.1]); dat.add(zn)
+#zn = fzone(index=62,name='zmin'); zn.rect([X0-0.1,X0-0.1,Z0-0.1],[X1+0.1,X1+0.1,Z0+0.1]); dat.add(zn)
+dat.strs.fem = True
+dat.strs.bodyforce=False
+dat.add(fmacro('stressboun',zone='XMIN',subtype='fixed',param=(('direction',1),('value',0)),write_one_macro=True))
+dat.add(fmacro('stressboun',zone='YMIN',subtype='fixed',param=(('direction',2),('value',0)),write_one_macro=True))
+dat.add(fmacro('stressboun',zone='ZMIN',subtype='fixed',param=(('direction',3),('value',0)),write_one_macro=True))
 
 # 7.2.8 Running the model
 dat.cont.variables.append(['xyz','pressure','liquid','temperature','stress','displacement','permeability'])
@@ -147,13 +172,13 @@ dat.files.root = 'EGS'
 
 dat.nobr = True
 
-dat.run('EGS_stress_INPUT.dat',files=['hist','outp','check'])
+dat.run('EGS_stress_INPUT.dat')
 
 # 7.2.9 Post-processing
 
 cont = fcontour(dat.files.root+'*.csv',latest=True)
 
-cont.slice_plot_fill(save='temperature_slice.png',cbar=True, levels = 10,
+cont.slice_plot(save='temperature_slice.png',cbar=True, levels = 10,
 	slice = ['z',-1000],divisions=[100,100],variable = 'T',xlims = [0,500],ylims=[0,500],title='final temperature distribution')
 
 cont.profile_plot(save='pressure_profile.png',profile = np.array([[0,0,-1000],[400,400,-1000]]),variable = 'P',
@@ -162,7 +187,7 @@ ylabel = 'pressure / MPa', title='pressure with distance from injector', color =
 cont.profile_plot(save='stress_profile.png',profile = np.array([[600,600,-500],[600,600,-1500]]),variable = 'strs_xx',
 xlabel='depth / m',ylabel = 'pressure / MPa', title='horizontal stress with depth', color = 'k', marker = '-',method = 'linear',elevationPlot = True)
 
-cont.cutaway_plot_fill(variable='T', save='temperature_cutaway.png',xlims=[0,400],
+cont.cutaway_plot(variable='T', save='temperature_cutaway.png',xlims=[0,400],
 ylims = [0,400],zlims = [-1000,-800],cbar=True,levels=np.linspace(60,90,11),
 grid_lines='k:',title='temperature contours / $^o$C')
 

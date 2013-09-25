@@ -1,3 +1,5 @@
+"""Class for FEHM data"""
+
 """
 Copyright 2013.
 Los Alamos National Security, LLC. 
@@ -18,8 +20,6 @@ will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General 
 Public License for more details.
 """
-
-"""Class for FEHM data"""
 
 import numpy as np
 from copy import copy, deepcopy
@@ -229,10 +229,10 @@ class fzone(object):						#FEHM zone object.
 	"""FEHM Zone object.
 	
 	"""
-	__slots__ = ['_index','_type','_points','_file','_name','_parent','_nodelist','_attempt_fix','_file','_permeability',
+	__slots__ = ['_index','_type','_points','_file','_name','_parent','_nodelist','_file','_permeability',
 			'_conductivity','_density','_specific_heat','_porosity','_youngs_modulus','_poissons_ratio',
 			'_thermal_expansion','_pressure_coupling','_Pi','_Ti','_Si','_fixedT','_fixedP','_updateFlag']
-	def __init__(self,index=None,type='',points=[],nodelist=[],file='',name = '',attempt_fix=True):
+	def __init__(self,index=None,type='',points=[],nodelist=[],file='',name = ''):
 		self._index=None
 		if index != None: self._index = index
 		self._type=''
@@ -246,7 +246,6 @@ class fzone(object):						#FEHM zone object.
 		self._nodelist=[]
 		if (self.type == 'nnum' or self.type == 'list') and nodelist:
 			self._nodelist = nodelist
-		self._attempt_fix = attempt_fix
 		if file: self._file = file
 		# material properties
 		self._permeability = None
@@ -370,7 +369,7 @@ class fzone(object):						#FEHM zone object.
 		:type save: str
 		:param angle: 	View angle of zone. First number is azimuth angle in degrees, second number is tilt. Alternatively, if angle is 'x', 'y', 'z', view is aligned along the corresponding axis.
 		:type angle: [fl64,fl64], str
-		:param color: Color of zone.
+		:param color: Colour of zone.
 		:type color: str, [fl64,fl64,fl64]
 		:param connections: Plot connections. If ``True`` all connections plotted. If between 0 and 1, random proportion plotted. If greater than 1, specified number plotted.
 		:type connections: bool
@@ -508,13 +507,13 @@ class fzone(object):						#FEHM zone object.
 		:type method: str
 		:param levels: Contour levels to plot. Can specify specific levels in list form, or a single integer indicating automatic assignment of levels. 
 		:type levels: lst[fl64], int
-		:param cbar: Add colorbar to plot.
+		:param cbar: Add colour bar to plot.
 		:param type: bool
 		:param xlims: Plot limits on x-axis.
 		:type xlims: [fl64, fl64]
 		:param ylims: Plot limits on y-axis.
 		:type ylims: [fl64, fl64]
-		:param clims: Color limits - **probably not working**. 
+		:param clims: Colour limits. 
 		:type clims: [fl64,fl64]
 		:param save: Name to save plot. Format specified extension (default .png if none give). Supported extensions: .png, .eps, .pdf.
 		:type save: str
@@ -703,14 +702,6 @@ class fzone(object):						#FEHM zone object.
 		if self.type in ['list','nnum']: print 'Error: points defined by content of nodelist.'; return
 		self._points = value
 	points = property(_get_points,_set_points)#: (*lst[fl64]*) Spatial data defining the zone.
-	def _get_attempt_fix(self): return self._attempt_fix
-	def _set_attempt_fix(self,value):
-		if not(isinstance(value,bool) or value in [0,1]): print 'Boolean values only'; return
-		if isinstance(value,int):
-			if value == 1: value = True
-			elif value == 0: value = False
-		self._attempt_fix = value
-	attempt_fix = property(_get_attempt_fix,_set_attempt_fix)#: (*bool*) Boolean indicating steps should be taken to fix macro.
 	def _get_permeability(self): return self._permeability
 	def _set_permeability(self,value): 
 		self._permeability = value
@@ -955,8 +946,8 @@ class fmacro(object): 						#FEHM macro object
 	"""FEHM macro object.
 	
 	"""
-	__slots__=['_type','_param','_parent','_zone','_subtype','_file','_attempt_fix','_write_one_macro']
-	def __init__(self,type='',zone=[],param=[],subtype='',file = None,attempt_fix = True,write_one_macro=False):
+	__slots__=['_type','_param','_parent','_zone','_subtype','_file','_write_one_macro']
+	def __init__(self,type='',zone=[],param=[],subtype='',file = None,write_one_macro=False):
 		self._type = type 		
 		if type == 'stressboun' and not subtype: subtype = 'fixed'
 		self._param = None 		
@@ -969,7 +960,6 @@ class fmacro(object): 						#FEHM macro object
 		self._subtype = subtype	
 		self._check_zone()
 		self._file = file
-		self._attempt_fix = attempt_fix		
 		self._write_one_macro = write_one_macro
 	def _assign_param(self): 
 		'''Assign parameters if supplied on initialisation.'''
@@ -1029,19 +1019,10 @@ class fmacro(object): 						#FEHM macro object
 	def _get_file(self): return self._file
 	def _set_file(self,value): self._file = value
 	file = property(_get_file,_set_file)#: (*str*) File string where information about the macro is stored. If file does not currently exist, it will be created and written to when the FEHM input file is written.
-	def _get_attempt_fix(self): return self._attempt_fix
-	def _set_attempt_fix(self,value):
-		if not(isinstance(value,bool) or value in [0,1]): print 'Boolean values only'; return
-		if isinstance(value,int):
-			if value == 1: value = True
-			elif value == 0: value = False
-		self._attempt_fix = value
-	attempt_fix = property(_get_attempt_fix,_set_attempt_fix)#: (*bool*) Boolean indicating steps should be taken to fix macro.
 	def _check(self):
 		# if not zone assigned, apply default background
 		if self._zone == None: 
 			prntStr = 'WARNING: Macro '+str(self.type)+' has no zone assigned.'
-			if self.attempt_fix: prntStr += ' Assign default zone 0.'; print prntStr; self.zone = 0
 		# if parameter value not assigned, print warning
 		for key in self.param.keys():
 			if self.param[key] == None: print 'WARNING: Macro '+str(self.type)+':'+str(self.zone.index)+' '+key+' not assigned.'
@@ -1849,7 +1830,7 @@ class ftrac(object): 						#FEHM chemistry module.
 	number_species = property(_get_number_species) #: (*int*) Number of species for which transport properties have been defined.
 	def _get_ldsp(self): return self._ldsp
 	def _set_ldsp(self,value): self._ldsp = value
-	ldsp = property(_get_ldsp,_set_ldsp) #: (*bool*) Boolean signalling logitudinal/transverse description of dispersivities to be used.
+	ldsp = property(_get_ldsp,_set_ldsp) #: (*bool*) Boolean signalling longitudinal/transverse description of dispersivities to be used.
 	def _get_common_modellist(self): return self._common_modellist
 	def _set_common_modellist(self,value): self._common_modellist = value
 	common_modellist = property(_get_common_modellist,_set_common_modellist) #: (*lst*) List of common model definitions.
@@ -2130,7 +2111,7 @@ class fboun(object):						#FEHM boundary condition object.
 	'''Boundary condition object.
 	
 	'''
-	def __init__(self,zone=[],type='ti',times=[],variable=[],file=None,attempt_fix=True):
+	def __init__(self,zone=[],type='ti',times=[],variable=[],file=None):
 		self._zone = []					
 		if zone: self.zone=zone
 		self._type = type 				
@@ -2138,7 +2119,6 @@ class fboun(object):						#FEHM boundary condition object.
 		self._parent = None
 		self._variable = []			
 		self._file = file	
-		self._attempt_fix = attempt_fix
 		if variable: self.variable = variable
 	def __repr__(self): 
 		retStr = self.type + ' BC: variable = ' 
@@ -2171,27 +2151,13 @@ class fboun(object):						#FEHM boundary condition object.
 	def _get_file(self): return self._file
 	def _set_file(self,value): self._file = value
 	file = property(_get_file,_set_file)#: (*str*) File string where information about the macro is stored. If file does not currently exist, it will be created and written to when the FEHM input file is written.
-	def _get_attempt_fix(self): return self._attempt_fix
-	def _set_attempt_fix(self,value):
-		if not(isinstance(value,bool) or value in [0,1]): print 'Boolean values only'; return
-		if isinstance(value,int):
-			if value == 1: value = True
-			elif value == 0: value = False
-		self._attempt_fix = value
-	attempt_fix = property(_get_attempt_fix,_set_attempt_fix)#: (*bool*) Boolean indicating steps should be taken to fix macro.
 	def _check(self):
 		# check length of variable vectors correspond to length of time vectors
 		for var in self._variable:
 			if len(var)-1<len(self.times):
 				prntStr = 'WARNING: Variable vector ('+var[0]+') specified in BOUN macro shorter than time vector.'
-				if self.attempt_fix:
-					prntStr += ' Extending variable vector.'; print prntStr
-					while len(var)-1 != len(self.times): var.append(var[-1])
 			if len(var)-1>len(self.times):
 				prntStr = 'WARNING: Variable vector ('+var[0]+') specified in BOUN macro longer than time vector.'
-				if self.attempt_fix:
-					prntStr += ' Shortening variable vector.'; print prntStr
-					while len(var)-1 != len(self.times): var.reverse(); var.remove(var[0]); var.reverse()
 class frlpm(object): 						#FEHM relative permeability object (different to rlp macro).
 	'''Relative permeability model.
 	
@@ -2467,14 +2433,6 @@ class files(object):						#FEHM file constructor.
 			fehmn.write('stor:')	
 			if not self.stor: self.stor = self.root+'.stor'
 			fehmn.write(' '+self.stor)
-			# move stor file to work directory
-			#if self._parent.work_dir:
-			#	if not os.path.isfile(self._parent.work_dir + self.stor) and os.path.isfile(self.stor):
-			#		shutil.copyfile(self.stor,self._parent.work_dir +slash+self.stor)
-			# if asking FEHM to calculate stor file, remove old version if exists
-			#if self._parent.ctrl['stor_file_LDA'] == -1 and os.path.isfile(self.stor):
-			#	os.remove(self.stor)
-			#	#os.system(delStr+' '+self.stor)
 			fehmn.write('\n')
 		if self.root: fehmn.write('root:'+self.root+'\n')		
 		fehmn.write('\nall\n')
@@ -2735,7 +2693,7 @@ class fdata(object):						#FEHM data file.
 		
 		:param filename: Name of FEHM input file to write to.
 		:type filename: str
-		:param writeSubFiles: Boolean indicating whether macro and zone information, designated as contained within other input files, should be written out, regardless of its existence. Non-existant files will alway be written out.
+		:param writeSubFiles: Boolean indicating whether macro and zone information, designated as contained within other input files, should be written out, regardless of its existence. Non-existant files will always be written out.
 		:type writeSubFiles: bool
 		'''
 		if writeSubFiles: self._writeSubFiles = writeSubFiles
@@ -3938,7 +3896,7 @@ class fdata(object):						#FEHM data file.
 		'''
 		for k in self.time.keys():	print k +': ' + str(self.time[k])
 	def change_timestepping(self,at_time,new_dti=None,new_dtmax=None,new_dtx=None,new_implicitness=None,new_print_out=None):
-		''' Change timestepping during a simulation. Note, if time stepping arguments are ommitted, FEHM will force output
+		''' Change timestepping during a simulation. Note, if time stepping arguments are omitted, FEHM will force output
 		to be written at the change time. The default for all optional arguments is no change.
 			
 		:param at_time: Simulation time to change time stepping behaviour.
@@ -4222,7 +4180,7 @@ class fdata(object):						#FEHM data file.
 			self.zone[index]._Pi = Pi
 			self.zone[index]._Ti = Ti
 			self.zone[index]._Si = Si
-	def run(self,input='',grid = '',incon='',exe=dflt.fehm_path,files=dflt.files,verbose = True, until=None,autorestart=0):
+	def run(self,input='',grid = '',incon='',exe=dflt.fehm_path,files=dflt.files,verbose = True, until=None,autorestart=0,use_links=False):
 		'''Run an fehm simulation. This command first writes out the input file, *fehmn.files* and this incon file
 		if changes have been made. A command line call is then made to the FEHM executable at the specified path (defaults
 		to *fehm.exe* in the working directory if not specified).
@@ -4241,6 +4199,8 @@ class fdata(object):						#FEHM data file.
 		:type until: func
 		:param autorestart: Number of times FEHM should restart itself in attempting to find a solution.
 		:type autorestart: int
+		:param use_links: Flag to indicate that PyFEHM should favor linking in fehmn.files rather than duplication of source files.
+		:type use_links: bool
 		'''
 		if not os.path.isfile(exe): 	# if can't find the executable, halt
 			if exe == dflt.fehm_path:
@@ -4258,12 +4218,12 @@ class fdata(object):						#FEHM data file.
 		if input: self._filename = input; self.files.input = input
 				
 		if self.work_dir: 	# if grid and incon files not in work dir, write them out
-			#if not os.path.isfile(self.work_dir+self.grid.filename): 
-			#	tname = self.grid.filename
-			#	self.grid.write()
-			#	self.grid._filename = tname
-			#	self.gridfilename = tname
-			if self.files.incon and not os.path.isfile(self.work_dir+self.files.incon): 
+			if not os.path.isfile(self.work_dir+self.grid.filename) and not use_links: 
+				tname = self.grid.filename
+				self.grid.write()
+				self.grid._filename = tname
+				self.gridfilename = tname
+			if self.files.incon and not os.path.isfile(self.work_dir+self.files.incon) and not use_links: 
 				tname = self.incon.filename
 				self.incon.write()
 				self.incon._filename = tname
@@ -4292,6 +4252,9 @@ class fdata(object):						#FEHM data file.
 				if self.files.stor:
 					if self.files.stor[1] != ':':
 						self.files.stor = cwd+slash+self.files.stor
+				if self.files.incon:
+					if self.files.incon[1] != ':':
+						self.files.incon = cwd+slash+self.files.incon
 			else:
 				os.chdir(self.work_dir)
 				if not os.path.isfile(self.gridfilename): 
@@ -4305,11 +4268,19 @@ class fdata(object):						#FEHM data file.
 					if not os.path.isfile(exe):
 						print 'ERROR: cannot establish executable path, aborting...'
 						return
+						
 				if self.files.stor:
 					if not os.path.isfile(self.files.stor): 
 						self.files.stor = cwd + slash + self.files.stor
 						if not os.path.isfile(self.files.stor):
 							print 'ERROR: cannot establish stor file path, aborting...'
+							return
+							
+				if self.files.incon:
+					if not os.path.isfile(self.files.incon): 
+						self.files.incon = cwd + slash + self.files.incon
+						if not os.path.isfile(self.files.incon):
+							print 'ERROR: cannot establish incon file path, aborting...'
 							return
 						
 				os.chdir(cwd)

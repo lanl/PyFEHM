@@ -1,3 +1,5 @@
+"""Environment file for PyFEHM. Set default attribute values."""
+
 """
 Copyright 2013.
 Los Alamos National Security, LLC. 
@@ -19,7 +21,6 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General
 Public License for more details.
 """
 
-"""Environment file for PyFEHM. Set default attribute values."""
 import os
 
 class fdflt(object):

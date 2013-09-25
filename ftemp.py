@@ -1,3 +1,5 @@
+"""Various templates for use with PyFEHM."""
+
 """
 Copyright 2013.
 Los Alamos National Security, LLC. 
@@ -18,8 +20,6 @@ will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General 
 Public License for more details.
 """
-
-"""Various templates for use with PyFEHM."""
 
 import numpy as np
 import scipy as sp
@@ -355,7 +355,7 @@ class wellbore_model(fdata):
 		:param temperature_lims: Limits on temperature axis of temperature vs. time plot.
 		:type temperature_lims: lst[fl64,fl64]
 		
-		:param pdf: Name of pdf file to combine all output plots. If not specified, pdf will not be creted.
+		:param pdf: Name of pdf file to combine all output plots. If not specified, pdf will not be created.
 		:type pdf: str
 		
 		:param combineString: Name of ghostscript executable.
