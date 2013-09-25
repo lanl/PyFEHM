@@ -70,5 +70,3 @@ def kill_condition(dat):
 	return nd.T<50.
 
 dat.run(root+'_INPUT.dat',until=kill_condition) # pass the function to the argument 'until'
-
-# test
