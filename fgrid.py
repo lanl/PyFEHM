@@ -576,7 +576,10 @@ class fgrid(object):				#Grid object.
 		if self._parent:
 			if self._parent.work_dir and not os.path.isdir(self._parent.work_dir): 		
 				os.makedirs(self._parent.work_dir)		
-			outfile = open(self._parent.work_dir+self.filename,'w')
+			if not self.filename.startswith(self._parent.work_dir):
+				outfile = open(self._parent.work_dir+self.filename,'w')
+			else:
+				outfile = open(self.filename,'w')
 		else:
 			outfile = open(self.filename,'w')
 		outfile.write('coor\n')
@@ -609,8 +612,11 @@ class fgrid(object):				#Grid object.
 	def _write_avs(self,filename):
 		if self._parent:
 			if self._parent.work_dir and not os.path.isdir(self._parent.work_dir): 
-				os.makedirs(self._parent.work_dir)		
-			outfile = open(self._parent.work_dir+self.filename,'w')
+				os.makedirs(self._parent.work_dir)			
+			if not self.filename.startswith(self._parent.work_dir):
+				outfile = open(self._parent.work_dir+self.filename,'w')
+			else:
+				outfile = open(self.filename,'w')
 		else:
 			outfile = open(self.filename,'w')
 		outfile.write(str(self.number_nodes)+' '+str(self.number_elems)+' 0 0 0\n')

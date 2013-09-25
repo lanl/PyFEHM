@@ -38,30 +38,23 @@ def simulation(j,param):
 	dat.grid.plot(root+'_GRID.png',color='r',angle=[45,45])
 
 	# 7.1.3 Zone creation
-	zn = fzone(index=1,name='lower')
-	zn.rect([-0.,-0.,-0.1],[10.1,10.1,3.1])
-	dat.add(zn)
+	zn = fzone(index=1,name='lower') 			
+	zn.rect([-0.,-0.,-0.1],[10.1,10.1,3.1])		
+	dat.add(zn)									
+	dat.zone[1].what 							
 
-	zn = fzone(index=2,name='middle')
-	zn.rect([-0.,-0.,3.1],[10.1,10.1,6.1])
-	dat.add(zn)
-
-	zn = fzone(index=3,name='upper')
-	zn.rect([-0.,-0.,6.1],[10.1,10.1,10.1])
-	dat.add(zn)
-
+	dat.new_zone(2,'middle',rect=[[-0.,-0.,3.1],[10.1,10.1,6.1]]) 	
+	dat.new_zone(3,'upper',rect=[[-0.,-0.,6.1],[10.1,10.1,10.1]])	
+	
 	# 7.1.4 Adding macros
 	rm = fmacro('rock',param=(('density',2500),('specific_heat',1000),('porosity',0.1)))
 	dat.add(rm)
 
-	pm = fmacro('perm',zone=1,param=(('kx',1.e-15),('ky',1.e-15),('kz',1.e-16)))
-	dat.add(pm)
+	pm = fmacro('perm',zone=1,param=(('kx',1.e-15),('ky',1.e-15),('kz',1.e-16))) 	
+	dat.add(pm) 																	
 
-	pm = fmacro('perm',zone=2,param=(('kx',kmid),('ky',kmid),('kz',kmid)))
-	dat.add(pm)
-
-	pm = fmacro('perm',zone='upper',param=(('kx',1.e-14),('ky',1.e-14),('kz',1.e-14)))
-	dat.add(pm)
+	dat.zone[2].permeability = kmid 			
+	dat.zone['upper'].permeability = [1.e-14,1.e-14,1.e-15] 	
 
 	# 7.1.5 Initial and boundary conditions
 	pres = fmacro('pres',param=(('pressure',5.),('temperature',60.),('saturation',1)))
@@ -80,14 +73,14 @@ def simulation(j,param):
 	# 7.1.6 Running the simulation
 	dat.cont.variables.append(['xyz','temperature','pressure'])
 
-	dat.time['max_time_TIMS']=10.
+	dat.tf=10.
 
 	dat.files.root = root
 	dat.run(root+'_INPUT.dat',exe='c:\\users\\264485\\fehm\\source\\src\\fehm.exe',files=['outp'])
 
 	# 7.1.7 Visualisation
 	c = fcontour(root+'\\*.csv',latest=True)
-	c.slice_plot_fill(save=root+'\\Tslice.png',cbar=True,levels=11,slice=['x',5],variable='T',method='linear',title='temperature / degC',
+	c.slice_plot(save=root+'\\Tslice.png',cbar=True,levels=11,slice=['x',5],variable='T',method='linear',title='temperature / degC',
 	xlabel='y / m', ylabel = 'z / m')
-	c.slice_plot_fill(save=root+'\\Pslice.png',cbar=True,levels=np.linspace(4,6,9),slice=['x',5],variable='P',method='linear',title='pressure / MPa',
+	c.slice_plot(save=root+'\\Pslice.png',cbar=True,levels=np.linspace(4,6,9),slice=['x',5],variable='P',method='linear',title='pressure / MPa',
 	xlabel='y / m', ylabel = 'z / m')

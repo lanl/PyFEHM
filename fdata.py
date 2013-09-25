@@ -4243,7 +4243,7 @@ class fdata(object):						#FEHM data file.
 		cwd = os.getcwd()
 				
 		# if executable, grid, stor path given relative to current directory, will need to modify for if using work_dir
-		if self.work_dir: 		
+		if self.work_dir and use_paths: 		
 			if WINDOWS:
 				if exe[1] != ':':
 					exe = cwd+slash+exe
