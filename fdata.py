@@ -4180,7 +4180,7 @@ class fdata(object):						#FEHM data file.
 			self.zone[index]._Pi = Pi
 			self.zone[index]._Ti = Ti
 			self.zone[index]._Si = Si
-	def run(self,input='',grid = '',incon='',exe=dflt.fehm_path,files=dflt.files,verbose = True, until=None,autorestart=0,use_links=False):
+	def run(self,input='',grid = '',incon='',exe=dflt.fehm_path,files=dflt.files,verbose = True, until=None,autorestart=0,use_paths=False):
 		'''Run an fehm simulation. This command first writes out the input file, *fehmn.files* and this incon file
 		if changes have been made. A command line call is then made to the FEHM executable at the specified path (defaults
 		to *fehm.exe* in the working directory if not specified).
@@ -4199,8 +4199,8 @@ class fdata(object):						#FEHM data file.
 		:type until: func
 		:param autorestart: Number of times FEHM should restart itself in attempting to find a solution.
 		:type autorestart: int
-		:param use_links: Flag to indicate that PyFEHM should favor linking in fehmn.files rather than duplication of source files.
-		:type use_links: bool
+		:param use_paths: Flag to indicate that PyFEHM should favour full paths in fehmn.files rather than duplication of source files.
+		:type use_paths: bool
 		'''
 		if not os.path.isfile(exe): 	# if can't find the executable, halt
 			if exe == dflt.fehm_path:
@@ -4218,12 +4218,12 @@ class fdata(object):						#FEHM data file.
 		if input: self._filename = input; self.files.input = input
 				
 		if self.work_dir: 	# if grid and incon files not in work dir, write them out
-			if not os.path.isfile(self.work_dir+self.grid.filename) and not use_links: 
+			if not os.path.isfile(self.work_dir+self.grid.filename) and not use_paths: 
 				tname = self.grid.filename
 				self.grid.write()
 				self.grid._filename = tname
 				self.gridfilename = tname
-			if self.files.incon and not os.path.isfile(self.work_dir+self.files.incon) and not use_links: 
+			if self.files.incon and not os.path.isfile(self.work_dir+self.files.incon) and not use_paths: 
 				tname = self.incon.filename
 				self.incon.write()
 				self.incon._filename = tname
