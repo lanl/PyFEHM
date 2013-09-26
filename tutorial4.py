@@ -66,7 +66,7 @@ def kill_condition(dat):
 	
 	# for example, kill the simulation when the node at [7.,7.,7.] has a temperature less than 50degC
 	nd = dat.grid.node_nearest_point([7.,7.,9.])
-	
+		
 	return nd.T<50.
 
 dat.run(root+'_INPUT.dat',until=kill_condition) # pass the function to the argument 'until'

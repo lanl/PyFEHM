@@ -4278,7 +4278,20 @@ class fdata(object):						#FEHM data file.
 		
 		tempRstoFlag = False
 		if until is not None and self.files.rsto == '':	tempRstoFlag = True
-		
+						
+		# if using 'until' to break a simulation, we require a restart file to be written each timestep
+		# restart files are written at the same frequency as contour output, hence contour output will
+		# need to be written every timestep - manage this data by deleting it
+		contUnchanged = True 			# flag to indicate whether we have modified cont
+		if until:
+			if self.cont.timestep_interval == 1 and self.cont.variables: contUnchanged = True
+			else:
+				from copy import deepcopy
+				oldCont = deepcopy(self.cont)
+				if not self.cont.variables: self.cont.variables.append('temperature')
+				self.cont.timestep_interval = 1
+				contUnchanged = False
+				
 		# option to write input, grid, incon files to new names
 		if input: self._path.filename = input
 		if grid: self.grid._path.filename = grid
@@ -4321,21 +4334,7 @@ class fdata(object):						#FEHM data file.
 		self.files.exe = exe
 		# RUN SIMULATION
 		cwd = os.getcwd()
-						
-						
-		# if using 'until' to break a simulation, we require a restart file to be written each timestep
-		# restart files are written at the same frequency as contour output, hence contour output will
-		# need to be written every timestep - manage this data by deleting it
-		contUnchanged = True 			# flag to indicate whether we have modified cont
-		if until:
-			if self.cont.timestep_interval == 1 and self.cont.variables: contUnchanged = True
-			else:
-				from copy import deepcopy
-				oldCont = deepcopy(self.cont)
-				if not self.cont.variables: self.cont.variables.append('temperature')
-				self.cont.timestep_interval = 1
-				contUnchanged = False
-		
+				
 		# summarize simulation
 		self.grid._summary()
 		if self.files.incon: self.incon._summary()
@@ -4399,12 +4398,12 @@ class fdata(object):						#FEHM data file.
 								delFiles.append(files[-1])
 							
 					p.poll() 								# check if run finished on its own
-					if untilFlag:  							# IF stop condition met
+					if p.returncode == 0:					# IF run finshed on its own
+						self._running = False					# break the loop
+					if untilFlag and self._running: 		# IF stop condition met
 						p.terminate()							# kill the process
 						self._running = False					# break the loop
 						breakAutorestart = True
-					if p.returncode == 0:					# IF run finshed on its own
-						self._running = False					# break the loop
 			
 			self.incon.read(self.files.rsto) 		# read fin file for autorestart
 			if abs((self.incon.time - self.tf)/self.tf)<0.001: breakAutorestart = True
@@ -5688,7 +5687,9 @@ class fdata(object):						#FEHM data file.
 	hist = property(_get_hist) #: (*fhist*) History output for the model.
 	def _get_incon(self): return self._incon
 	incon = property(_get_incon) #: (*fincon*) Initial conditions (restart file) associated with the model.
-	def _get_work_dir(self): return self._path.absolute_to_workdir
+	def _get_work_dir(self): 
+		if self._path.absolute_to_workdir: return self._path.absolute_to_workdir
+		else: return ''
 	def _set_work_dir(self,value): 
 		self._path.update(value)
 		self.grid._path.update(value)
