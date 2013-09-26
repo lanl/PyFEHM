@@ -637,8 +637,8 @@ class fzone(object):						#FEHM zone object.
 		else: return
 		
 		ws += '\nMaterial properties........\n'
-		if self._permeability: ws += '  permeability...... '+str(self._permeability)+'\n'
-		if self._conductivity: ws += '  conductivity...... '+str(self._conductivity)+'\n'
+		if self._permeability != None: ws += '  permeability...... '+str(self._permeability)+'\n'
+		if self._conductivity != None: ws += '  conductivity...... '+str(self._conductivity)+'\n'
 		if self._density: ws += '  density........... '+str(self._density)+'\n'
 		if self._specific_heat: ws += '  specific heat..... '+str(self._specific_heat)+'\n'
 		if self._porosity: ws += '  porosity.......... '+str(self._porosity)+'\n'
