@@ -22,11 +22,10 @@ Public License for more details.
 """
 
 import numpy as np
-import os,math
-import platform
+import os,math,platform,string
 WINDOWS = platform.system()=='Windows'
-if WINDOWS: copyStr = 'copy'; delStr = 'del'
-else: copyStr = 'cp'; delStr = 'rm'
+if WINDOWS: slash = '\\'
+else: slash = '/'
 
 # dictionary of unit name, number to multiply by to yield SI measure
 units = dict([
@@ -254,6 +253,60 @@ def SI(quantity,unit=None):
 #-----------------------------------------------------------------------------------------------------
 #------------------------------ FUNCTIONS AND CLASSES FOR INTERNAL USE -------------------------------
 #-----------------------------------------------------------------------------------------------------
+class fpath(object):
+	def __init__(self,filename = None,work_dir = None,parent = None):
+		self._filename = filename
+		self.absolute_to_file = None		# location where originally read DOES NOT CHANGE
+		self.absolute_to_workdir = None	# working directory CAN CHANGE
+		self.parent = parent
+	def update(self, wd):
+		'''called when work_dir is updated'''		
+		if wd == None: 
+			self.absolute_to_workdir = None
+			return
+		
+		if WINDOWS: wd = wd.replace('/','\\')
+		else: wd = wd.replace('\\','/')
+		
+		absolute = False
+		if WINDOWS and wd[1]==':': absolute = True
+		if not WINDOWS and wd[0]=='/': absolute = True
+		if absolute:
+			self.absolute_to_workdir = wd
+		else:
+			self.absolute_to_workdir = os.getcwd()+slash+wd	
+			
+	def _get_filename(self): return self._filename
+	def _set_filename(self,value): 
+		# ensure path specification consistent with OS
+		if WINDOWS: value = value.replace('/','\\')
+		else: value = value.replace('\\','/')
+		# check if any slashes exist
+		if slash in value:
+			self._filename = value.split(slash)[-1]
+		else: 
+			self._filename = value
+			self.absolute_to_file = os.getcwd()
+			return
+		# check if absoulte or relative specification
+		path = value.split(slash)[:-1]
+		path = string.join(path,slash)
+		
+		absolute = False
+		if WINDOWS and path[1]==':': absolute = True
+		if not WINDOWS and path[0]=='/': absolute = True
+		
+		if absolute:
+			self.absolute_to_file = path
+		else:
+			self.absolute_to_file = os.getcwd()+path
+			
+	filename = property(_get_filename, _set_filename) #: (**)
+	
+	def _get_full_path(self): 
+		return self.absolute_to_file+slash+self.filename
+	full_path = property(_get_full_path) #: (**)
+		
 class ImmutableDict(dict):
 	def __setitem__(self,key,value):
 		if key not in self:

@@ -1206,7 +1206,6 @@ class fincon(object): 						#FEHM restart object.
 	and sets up fehmn.files to use the file for restarting.
 	'''
 	def __init__(self,inconfilename=''):
-		self._filename = ''
 		self._source = ''
 		self._parent = None
 		self._time = None
@@ -1230,30 +1229,25 @@ class fincon(object): 						#FEHM restart object.
 		self._disp_x = []
 		self._disp_y = []
 		self._disp_z = []
-		if inconfilename: self._filename = inconfilename
-		if self._filename: self.read(inconfilename)
-	def read(self,inconfilename,if_new = False):
+		self._path = fpath(parent=self)
+		
+		if inconfilename: self._path.filename = inconfilename
+		if self.filename: self.read()
+	def read(self,inconfilename='',if_new = False):
 		'''Parse a restart file for variable information.
 		
 		:param inconfilename: Name of restart file.
 		:type inconfilename: str
 		'''
 		
-		if if_new and not os.path.isfile(inconfilename): return False
+		if inconfilename: self._path.filename = inconfilename
 		
-		self._filename = inconfilename
-		if slash in self._filename: self._filename = self._filename.split(slash)[-1]
-		if self._parent.work_dir:
-			if os.path.isfile(self._parent.work_dir+slash+inconfilename):
-				infile = open(self._parent.work_dir+slash+inconfilename,'r')
-			elif os.path.isfile(inconfilename):
-				infile = open(inconfilename,'r')
-		else:
-			infile = open(inconfilename,'r')		
-				
-		if self._parent: 
-			self._parent.files.incon = inconfilename
-			if slash in self._parent.files.incon: self._parent.files.incon = self._parent.files.incon.split(slash)[-1]
+		if if_new and not os.path.isfile(self._path.full_path): return False
+		
+		infile = open(self._path.full_path,'r')	
+		
+		self._parent.files.incon = inconfilename
+
 		lns = infile.readlines()
 		infile.close()
 		# check if incon file finished writing
@@ -1325,14 +1319,12 @@ class fincon(object): 						#FEHM restart object.
 		:type inconfilename: str
 		'''
 		if inconfilename: 
-			self._filename = inconfilename
-			self._parent.files._incon = inconfilename
-		if self._parent:
-			if self._parent.work_dir and not os.path.isdir(self._parent.work_dir): 	
-				os.makedirs(self._parent.work_dir)
-			outfile = open(self._parent.work_dir+self.filename,'w')
+			self._path.filename = inconfilename
+			#self._parent.files._incon = inconfilename
+		if self._parent.work_dir:
+			outfile = open(self._path.absolute_to_workdir+slash+self._path.filename,'w')
 		else:
-			outfile = open(self.filename,'w')
+			outfile = open(self._path.full_path,'w')
 		# write headers
 		outfile.write('PyFEHM V1.0                      ')
 		import time
@@ -1561,7 +1553,7 @@ class fincon(object): 						#FEHM restart object.
 						prntStr = ' IIII   '
 		print ' IIII---------------------------------------------------------IIII'
 		print ''
-	def _get_filename(self): return self._filename
+	def _get_filename(self): return self._path.filename
 	filename = property(_get_filename)	#: (*str*) Name of restart file (initial conditions)
 	def _get_time(self): return self._time
 	def _set_time(self,value): self._time = value; self._changeTime = True
@@ -2389,57 +2381,59 @@ class files(object):						#FEHM file constructor.
 	def write(self):
 		'''Write out *fehmn.files*.
 		'''		
+		
 		if self._parent.work_dir:
-			wd = self._parent.work_dir
-			# check to see if any likely mismatches between work-dir path
-			if self.input.startswith(wd): self.input = self.input.split(wd)[-1]
-			if self.grid.startswith(wd): self.grid = self.grid.split(wd)[-1]
-			if self.incon.startswith(wd): self.incon = self.incon.split(wd)[-1]
-			if self.rsto.startswith(wd): self.rsto = self.rsto.split(wd)[-1]
-			if self.root.startswith(wd): self.root = self.root.split(wd)[-1]
-			if self.outp.startswith(wd): self.outp = self.outp.split(wd)[-1]
-			if self.check.startswith(wd): self.check = self.check.split(wd)[-1]
-			if self.hist.startswith(wd): self.hist = self.hist.split(wd)[-1]
-			if self.stor.startswith(wd): self.stor = self.stor.split(wd)[-1]
-			if self.co2in.startswith(wd): self.co2in = self.co2in.split(wd)[-1]
-		fehmn = open(self._parent.work_dir+'fehmn.files','w')
-		fehmn.write('input: '+self.input+'\n')
-		fehmn.write('grida: '+self.grid+'\n')
+			outfile = open(self._parent.work_dir+slash+'fehmn.files','w')
+		else:
+			outfile = open('fehmn.files','w')
+			
+		outfile.write('input: '+self.input+'\n')
+		outfile.write('grida: '+self.grid+'\n')
 		if not self.root: self.root = self.input.split('.')[0]
-		if self._use_rsto: 
-			if not self.rsto: self.rsto = self.root+'.rsto'
-			fehmn.write('rsto: '+self.rsto+'\n')
+		
+		if not self.rsto: self.rsto = self.root+'.rsto' 			# default is to produce a restart file
+		outfile.write('rsto: '+self.rsto+'\n')
+		
 		if self._use_outp: 
 			if not self.outp: self.outp = self.root+'.outp'
-			fehmn.write('outp: '+self.outp+'\n')
+			outfile.write('outp: '+self.outp+'\n')
 		if self._use_check: 
 			if not self.check: self.check = self.root+'.chk'
-			fehmn.write('check: '+self.check+'\n')
-		if self._use_incon: fehmn.write('rsti:'+self.incon+'\n')
-		if self._use_hist: 
-			fehmn.write('hist: '+self.hist+'\n')
+			outfile.write('check: '+self.check+'\n')
 			
+		if self.incon: outfile.write('rsti:'+self.incon+'\n')
+		
+		if self._use_hist: 
+			if not self.check: self.check = self.root+'.hst'
+			outfile.write('hist: '+self.hist+'\n')
+		
 		if self._parent.carb.iprtype != 1 and not self.co2in: 
-			if WINDOWS:	self.co2in = dflt.co2_interp_path.replace('/',slash)
-			else: self.co2in = dflt.co2_interp_path.replace('\\',slash)
-			if not os.path.isfile(self.co2in):
-				if WINDOWS:	self.co2in = dflt.co2_interp_path_2.replace('/',slash)
-				else: self.co2in = dflt.co2_interp_path_2.replace('\\',slash)
-				
+			self._use_co2in = True
+			co2_path = fpath()
+			co2_path.filename = dflt.co2_interp_path
+			if not os.path.isfile(co2_path.full_path):
+				co2_path.filename = dflt.co2_interp_path_2
+			if not os.path.isfile(co2_path.full_path):
+				print 'WARNING: Cant find co2_interp.txt'
+				self._use_co2in = False
+		elif self.co2in:
+			co2_path = fpath()
+			co2_path.filename = self.co2in
+			
 		if self._use_co2in: 
-			fehmn.write('co2in: '+self.co2in+'\n')	
+			outfile.write('co2in: '+co2_path.full_path+'\n')	
 			
 		if self._use_stor: 
-			fehmn.write('stor:')	
+			outfile.write('stor:')	
 			if not self.stor: self.stor = self.root+'.stor'
-			fehmn.write(' '+self.stor)
-			fehmn.write('\n')
-		if self.root: fehmn.write('root:'+self.root+'\n')		
+			outfile.write(' '+self.stor)
+			outfile.write('\n')
+		if self.root: outfile.write('root:'+self.root+'\n')		
 		
 		# level of print screen output
-		if self.verbose: fehmn.write('\nall\n')
-		else: fehmn.write('\nnone\n')
-		fehmn.close()
+		if self.verbose: outfile.write('\nall\n')
+		else: outfile.write('\nnone\n')
+		outfile.close()
 	def _get_input(self): return self._input
 	def _set_input(self,value):  
 		self._input = value
@@ -2465,7 +2459,9 @@ class files(object):						#FEHM file constructor.
 	def _set_check(self,value):  self._check = value
 	check = property(_get_check,_set_check)	#: (*str*) Name of check file.
 	def _get_co2in(self): return self._co2in
-	def _set_co2in(self,value): self._co2in = value; self._use_co2in = True
+	def _set_co2in(self,value): 
+		self._co2in = value
+		self._use_co2in = True
 	co2in = property(_get_co2in, _set_co2in) #: (*str*) Name or path to co2 properties file
 	def _get_hist(self): return self._hist
 	def _set_hist(self,value):  self._hist = value
@@ -2487,20 +2483,19 @@ class fdata(object):						#FEHM data file.
 			'_bounlist','_cont','_ctrl','_grid','_incon','_hist','_iter','_nfinv','_nobr','_vapl','_adif','_rlpmlist','_pporlist','_vconlist','_sol',
 			'_time','text','times','_time','_zonelist','_writeSubFiles','_strs','_ngas','_carb','_trac','_files','_verbose',
 			'_tf','_ti','_dti','_dtmin','_dtmax','_dtn','_dtx','_sections','_help','_running','_unparsed_blocks','keep_unknown','_flxo',
-			'_output_times']
-	def __init__(self,filename='',gridfilename='',inconfilename='',sticky_zones=dflt.sticky_zones,associate=dflt.associate,work_dir = '',
+			'_output_times','_path']
+	def __init__(self,filename='',gridfilename='',inconfilename='',sticky_zones=dflt.sticky_zones,associate=dflt.associate,work_dir = None,
 		full_connectivity=dflt.full_connectivity,skip=[],keep_unknown=dflt.keep_unknown):		#Initialise data file
 		from copy import copy
-		self._filename=filename			
+		#self._filename=filename			
 		self._gridfilename=gridfilename	
 		self._inconfilename=inconfilename 
 		self._sticky_zones = sticky_zones
 		self._allMacro = dict([(key,[]) for key in macro_list.keys()])
 		self._allModel = dict([(key,[]) for key in model_list.keys()])
 		self._associate = associate 
-		self._work_dir = work_dir
-		if work_dir:
-			if not os.path.isdir(work_dir): os.makedirs(work_dir)		
+#		if work_dir:
+#			if not os.path.isdir(work_dir): os.makedirs(work_dir)		
 		# model objects
 		self._bounlist = []				
 		self._cont = fcont()				
@@ -2531,12 +2526,20 @@ class fdata(object):						#FEHM data file.
 		self._ngas = fngas(parent=self)
 		self._help = fhelp(parent=self)
 		# run object
+		self._path = fpath(parent=self)
+		#self._path.filename=filename	
 		self._files = files() 				
 		self._files._parent = self
 		self._verbose = True
 		self._running = False 		# boolean indicating whether a simulation is in progress
 		self._unparsed_blocks = {}
 		self.keep_unknown = keep_unknown
+		self.work_dir = work_dir
+		if self.work_dir:
+			try:
+				os.makedirs(self.work_dir)
+			except:
+				pass
 		# time stepping shortcuts
 		self._tf = dflt.time['max_time_TIMS']
 		self._ti = dflt.time['initial_day_INITTIME']
@@ -2549,14 +2552,56 @@ class fdata(object):						#FEHM data file.
 		# add 'everything' zone
 		self._add_zone(fzone(index=0))
 		
-		if slash in filename:
-			if filename.split(slash)[-1] =='fehmn.files':
-				self.read(filename,full_connectivity=full_connectivity,skip=skip)
-		elif filename == 'fehmn.files': 
-			self.read(filename,full_connectivity=full_connectivity,skip=skip)
-		elif self.filename and self.gridfilename and self.inconfilename: self.read(filename,gridfilename,inconfilename,full_connectivity=full_connectivity,skip=skip)
-		elif self.filename and self.gridfilename: self.read(filename,gridfilename,full_connectivity=full_connectivity,skip=skip)
-		elif self.filename: print 'ERROR: meshfile must be specified if reading existing input file.'; return
+		# OPTIONS
+		temp_path = fpath(); temp_path.filename = filename
+		# 1. fehmn.files was passed - assume that the directory in which this file sits is the work directory
+		if temp_path.filename == 'fehmn.files':
+		
+			if temp_path.absolute_to_file != os.getcwd():
+				self.work_dir = temp_path.absolute_to_file
+			
+			wd = temp_path.absolute_to_file+slash
+			inconfilename = None
+			with open(filename) as f:
+				for ln in f.readlines():
+					if ln.startswith('rsti:'): 
+						inconfilename = wd+ln.split('rsti:')[-1].strip()
+					if ln.startswith('grida:'): 
+						gridfilename = wd+ln.split('grida:')[-1].strip()
+					if ln.startswith('gridf:'): 
+						gridfilename = wd+ln.split('gridf:')[-1].strip()
+					if ln.startswith('input:'): 
+						filename = wd+ln.split('input:')[-1].strip()
+					if ln.startswith('stor:'): 
+						storfilename = wd+ln.split('stor:')[-1].strip()
+						self.files.stor = storfilename
+			
+			# set up  path objects then pass to read function
+			self._path.filename = filename
+			self.grid._path.filename = gridfilename
+			if inconfilename:
+				self.incon._path.inconfilename
+			self.read(full_connectivity=full_connectivity,skip=skip)
+			
+		# 2. nothing passed - no path objects to set up, no reading required
+		elif not filename and not gridfilename and not inconfilename:
+			return
+			
+		# 3. input and grid file passed
+		elif filename and gridfilename and not inconfilename:
+			self._path.filename = filename
+			self.grid._path.filename = gridfilename
+			self.read(full_connectivity=full_connectivity,skip=skip)
+			
+		# 4. all passed
+		elif filename and gridfilename and inconfilename:
+			self._path.filename = filename
+			self.grid._path.filename = gridfilename
+			self.incon._path.filename = inconfilename
+			self.read(full_connectivity=full_connectivity,skip=skip)
+		
+		else:
+			print 'ERROR: file configuration not recognized'; return
 	def __repr__(self): return self.filename			#Print out details
 	def read(self,filename='',gridfilename='',inconfilename='',full_connectivity=dflt.full_connectivity,skip=[]):			#Reads data from file.
 		'''Read FEHM input file and construct fdata object.
@@ -2571,47 +2616,45 @@ class fdata(object):						#FEHM data file.
 		:type skip: list
 		
 		'''
-		wd = ''
-		import string
-		if slash in filename:
-			if filename.split(slash)[-1] =='fehmn.files':
-				#print filename.split(slash)[:-1]
-				wd = string.join(filename.split(slash)[:-1],slash)+slash
-				filename = 'fehmn.files'
-		if filename == 'fehmn.files':
-			with open(filename) as f:
-				for ln in f.readlines():
-					if ln.startswith('rsti:'): inconfilename = wd+ln.split('rsti:')[-1].strip()
-					if ln.startswith('grida:'): gridfilename = wd+ln.split('grida:')[-1].strip()
-					if ln.startswith('gridf:'): gridfilename = wd+ln.split('gridf:')[-1].strip()
-					if ln.startswith('input:'): filename = wd+ln.split('input:')[-1].strip()
-					if ln.startswith('stor:'): 
-						storfilename = wd+ln.split('stor:')[-1].strip()
-						self.files.stor = storfilename
-		if gridfilename and (self.grid.number_nodes==0):
-			print 'reading grid file'
-			self.gridfilename=gridfilename
-			if isinstance(gridfilename,str):
-				self.grid.read(gridfilename,full_connectivity=full_connectivity)
-				self.grid._parent=self
-				self.files.grid = gridfilename
-		if inconfilename:
-			print 'reading incon file'
-			self.inconfilename=inconfilename
-			if isinstance(inconfilename,str):
-				self.incon.read(inconfilename)
-				self.incon._parent=self
-				self.files.incon = inconfilename
-				self.files._use_incon = True
-				if len(self.incon.P) != self.grid.number_nodes: 
-					print 'ERROR: grid and incon files contain different numbers of nodes'
-					self.incon = fincon()
-					self.files.incon = ''	
-					self.files._use_incon = False
-				else: self._associate_incon()
-		if filename: self._filename=filename; self.files.input = filename
+		
+		# set up paths
+		if filename: self._path.filename = filename
+		if gridfilename: self.grid._path.filename = filename
+		if inconfilename: self.incon._path.filename = filename
+		
+		# THERE WILL ALWAYS BE A GRID PATH TO READ - INPUT FILES CANNOT BE READ WITHOUT A GRID
+		self.grid.read(self.grid._path.full_path,full_connectivity=full_connectivity)
+		self.files.grid = self.grid._path.full_path
+		
+		if self.incon._path.filename:
+			self.incon.read(self.incon._path.full_path)
+			self.files.incon = self.incon._path.full_path
+			self.files._use_incon = True
+			if len(self.incon.P) != self.grid.number_nodes: 
+				print 'ERROR: grid and incon files contain different numbers of nodes'
+				self.incon = fincon() 	# empty incon
+				self.files.incon = ''	
+				self.files._use_incon = False
+			else: self._associate_incon()
+		
+		self.files.input = self._path.full_path
+			
+		
+		#if gridfilename and (self.grid.number_nodes==0):
+		#	print 'reading grid file'
+		#	#self.gridfilename=gridfilename
+		#	self.grid.read(gridfilename,full_connectivity=full_connectivity)
+		#if inconfilename:
+		#	print 'reading incon file'
+		#	self.inconfilename=inconfilename
+		#	if isinstance(inconfilename,str):
+		#		#self.incon.read(inconfilename)
+		#		#self.incon._parent=self
+		#		self.files.incon = inconfilename
+		#if filename: self._path.filename=filename; self.files.input = filename
 		print 'reading input file'
-		infile = open(filename,'r')
+		#infile = open(filename,'r')
+		infile = open(self._path.full_path,'r')
 		read_fn=dict(zip(fdata_sections,
 						[self._read_cont,self._read_macro,self._read_zonn,self._read_zonn,self._read_macro,
 						 self._read_time,self._read_ctrl,self._read_iter,self._read_macro,self._read_macro,
@@ -2630,7 +2673,7 @@ class fdata(object):						#FEHM data file.
 				self._read_ctrl(infile)
 				more = False				
 		infile.close()
-		infile = open(filename,'r')		
+		infile = open(self._path.full_path,'r')
 		more = True
 		precedingKey='start'
 		precedingZoneKey = None
@@ -2700,15 +2743,26 @@ class fdata(object):						#FEHM data file.
 		:type writeSubFiles: bool
 		'''
 		if writeSubFiles: self._writeSubFiles = writeSubFiles
-		if filename: self._filename=filename
-		if self.filename=='': self._filename='fdata.dat'
+		if filename: self._path.filename=filename
+		if not self._path.filename: self._path.filename='default_INPUT.dat'
 		out_flag = self._write_prep()
-		if out_flag: return		
-		if slash in self.filename:
-			make_directory(self.filename)
-		if self.work_dir:
-			if not os.path.isdir(self.work_dir): os.makedirs(self.work_dir)			
-		outfile = open(self.work_dir+self.filename,'w')
+		if out_flag: return
+		
+		# ensure directory is created
+		if self.work_dir: wd = self.work_dir
+		else: wd = self._path.absolute_to_file
+		try:
+			os.makedirs(wd)
+		except:
+			pass
+		# open file
+		outfile = open(wd+slash+self._path.filename,'w')
+			
+		#if slash in self.filename:
+		#	make_directory(self.filename)
+		#if self.work_dir:
+		#	if not os.path.isdir(self.work_dir): os.makedirs(self.work_dir)			
+		#outfile = open(self.work_dir+self.filename,'w')
 		outfile.write('# '+self.filename+'\n')
 		self._write_unparsed(outfile,'start')
 		if self.text: self._write_text(outfile); self._write_unparsed(outfile,'text')
@@ -2909,7 +2963,7 @@ class fdata(object):						#FEHM data file.
 			line=infile.readline().strip()
 			if not os.path.isfile(line):
 				# check if in subdirectory with input file
-				fname = self._filename.split(slash)
+				fname = self.filename.split(slash)
 				if len(fname)>0:
 					fn0 = ''
 					for fn in fname[:-1]: fn0 += fn
@@ -4211,103 +4265,64 @@ class fdata(object):						#FEHM data file.
 		:param use_paths: Flag to indicate that PyFEHM should favour full paths in fehmn.files rather than duplication of source files.
 		:type use_paths: bool
 		'''
+		
 		if verbose != None: self._verbose = verbose
-		if not os.path.isfile(exe): 	# if can't find the executable, halt
-			if exe == dflt.fehm_path:
-				print 'ERROR: No executable at default location '+exe
-			else:
-				print 'ERROR: No executable at location '+exe
+		
+		# set up and check path to executable
+		exe_path = fpath()
+		exe_path.filename = exe
+		
+		if not os.path.isfile(exe_path.full_path): 	# if can't find the executable, halt
+			print 'ERROR: No executable at location '+exe
 			return
 		
 		tempRstoFlag = False
 		if until is not None and self.files.rsto == '':	tempRstoFlag = True
 		
-		if self.work_dir: 				# if working directory does not exist, make it
-			if not os.path.isdir(self.work_dir): os.makedirs(self.work_dir)
-			
-		if input: self._filename = input; self.files.input = input
-				
-		if self.work_dir: 	# if grid and incon files not in work dir, write them out
-			if not os.path.isfile(self.work_dir+self.grid.filename) and not use_paths: 
-				tname = self.grid.filename
-				self.grid.write()
-				self.grid._filename = tname
-				self.gridfilename = tname
-			if self.files.incon and not os.path.isfile(self.work_dir+self.files.incon) and not use_paths: 
-				tname = self.incon.filename
-				self.incon.write()
-				self.incon._filename = tname
-				self.inconfilename = tname
+		# option to write input, grid, incon files to new names
+		if input: self._path.filename = input
+		if grid: self.grid._path.filename = grid
+		if incon: self.incon._path.filename = incon
 		
-		if grid: 
-			if self.work_dir:
-				self.grid.write(self.work_dir + grid)
-			else:
-				self.grid.write(grid)
-			self.files.grid=grid
-		if self.incon._writeOut == True: 
-			print 'Changes made in to incon file, writing out new.'
-			self.incon.write()
-		if incon: self.files.incon = incon; self.files._use_incon = True
-		self.files.exe = exe
-		cwd = os.getcwd()
-				
-		# if executable, grid, stor path given relative to current directory, will need to modify for if using work_dir
-		if self.work_dir and use_paths: 		
-			if WINDOWS:
-				if exe[1] != ':':
-					exe = cwd+slash+exe
-				if self.gridfilename[1] != ':':
-					self.files.grid = cwd+slash+self.gridfilename
-				if self.files.stor:
-					if self.files.stor[1] != ':':
-						self.files.stor = cwd+slash+self.files.stor
-				if self.files.incon:
-					if self.files.incon[1] != ':':
-						self.files.incon = cwd+slash+self.files.incon
-			else:
-				os.chdir(self.work_dir)
-				if not os.path.isfile(self.gridfilename): 
-					self.files.grid = cwd + slash + self.files.grid
-					if not os.path.isfile(self.files.grid):
-						print 'ERROR: cannot establish grid file path, aborting...'
-						return
-				
-				if not os.path.isfile(exe): 
-					exe = cwd + slash + exe
-					if not os.path.isfile(exe):
-						print 'ERROR: cannot establish executable path, aborting...'
-						return
+		# ASSEMBLE FILES IN CORRECT DIRECTORIES
+		if self.work_dir: wd = self.work_dir + slash
+		else: wd = os.getcwd() + slash
+		self.write(wd+self._path.filename) 				# ALWAYS write input file
+		self.files.input = self._path.filename
+		# 1. Copy everything to working directory 
+		if not use_paths:
+			self.grid.write(wd+self.grid._path.filename)	# SOMETIMES write grid file
+			self.files.grid = self.grid._path.filename
+			if self.files._use_incon:
+				self.incon.write(wd+self.incon._path.filename)	# SOMETIMES write incon file
+				self.files.incon = self.incon._path.filename
+			if self.files._use_stor:						# SOMETIMES copy stor file
+				temp_path = fpath()
+				temp_path.filename = self.files.stor
+				if os.path.isfile(temp_path.full_path):
+					shutil.copyfile(temp_path.full_path,wd+filename)
+				else:
+					print 'ERROR: cant find stor file at '+temp_path.full_path
+					return
+		else:	
+			self.files.grid = self.grid._path.full_path
+			if self.files._use_incon:
+				self.files.incon = self.incon._path.full_path
 						
-				if self.files.stor:
-					if not os.path.isfile(self.files.stor): 
-						self.files.stor = cwd + slash + self.files.stor
-						if not os.path.isfile(self.files.stor):
-							print 'ERROR: cannot establish stor file path, aborting...'
-							return
-							
-				if self.files.incon:
-					if not os.path.isfile(self.files.incon): 
-						self.files.incon = cwd + slash + self.files.incon
-						if not os.path.isfile(self.files.incon):
-							print 'ERROR: cannot establish incon file path, aborting...'
-							return
-						
-				os.chdir(cwd)
-		
-		for file in files:
+		for file in files: 												# extra files to be written
 			if file == 'chk': self.files._use_check = True
 			if file == 'check': self.files._use_check = True
 			if file == 'hist': self.files._use_hist = True
 			if file == 'outp': self.files._use_outp = True
-		if self.ctrl['stor_file_LDA']: self.files._use_stor = True
-		
-		if not self.files.input: self.files.input = self.filename
-		if not self.files.grid: 
-			if self.gridfilename: self.files.grid = self.gridfilename
-			elif self.grid.filename: self.files.filename = self.grid.filename
-			else: print 'WARNING: no grid file specified'
-		
+			
+		if self.ctrl['stor_file_LDA']: self.files._use_stor = True 		# stor file requested?
+			
+		self.files.write()				# ALWAYS write fehmn.files
+		self.files.exe = exe
+		# RUN SIMULATION
+		cwd = os.getcwd()
+						
+						
 		# if using 'until' to break a simulation, we require a restart file to be written each timestep
 		# restart files are written at the same frequency as contour output, hence contour output will
 		# need to be written every timestep - manage this data by deleting it
@@ -4325,15 +4340,16 @@ class fdata(object):						#FEHM data file.
 		self.grid._summary()
 		if self.files.incon: self.incon._summary()
 		self._summary()		
-		self.write()
+		#self.write()
 		
-		self.files.write()
+		#self.files.write()
 
 		if self.work_dir: os.chdir(self.work_dir)
 		
 		# remove restart file if left over from old simulation
 		if until and self.incon.time == None and os.path.isfile(self.files.rsto):
 			os.remove(self.files.rsto)
+			
 		# run the simulation
 		breakAutorestart = False
 		for attempt in range(autorestart+1): 	# restart execution
@@ -5615,11 +5631,11 @@ class fdata(object):						#FEHM data file.
 	rlpmlist = property(_get_rlpmlist)
 	def _get_rlpm(self): return dict([(rlpm.group,rlpm) for rlpm in self._rlpmlist])
 	rlpm = property(_get_rlpm)
-	def _get_filename(self): return self._filename
+	def _get_filename(self): return self._path.filename
 	filename = property(_get_filename)#: (*str*) File name for reading and writing FEHM input text file.
-	def _get_gridfilename(self): return self._gridfilename
-	def _set_gridfilename(self,value): self._gridfilename = value
-	gridfilename = property(_get_gridfilename, _set_gridfilename) #: (*str*) File name of FEHM grid file.
+	def _get_gridfilename(self): return self.grid._path.filename
+	#def _set_gridfilename(self,value): self._gridfilename = value
+	gridfilename = property(_get_gridfilename) #: (*str*) File name of FEHM grid file.
 	def _get_inconfilename(self): return self._inconfilename
 	def _set_inconfilename(self,value): self._inconfilename = value
 	inconfilename = property(_get_inconfilename, _set_inconfilename) #: (*str*) File name of FEHM restart file.
@@ -5672,11 +5688,15 @@ class fdata(object):						#FEHM data file.
 	hist = property(_get_hist) #: (*fhist*) History output for the model.
 	def _get_incon(self): return self._incon
 	incon = property(_get_incon) #: (*fincon*) Initial conditions (restart file) associated with the model.
-	def _get_work_dir(self): 
-		if self._work_dir and not self._work_dir.endswith(slash):
-			return self._work_dir+slash
-		return self._work_dir
-	def _set_work_dir(self,value): self._work_dir = value
+	def _get_work_dir(self): return self._path.absolute_to_workdir
+	def _set_work_dir(self,value): 
+		self._path.update(value)
+		self.grid._path.update(value)
+		self.incon._path.update(value)
+		try:
+			os.makedirs(self.work_dir)
+		except:
+			pass
 	work_dir = property(_get_work_dir, _set_work_dir) #: (*str*) Directory in which to store files and run simulation.
 	def _get_tf(self): return self._tf
 	def _set_tf(self,value): 
