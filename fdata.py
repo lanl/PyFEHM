@@ -2744,15 +2744,17 @@ class fdata(object):						#FEHM data file.
 		if self.trac._on: self._write_trac(outfile); self._write_unparsed(outfile,'trac')
 		outfile.write('stop\n')
 		outfile.close()
-	def add(self,obj):									#Adds a new object to the file
+	def add(self,obj,overwrite=False):									#Adds a new object to the file
 		'''Attach a zone, boundary condition or macro object to the data file.
 		
 		:param obj: Object to be added to the data file.
 		:type obj: fzone, fmacro, fmodel, fboun
+		:param overwrite: Flag to overwrite macro if already exists for a particular zone.
+		:type overwrite: bool
 		'''
-		if isinstance(obj,fmacro): self._add_macro(obj)
+		if isinstance(obj,fmacro): self._add_macro(obj,overwrite)
 		if isinstance(obj,fmodel): self._add_model(obj)
-		elif isinstance(obj,fzone): self._add_zone(obj)
+		elif isinstance(obj,fzone): self._add_zone(obj,overwrite)
 		elif isinstance(obj,fboun): self._add_boun(obj)
 		elif isinstance(obj,frlpm): self._add_rlpm(obj)
 		elif isinstance(obj,frlpm_table): self._add_rlpm(obj)
@@ -2788,13 +2790,17 @@ class fdata(object):						#FEHM data file.
 			
 			dx = (x[1]-x[0])/2.
 			zn = fzone(999,name='XMIN'); zn.rect([x0-0.1,y0-0.1],[x0+dx,y1+0.1])
+			self.add(zn,overwrite=True)
 			dx = (x[-1]-x[-2])/2.
 			zn = fzone(998,name='XMAX'); zn.rect([x1-dx,y0-0.1],[x1+0.1,y1+0.1])
+			self.add(zn,overwrite=True)
 			
 			dy = (y[1]-y[0])/2.
 			zn = fzone(997,name='YMIN'); zn.rect([x0-0.1,y0-0.1],[x1+0.1,y0+dy])
+			self.add(zn,overwrite=True)
 			dy = (y[-1]-y[-2])/2.
 			zn = fzone(996,name='YMAX'); zn.rect([x0-0.1,y1-dy],[x1+0.1,y1+0.1])
+			self.add(zn,overwrite=True)
 			
 		elif self.grid.dimensions == 3:
 			z0,z1 = self.grid.zmin,self.grid.zmax
@@ -2806,27 +2812,27 @@ class fdata(object):						#FEHM data file.
 			
 			dx = (x[1]-x[0])/2.
 			zn = fzone(999,name='XMIN'); zn.rect([x0-0.1,y0-0.1,z0-0.1],[x0+dx,y1+0.1,z1+0.1])
-			self.add(zn)
+			self.add(zn,overwrite=True)
 			
 			dx = (x[-1]-x[-2])/2.
 			zn = fzone(998,name='XMAX'); zn.rect([x1-dx,y0-0.1,z0-0.1],[x1+0.1,y1+0.1,z1+0.1])
-			self.add(zn)
+			self.add(zn,overwrite=True)
 			
 			dy = (y[1]-y[0])/2.
 			zn = fzone(997,name='YMIN'); zn.rect([x0-0.1,y0-0.1,z0-0.1],[x1+0.1,y0+dy,z1+0.1])
-			self.add(zn)
+			self.add(zn,overwrite=True)
 			
 			dy = (y[-1]-y[-2])/2.
 			zn = fzone(996,name='YMAX'); zn.rect([x0-0.1,y1-dy,z0-0.1],[x1+0.1,y1+0.1,z1+0.1])
-			self.add(zn)
+			self.add(zn,overwrite=True)
 			
 			dz = (z[1]-z[0])/2.
 			zn = fzone(995,name='ZMIN'); zn.rect([x0-0.1,y0-0.1,z0-0.1],[x1+0.1,y1+0.1,z0+dz])
-			self.add(zn)
+			self.add(zn,overwrite=True)
 			
 			dz = (z[-1]-z[-2])/2.
 			zn = fzone(994,name='ZMAX'); zn.rect([x0-0.1,y0-0.1,z1-dz],[x1+0.1,y1+0.1,z1+0.1])
-			self.add(zn)
+			self.add(zn,overwrite=True)
 			
 		else:
 			print 'Unrecognized grid dimensionality'
@@ -4662,7 +4668,7 @@ class fdata(object):						#FEHM data file.
 						if different_zone:
 							print 'WARNING: zone '+str(zind)+' was defined earlier in the input file. PyFEHM assumes unique zone definitions. This zone will be ignored.'
 				
-				if not zind in self.zone.keys(): self._add_zone(new_zone)		
+				if not zind in self.zone.keys(): self._add_zone(new_zone,overwrite=True)		
 				line=infile.readline(); block.append(line+'\n')
 				if not line.strip(): more = False
 		return block
@@ -4760,11 +4766,26 @@ class fdata(object):						#FEHM data file.
 					outfile.write('\n')
 				if zn.type == 'list': outfile.write('\n')
 		if not zn.file: outfile.write('\n')		
-	def _add_zone(self,zone=fzone()):							#Adds a ZONE object.
+	def _add_zone(self,zone=fzone(),overwrite=False):			#Adds a ZONE object.
+		# check if zone already exists
+		if isinstance(zone,fzone):
+			if zone.index in self.zone.keys():
+				if not overwrite:
+					print 'WARNING: A zone with index '+str(zone.index)+' already exists. Zone will not be defined, use overwrite = True in add() to overwrite the old zone.'
+					return
+				else:
+					self.delete(self.zone[zone.index])
+		
+			if zone.name in self.zone.keys():
+				if not overwrite:
+					print 'WARNING: A zone with name \''+str(zone.name)+'\' already exists. Zone will not be defined, use overwrite = True in add() to overwrite the old zone.'
+					return
+				else:
+					self.delete(self.zone[zone.name])
+		
 		zone._parent = self
 		if zone not in self._zonelist:
 			self._zonelist.append(zone)
-		#self._zonelist.sort(key=lambda x: x.index)
 		self._associate_zone(zone)
 	def _associate_zone(self,zone): 							#Associates nodes contained within a ZONE, with that zone
 		if not self._associate: return
@@ -5015,7 +5036,7 @@ class fdata(object):						#FEHM data file.
 				m.zone = self._macro_zone(nums_zone)
 				if infile.name != self.filename: m.file=infile.name
 				for i,key in enumerate(macro_list[macroName]): m.param[key[0]] = float(nums_params[i])			
-				self._add_macro(m)
+				self._add_macro(m,overwrite=True)
 		if file_flag:
 			line=infile.readline().strip()
 			if not os.path.isfile(line):
@@ -5036,13 +5057,48 @@ class fdata(object):						#FEHM data file.
 				line = macrofile.readline().strip()
 				self._read_macro(macrofile,macroName)
 				macrofile.close()
-	def _add_macro(self,macro):									#Adds the macro to data file
+	def _add_macro(self,macro,overwrite=False):					#Adds the macro to data file
+		# check macro zone definition
 		macro._parent = self
 		if isinstance(macro.zone,list) and len(macro.zone)==0: macro.zone = self.zone[0] 	# assign everywhere zone
 		elif isinstance(macro.zone,tuple): macro.zone = tuple([int(ls) for ls in macro.zone])
 		elif isinstance(macro.zone,(int,str)):
 			if macro.zone in self.zone.keys(): macro.zone = self.zone[macro.zone]
 			else: print 'ERROR: Specified zone '+str(ind)+' for macro '+macro.type+' does not exist.'
+		
+		# check if macro already exists
+		if isinstance(macro.zone,fzone):
+			zn = macro.zone
+			keys =  []
+			for m in self._allMacro[macro.type]:
+				if isinstance(m.zone,fzone):
+					keys.append((m.zone.index,m))
+					if m.zone.name: keys.append((m.zone.name,m))
+				elif isinstance(m.zone,tuple): keys.append((m.zone,m))
+			
+			keys = dict(keys)
+			if zn.index in keys.keys():
+				if not overwrite:
+					print 'WARNING: A '+macro.type+' macro for zone '+str(zn.index)+' already exists. Macro will not be defined, use overwrite = True in add() to overwrite the old macro.'
+					return
+				else:
+					self.delete(keys[zn.index])
+		
+			keys =  []
+			for m in self._allMacro[macro.type]:
+				if isinstance(m.zone,fzone):
+					keys.append((m.zone.index,m))
+					if m.zone.name: keys.append((m.zone.name,m))
+				elif isinstance(m.zone,tuple): keys.append((m.zone,m))
+			
+			keys = dict(keys)
+			if zn.name in keys.keys():
+				if not overwrite:
+					print 'WARNING: A macro for zone \''+str(zn.name)+'\' already exists. Macro will not be defined, use overwrite = True in add() to overwrite the old macro.'
+					return
+				else:
+					self.delete(keys[zn.name])
+	
 		self._allMacro[macro.type].append(macro)
 		self._allMacro[macro.type].sort(key=lambda x: x.zone.index)
 		self._associate_macro(macro)
