@@ -2435,7 +2435,10 @@ class files(object):						#FEHM file constructor.
 			fehmn.write(' '+self.stor)
 			fehmn.write('\n')
 		if self.root: fehmn.write('root:'+self.root+'\n')		
-		fehmn.write('\nall\n')
+		
+		# level of print screen output
+		if self.verbose: fehmn.write('\nall\n')
+		else: fehmn.write('\nnone\n')
 		fehmn.close()
 	def _get_input(self): return self._input
 	def _set_input(self,value):  
@@ -4180,7 +4183,7 @@ class fdata(object):						#FEHM data file.
 			self.zone[index]._Pi = Pi
 			self.zone[index]._Ti = Ti
 			self.zone[index]._Si = Si
-	def run(self,input='',grid = '',incon='',exe=dflt.fehm_path,files=dflt.files,verbose = True, until=None,autorestart=0,use_paths=False):
+	def run(self,input='',grid = '',incon='',exe=dflt.fehm_path,files=dflt.files,verbose = None, until=None,autorestart=0,use_paths=False):
 		'''Run an fehm simulation. This command first writes out the input file, *fehmn.files* and this incon file
 		if changes have been made. A command line call is then made to the FEHM executable at the specified path (defaults
 		to *fehm.exe* in the working directory if not specified).
@@ -4202,6 +4205,7 @@ class fdata(object):						#FEHM data file.
 		:param use_paths: Flag to indicate that PyFEHM should favour full paths in fehmn.files rather than duplication of source files.
 		:type use_paths: bool
 		'''
+		if verbose != None: self._verbose = verbose
 		if not os.path.isfile(exe): 	# if can't find the executable, halt
 			if exe == dflt.fehm_path:
 				print 'ERROR: No executable at default location '+exe
@@ -4329,12 +4333,7 @@ class fdata(object):						#FEHM data file.
 		for attempt in range(autorestart+1): 	# restart execution
 			if breakAutorestart: break
 			untilFlag = False
-			if verbose:
-				p = Popen(exe)
-			else:
-				fh = open('nul','w')
-				p = Popen(exe,stdout=fh)
-				fh.close()
+			p = Popen(exe)
 			if until is None:
 				p.communicate()
 			else:
