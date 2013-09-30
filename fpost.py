@@ -264,7 +264,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 	
 	'''
 	def __init__(self,filename=None,latest=False,first=False,nearest=None):
-		self._filename=filename
+		self._filename=os_path(filename)
 		self._times=[]   
 		self._format = ''
 		self._data={}
@@ -295,6 +295,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 		:param nearest: Read in the file with date closest to the day supplied. List input will parse multiple output files.
 		:type nearest: fl64,list
 		'''
+		filename = os_path(filename)
 		from glob import glob
 		if isinstance(filename,list):
 			files = filename
@@ -694,6 +695,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 		:type equal_axes: bool
 		
 		'''	
+		save = os_path(save)
 		# at this stage, only structured grids are supported
 		if time==None: time = self.times[-1]
 		delta = False
@@ -776,6 +778,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 		:type perm_contrasts: bool
 		
 		'''	
+		save = os_path(save)
 		# at this stage, only structured grids are supported
 		if time==None: 
 			if np.min(self.times)<0: time = self.times[0]
@@ -946,6 +949,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 		:type elevationPlot: bool
 		
 		'''
+		save = os_path(save)
 		if time==None: time = self.times[-1]	
 		delta = False
 		if isinstance(time,list) or isinstance(time,np.ndarray):
@@ -1045,6 +1049,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 		:type grid_lines: bool
 		 
 		'''	
+		save = os_path(save)
 		# check inputs
 		if time==None: time = self.times[-1]
 		delta = False
@@ -1219,6 +1224,7 @@ class fhistory(object):						# Reading and plotting methods associated with hist
 		self.column_name=[]
 		self.num_columns=0
 		self._nkeys=1
+		filename = os_path(filename)
 		if filename: self._filename=filename; self.read(filename)
 	def __getitem__(self,key):
 		if key in self.variables:
@@ -1369,6 +1375,7 @@ class fhistory(object):						# Reading and plotting methods associated with hist
 		:param scale_t: As for scale but applied to the time axis.
 		:type scale_t: fl64
 		'''
+		save = os_path(save)
 		if not node: print 'Error: no plot node specified.'; return
 		if not variable: 
 			print 'Error: no plot variable specified.'
@@ -1528,7 +1535,7 @@ class multi_pdf(object):
 	def __init__(self,combineString = 'gswin64',
 		save='multi_plot.pdf',files = [],delete_files = True):
 		self.combineString = combineString
-		self._save = save
+		self._save = os_path(save)
 		self._delete_files = delete_files
 		self._assign_files(files)
 	def _assign_files(self,files):

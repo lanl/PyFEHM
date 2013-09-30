@@ -393,6 +393,7 @@ class fzone(object):						#FEHM zone object.
 		``zn.plot(save='myzone.png', angle = [45,45], xlabel = 'x / m', font_size = 'small', color = 'r')``
 		 
 		'''
+		save = os_path(save)
 		if isinstance(angle,str):
 			if angle == 'x': angle = [0,0]
 			elif angle == 'y': angle = [0,90]
@@ -533,6 +534,7 @@ class fzone(object):						#FEHM zone object.
 		``dat.zone[2].topo('zoneDEMtopo.png',method = 'linear')``
 		
 		'''	
+		save = os_path(save)
 		if not self.nodelist: print 'No node information, aborting...'; return
 		if not title: 
 			title = 'Topographic plot of zone ' +str(self.index)
