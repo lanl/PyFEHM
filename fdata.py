@@ -71,9 +71,13 @@ permDicts = dict((
 	(24,['shear_frac_tough','static_frict_coef','dynamic_frict_coef','frac_num','onset_disp',
 	'disp_interval','max_perm_change','frac_cohesion','frac_dens']),
 	
-	(25,['frac_spacing','init_frac_aperture','norm_frac_tough','shear_frac_tough','frac_dilat_angle',
+	#(25,['frac_spacing','init_frac_aperture','norm_frac_tough','shear_frac_tough','frac_dilat_angle',
+	#'static_frict_coef','dynamic_frict_coef','frac_num','onset_disp','disp_interval','max_perm_change',
+	#'frac_cohesion','frac_dens']),
+	
+	(25,['shear_frac_tough',
 	'static_frict_coef','dynamic_frict_coef','frac_num','onset_disp','disp_interval','max_perm_change',
-	'frac_cohesion','frac_dens']),
+	'frac_cohesion']),
 	))
 # dictionary of perm model units, indexed by perm model number, ORDER OF LIST MUST EQUAL ORDER OF INPUT
 permUnits = dict((
@@ -81,7 +85,8 @@ permUnits = dict((
 	(21,['','','','','MPa','','MPa','','','','','','']),
 	(22,['','MPa','','MPa','','','','','','','','','MPa']),
 	(24,['MPa/m','','','','m','m','log(m^2)','MPa','']),
-	(25,['m','m','MPa/m','MPa/m','degrees','','','','m','m','log(m^2)','MPa','']),
+	#(25,['m','m','MPa/m','MPa/m','degrees','','','','m','m','log(m^2)','MPa','']),
+	(25,['MPa/m','','','','m','m','log(m^2)','MPa']),
 	))
 # dictionary of relative permeability model parameters, indexed by model number, ORDER OF LIST MUST EQUAL ORDER OF INPUT
 rlpDicts = dict((
@@ -1241,8 +1246,9 @@ class fincon(object): 						#FEHM restart object.
 		:param inconfilename: Name of restart file.
 		:type inconfilename: str
 		'''
-		
+		print inconfilename
 		if inconfilename: self._path.filename = inconfilename
+		print self._path.full_path
 		
 		if if_new and not os.path.isfile(self._path.full_path): return False
 		

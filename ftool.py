@@ -299,7 +299,7 @@ class fpath(object):
 		if absolute:
 			self.absolute_to_file = path
 		else:
-			self.absolute_to_file = os.getcwd()+path
+			self.absolute_to_file = os.getcwd()+slash+path
 			
 	filename = property(_get_filename, _set_filename) #: (**)
 	
