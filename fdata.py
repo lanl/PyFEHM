@@ -4274,7 +4274,7 @@ class fdata(object):						#FEHM data file.
 		:type use_paths: bool
 		'''
 		
-		if verbose != None: self._verbose = verbose
+		if verbose != None: self.files._verbose = verbose
 		
 		# set up and check path to executable
 		exe_path = fpath()
