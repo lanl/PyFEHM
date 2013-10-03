@@ -2499,9 +2499,9 @@ class files(object):						#FEHM file constructor.
 	def _get_verbose(self): return self._verbose	
 	def _set_verbose(self,value):  self._verbose = value
 	verbose = property(_get_verbose,_set_verbose)#: (*bool*) Boolean to request FEHM output to screen.
-	def _get_co2_inj(self): return self._co2_inj	
-	def _set_co2_inj(self,value):  self._co2_inj = value
-	co2_inj = property(_get_co2_inj,_set_co2_inj)#: (*fl64*) Number of years at which FEHM will terminate co2 injection
+	def _get_co2_inj_time(self): return self._co2_inj_time	
+	def _set_co2_inj_time(self,value):  self._co2_inj_time = value
+	co2_inj_time = property(_get_co2_inj_time,_set_co2_inj_time)#: (*fl64*) Number of years at which FEHM will terminate co2 injection
 class fdata(object):						#FEHM data file.
 	"""Class for FEHM data file. 
 	
