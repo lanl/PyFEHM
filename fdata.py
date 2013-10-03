@@ -1246,9 +1246,7 @@ class fincon(object): 						#FEHM restart object.
 		:param inconfilename: Name of restart file.
 		:type inconfilename: str
 		'''
-		print inconfilename
 		if inconfilename: self._path.filename = inconfilename
-		print self._path.full_path
 		
 		if if_new and not os.path.isfile(self._path.full_path): return False
 		
@@ -2342,8 +2340,9 @@ class frlpm_table(object):						# different object for specifying tables
 class files(object):						#FEHM file constructor.
 	'''Class containing information necessary to write out fehmn.files.
 	'''
-	
-	def __init__(self,root='',input='',grid='',incon='',rsto='',outp='',check='',hist='',co2in='',stor='',exe='fehm.exe',verbose=True,co2_inj_time=None):
+	slots = ['_root','_input','_grid','_incon','_use_incon','_rsto','_use_rsto','_outp','_use_outp','_check',
+		'_use_check','_hist','_use_hist','_co2in','_use_co2in','_stor','_use_stor','_parent','_exe','_co2_inj_time']
+	def __init__(self,root='',input='',grid='',incon='',rsto='',outp='',check='',hist='',co2in='',stor='',exe='fehm.exe',co2_inj_time=None):
 		self._root = ''
 		self._input = ''
 		self._grid = ''
@@ -2363,7 +2362,6 @@ class files(object):						#FEHM file constructor.
 		self._use_stor = False		
 		self._parent = None
 		self._exe = exe
-		self._verbose = verbose
 		self._co2_inj_time = co2_inj_time
 		if root:  	# if root specified assign as default for all inputs.
 			self._root = root
@@ -2440,7 +2438,7 @@ class files(object):						#FEHM file constructor.
 		if self.root: outfile.write('root:'+self.root+'\n')		
 		
 		# level of print screen output
-		if self.verbose: outfile.write('\nall\n')
+		if self._parent.verbose: outfile.write('\nall\n')
 		else: outfile.write('\nnone\n')
 
 		# Set secret flag to use co2_inj.txt file to specify time to stop injection
@@ -2496,9 +2494,6 @@ class files(object):						#FEHM file constructor.
 	def _get_exe(self): return self._exe
 	def _set_exe(self,value):  self._exe = value
 	exe = property(_get_exe,_set_exe)#: (*str*) Path to FEHM executable. Default is 'fehm.exe'.
-	def _get_verbose(self): return self._verbose	
-	def _set_verbose(self,value):  self._verbose = value
-	verbose = property(_get_verbose,_set_verbose)#: (*bool*) Boolean to request FEHM output to screen.
 	def _get_co2_inj_time(self): return self._co2_inj_time	
 	def _set_co2_inj_time(self,value):  self._co2_inj_time = value
 	co2_inj_time = property(_get_co2_inj_time,_set_co2_inj_time)#: (*fl64*) Number of years at which FEHM will terminate co2 injection
@@ -4293,7 +4288,7 @@ class fdata(object):						#FEHM data file.
 		:type use_paths: bool
 		'''
 		
-		if verbose != None: self.files._verbose = verbose
+		if verbose != None: self._verbose = verbose
 		
 		# set up and check path to executable
 		exe_path = fpath()
