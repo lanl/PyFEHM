@@ -120,6 +120,8 @@ def test_input():
 	dat.add(fmacro('flow',zone=0,param=(('rate',1.),('energy',1.),('impedance',1.))))
 	dat.add(fmacro('grad',zone=0,param=(('reference_coord',1),('direction',3),
 		('variable',1),('reference_value',1),('gradient',1))))
+	dat.add(fmacro('grad',zone=0,param=(('reference_coord',1),('direction',3),
+		('variable',2),('reference_value',1),('gradient',1))))
 	dat.add(fmacro('co2frac',param=(('water_rich_sat',1.),('co2_rich_sat',0.),('co2_mass_frac',0.),
 		('init_salt_conc',0.),('override_flag',1))))
 	dat.add(fmacro('co2pres',param=(('pressure',1),('temperature',1),('phase',1))))

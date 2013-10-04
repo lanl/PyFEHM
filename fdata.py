@@ -5104,7 +5104,7 @@ class fdata(object):						#FEHM data file.
 			else: print 'ERROR: Specified zone '+str(ind)+' for macro '+macro.type+' does not exist.'
 		
 		# check if macro already exists
-		if isinstance(macro.zone,fzone):
+		if isinstance(macro.zone,fzone) and macro.type != 'grad':
 			zn = macro.zone
 			keys =  []
 			for m in self._allMacro[macro.type]:
