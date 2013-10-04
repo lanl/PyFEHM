@@ -1530,6 +1530,71 @@ class fzoneflux(fhistory): 					# Derived class of fhistory, for zoneflux output
 	def _get_zones(self): return self._zones
 	def _set_zones(self,value): self._zones = value
 	zones = property(_get_zones, _set_zones) #: (*lst[int]*) List of zone indices for which output data are available.
+class fnodeflux(object): 					# Reading and plotting methods associated with internode flux files.
+	'''Internode flux information.
+		
+		Can read either water or CO2 internode flux files.
+		
+		The fnodeflux object is indexed first by node pair - represented as a tuple of node indices - and then
+		by either the string 'liquid' or 'vapor'. Data values are in time order, as given in the 'times' attribute.
+	'''
+	def __init__(self,filename=None):
+		self._filename = filename
+		self._nodepairs = []
+		self._times = []
+		self._data = {}
+		if self._filename: self.read(self._filename)
+	def __getitem__(self,key):
+		if key in self.nodepairs:
+			return self._data[key]
+		else: return None
+	def read(self,filename):
+		'''Read in FEHM contour output information.
+		
+		:param filename: File name for output data, can include wildcards to define multiple output files.
+		:type filename: str
+		'''
+		if not os.path.isfile(filename):
+			print 'ERROR: cannot find file at '+filename
+			return
+		fp = open(filename)
+		ln = fp.readline()
+		N = None
+		tind = 0
+		while ln != '':
+			nums = ln.split()
+			self._times.append(float(nums[3]))
+			if N == None:
+				N = int(nums[1])
+				# construct data array - times (undetermine length), node_pairs, phase (liquid/vapour)
+				data = np.zeros((N,10000,2))
+				for i in range(N):
+					ln = fp.readline().strip().split()
+					self._nodepairs.append((int(float(ln[0])),int(float(ln[1])))) 	# append node pair
+					data[i,tind,0] = float(ln[2])
+					data[i,tind,1] = float(ln[2])
+			else:
+				for i in range(N):
+					ln = fp.readline().strip().split()
+					data[i,tind,0] = float(ln[2])
+					data[i,tind,1] = float(ln[2])
+			ln = fp.readline()
+			tind +=1
+		fp.close()	
+		data = data[:,:tind,:] 		# truncate unused section of data
+		
+		for i,nodepair in enumerate(self.nodepairs):
+			self._data[nodepair] = dict([(var,data[i,:,icol]) for icol,var in enumerate(['liquid','vapor'])])
+			
+	def _get_filename(self): return self._filename
+	def _set_filename(self,value): self._filename = value
+	filename = property(_get_filename, _set_filename) #: (*str*) filename target for internode flux file.
+	def _get_times(self): return self._times
+	def _set_times(self,value): self._times = value
+	times = property(_get_times, _set_times) #: (*lst*) times for which node flux information is reported.
+	def _get_nodepairs(self): return self._nodepairs
+	def _set_nodepairs(self,value): self._nodepairs = value
+	nodepairs = property(_get_nodepairs, _set_nodepairs) #: (*lst*) node pairs for which node flux information is available. Each node pair is represented as a two item tuple of node indices.
 class multi_pdf(object):
 	'''Tool for making a single pdf document from multiple eps files.'''
 	def __init__(self,combineString = 'gswin64',

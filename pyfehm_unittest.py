@@ -2,6 +2,9 @@
 print 'Testing imports'
 from fdata import*
 
+# test reading of internode fluxes
+ndflx = fnodeflux('run.internode_fluxes.out')
+
 # test pyfehm capabilities
 path = fpath()
 path.filename = 'test.py'
@@ -19,7 +22,6 @@ print path.filename
 print path.absolute_to_file
 print path.full_path
 print ''
-#	asdf
 
 def test_grid(geo):
 	x = np.linspace(0,10,11)
