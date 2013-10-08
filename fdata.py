@@ -2503,7 +2503,7 @@ class fdata(object):						#FEHM data file.
 	"""		
 	__slots__ = ['_filename','_gridfilename','_inconfilename','_sticky_zones','_allMacro','_allModel','_associate','_work_dir',
 			'_bounlist','_cont','_ctrl','_grid','_incon','_hist','_iter','_nfinv','_nobr','_vapl','_adif','_rlpmlist','_pporlist','_vconlist','_sol',
-			'_time','text','times','_time','_zonelist','_writeSubFiles','_strs','_ngas','_carb','_trac','_files','_verbose',
+			'_time','text','_times','_zonelist','_writeSubFiles','_strs','_ngas','_carb','_trac','_files','_verbose',
 			'_tf','_ti','_dti','_dtmin','_dtmax','_dtn','_dtx','_sections','_help','_running','_unparsed_blocks','keep_unknown','_flxo',
 			'_output_times','_path']
 	def __init__(self,filename='',gridfilename='',inconfilename='',sticky_zones=dflt.sticky_zones,associate=dflt.associate,work_dir = None,
@@ -2536,7 +2536,7 @@ class fdata(object):						#FEHM data file.
 		self._sol = ImmutableDict(copy(dflt.sol))
 		self.text=[]					#: (*str*) Information about the model printed at the top of the input file.
 		self._time=ImmutableDict(copy(dflt.time))	
-		self.times=[]					
+		self._times=[]					
 		self._zonelist=[]	
 		self._flxo = []
 		#self._zone={}				
@@ -3954,7 +3954,7 @@ class fdata(object):						#FEHM data file.
 		while line.strip():
 			nums = line.split()
 			time = np.array([float(num) for num in nums])
-			self.times.append(time)
+			self._times.append(time)
 			line=infile.readline().strip()
 		self.tf = self.time['max_time_TIMS']
 		self.dtn = self.time['max_timestep_NSTEP']
@@ -5769,13 +5769,17 @@ class fdata(object):						#FEHM data file.
 	def _get_help(self): return self._help
 	def _set_help(self,value): self._help = value
 	help = property(_get_help, _set_help) #: (*fhelp*) Module for interactive assistance.
+	def _get_times(self): return self._times
+	def _set_times(self,value): self._times = value
+	times = property(_get_times, _set_times) #: array of additional timestepping information
 	def _get_output_times(self): return self._output_times
 	def _set_output_times(self,value): 
+		self._output_times = value
 		if isinstance(self._output_times,(int,float)): self._output_times = [self._output_times]
 		if isinstance(self._output_times,(list,tuple)): self._output_times = np.array(self._output_times)
 		self._times = []
 		for t in self._output_times: self.change_timestepping(t)
+		if len(self._output_times) == 0: return
 		if np.max(self._output_times)>self.tf:
 			print 'WARNING: output requested for times after the simulation end time.'
-		self._output_times = value
 	output_times = property(_get_output_times, _set_output_times) #: (*lst*) List of times at which FEHM should produce output.

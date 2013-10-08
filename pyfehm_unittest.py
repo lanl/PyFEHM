@@ -223,6 +223,9 @@ def test_input():
 	dat.run(verbose = False)
 	dat.verbose = True
 	
+	dat.output_times = [10,20,30]
+	dat.output_times = np.linspace(1,10,20)
+	
 	print 'test incon reading'
 	dat.incon.read('pyfehm_unittest_OUT.rsto')
 	dat0 = fdata('pyfehm_unittest_INPUT.dat','pyfehm_unittest_GRID.inp','pyfehm_unittest_OUT.rsto')
