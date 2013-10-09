@@ -25,7 +25,6 @@ def textline(symbol,N):
 	out = ''
 	for i in range(N): out += symbol
 	return out
-
 class fhelp(object):
 	def __init__(self, parent = None):
 		self._parent = parent
@@ -220,7 +219,7 @@ class fhelp(object):
 				ws = 'Parameters'
 				print ws
 				print textline('-',len(ws))
-				ws = 'shear_frac_tough - \n\n'
+				ws = 'shear_frac_tough - parameter converting excess shear stress to displacement.\n\n'
 				ws += 'static_frict_coef - static coefficient of friction on the fractures.\n\n'
 				ws += 'dynamic_frict_coef - dynamic coefficient that friction drops to during failure.\n\n'
 				ws += 'frac_num - number of fractures per control volume.\n\n'
@@ -254,6 +253,36 @@ class fhelp(object):
 				ws += 'FEHM looks for an auxilliary file called fracture_orientations.dat, which contains a two column list of fracture dips ' 
 				ws += 'and azimuths. These data define a population from which synthetic fracture distributions are constructed for each node. '
 				ws += 'See Dempsey et al. (2013, Int. J. Rock Mech. Min. Sci.) for more details.\n'
+				print ws
+				ws = 'Parameters'
+				print ws
+				print textline('-',len(ws))
+				ws = 'shear_frac_tough - parameter converting excess shear stress to displacement.\n\n'
+				ws += 'static_frict_coef - static coefficient of friction on the fractures.\n\n'
+				ws += 'dynamic_frict_coef - dynamic coefficient that friction drops to during failure.\n\n'
+				ws += 'frac_num - number of fractures per control volume.\n\n'
+				ws += 'onset_disp - shear displacement of the fracture at which permeability modification begins.\n\n'
+				ws += 'disp_interval - displacement interval over which full permeability enhancement is realised.\n\n'
+				ws += 'max_perm_change - maximum change in permeability in log-space (log(multiplier)).\n\n'
+				ws += 'frac_cohesion - facture cohesion, used in Mohr-Coulomb failure calculation.\n\n'
+				print ws
+				
+				ws = 'Example'
+				print ws
+				print textline('-',len(ws))
+				
+				ws = 'Assign permmodel 25 to the zone called \'damage\'.\n\n'
+				ws += '>>> pm = fmodel(\'permmodel\',index=25)  # create the permmodel object\n'
+				ws += '>>> pm.zone = dat.zone[\'damage\']       # assign a zone\n'
+				ws += '>>> pm.param[\'shear_frac_tough\'] = 1.e6    # assign parameters\n'
+				ws += '>>> pm.param[\'static_frict_coef\'] = 0.65\n'
+				ws += '>>> pm.param[\'dynamic_frict_coef\'] = 0.55\n'
+				ws += '>>> pm.param[\'frac_num\'] = 100\n'
+				ws += '>>> pm.param[\'onset_disp\'] = 1.5e-3\n'
+				ws += '>>> pm.param[\'disp_interval\'] = 5.e-3\n'
+				ws += '>>> pm.param[\'max_perm_change\'] = 1.8\n'
+				ws += '>>> pm.param[\'frac_cohesion\'] = 1.\n'
+				ws += '>>> dat.add(pm)\n'
 				print ws
 		else:
 			print 'No information available for that permmodel.'
