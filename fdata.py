@@ -1240,6 +1240,11 @@ class fincon(object): 						#FEHM restart object.
 		
 		if inconfilename: self._path.filename = inconfilename
 		if self.filename: self.read()
+	def __repr__(self): 
+		if self.filename == None:
+			return 'no initial conditions'
+		else:
+			return self.filename			#Print out details
 	def read(self,inconfilename='',if_new = False):
 		'''Parse a restart file for variable information.
 		
@@ -1721,7 +1726,7 @@ class fcarb(object):						#FEHM CO2 module.
 		self._brine = brine			
 		self._parent =parent
 	def __repr__(self): 
-		if not self.iprtype==1: return 'CO2 module inactive'
+		if self.iprtype==1: return 'CO2 module inactive'
 		else: return 'CO2 module active'
 	def on(self,iprtype=3):
 		"""Set parameters to turn CO2 calculations ON.
@@ -2374,7 +2379,7 @@ class files(object):						#FEHM file constructor.
 		if check: self._check = check; self._use_check = True
 		if hist: self._hist = hist; self._use_hist = True
 		if stor: self._stor = stor; self._use_stor = True
-	def __repr__(self): return 'fehmn.files constructor for '+str(self.input)	
+	def __repr__(self): return 'fehmn.files constructor'
 	def _assign_root(self):
 		'''Use root name for all inputs.
 		'''
@@ -2624,7 +2629,11 @@ class fdata(object):						#FEHM data file.
 		
 		else:
 			print 'ERROR: file configuration not recognized'; return
-	def __repr__(self): return self.filename			#Print out details
+	def __repr__(self): 
+		if self.filename == None:
+			return 'empty object'
+		else:
+			return self.filename			#Print out details
 	def read(self,filename='',gridfilename='',inconfilename='',full_connectivity=dflt.full_connectivity,skip=[]):			#Reads data from file.
 		'''Read FEHM input file and construct fdata object.
 		
@@ -4280,7 +4289,7 @@ class fdata(object):						#FEHM data file.
 		:type exe: str
 		:param files: List of additional files to output. Options include 'check', 'hist' and 'outp'.
 		:type files: lst[str]
-		:param until: Name of a function defined inside the script. The function returns a boolean indicating the simulation should be halted. See manual for usage.
+		:param until: Name of a function defined inside the script. The function returns a boolean indicating the simulation should be halted. See tutorial 4 for usage.
 		:type until: func
 		:param autorestart: Number of times FEHM should restart itself in attempting to find a solution.
 		:type autorestart: int

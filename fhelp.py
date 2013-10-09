@@ -29,7 +29,39 @@ def textline(symbol,N):
 class fhelp(object):
 	def __init__(self, parent = None):
 		self._parent = parent
-	
+	def __repr__(self): 
+		outStr = 'PyFEHM PaperClip assistant: "It looks like you\'re building a model..."\n'
+		outStr+='\n' 
+		outStr+='		        _.-;:q=._                                  \n'
+		outStr+='                      .\' j=""^k;:\\.                                 \n'
+		outStr+='                     ; .F       ";`Y                                \n'
+		outStr+='                    ,;.J_        ;\'j                                \n'
+		outStr+='                  ,-;"^7F       : .F           _________________    \n'
+		outStr+='                 ,-\'-_<.        ;gj. _.,---""\'\'               .\'    \n'
+		outStr+='                ;  _,._`\.     : `T"5,                       ;      \n'
+		outStr+='                : `?8w7 `J  ,-\'" -^q. `                     ;       \n'
+		outStr+='                 \;._ _,=\' ;   n58L Y.                     .\'       \n'
+		outStr+='                   F;";  .\' k_ `^\'  j\'                     ;        \n'
+		outStr+='                   J;:: ;     "y:-=\'                      ;         \n'
+		outStr+='                    L;;==      |:;   jT\                  ;         \n'
+		outStr+='                    L;:;J      J:L  7:;\'       _         ;          \n'
+		outStr+='                    I;|:.L     |:k J:.\' ,  \'       .     ;          \n'
+		outStr+='                    |;J:.|     ;.I F.:      .           :           \n'
+		outStr+='                   ;J;:L::     |.| |.J  , \'   `    ;    ;           \n'
+		outStr+='                 .\' J:`J.`.    :.J |. L .    ;         ;            \n'
+		outStr+='                ;    L :k:`._ ,\',j J; |  ` ,        ; ;             \n'
+		outStr+='              .\'     I :`=.:."_".\'  L J             `.\'             \n'
+		outStr+='            .\'       |.:  `"-=-\'    |.J              ;              \n'
+		outStr+='        _.-\'         `: :           ;:;           _ ;               \n'
+		outStr+='    _.-\'"             J: :         /.;\'       ;    ;                \n'
+		outStr+='  =\'_                  k;.\.    _.;:Y\'     ,     .\'                 \n'
+		outStr+='     `"---..__          `Y;."-=\';:=\'     ,      .\'                  \n'
+		outStr+='              `""--..__   `"==="\'    -        .\'                    \n'
+		outStr+='                       ``""---...__    itz .-\'                      \n'
+		outStr+='                                   ``""---\'                         \n'
+		outStr+='Available help topics: \n'
+		outStr += '   .help.permmodel()'
+		return outStr
 	def permmodel(self,index=None):
 		print ''
 		if not index: # summary of available models
@@ -40,7 +72,7 @@ class fhelp(object):
 			ws = 'PyFEHM input'
 			print ws
 			print textline('-',len(ws))
-			print 'Permmodels are defined using the fmacro() class and added via the fdata.add() method.\n'
+			print 'Permmodels are defined using the fmodel() class and added via the fdata.add() method.\n'
 			print 'Inputs:'
 			print 'index - denotes the permmodel to be used, see below for a summary'
 			print 'zone - the zone object (or index or name) to which the permmodel is applied'
@@ -74,7 +106,7 @@ class fhelp(object):
 			print textline('-',len(ws))
 			
 			ws = 'Assign permmodel 24 to the zone called \'damage\'.\n\n'
-			ws += '>>> pm = fmacro(\'permmodel\',index=24)  # create the permmodel object\n'
+			ws += '>>> pm = fmodel(\'permmodel\',index=24)  # create the permmodel object\n'
 			ws += '>>> pm.zone = dat.zone[\'damage\']       # assign a zone\n'
 			ws += '>>> pm.param[\'shear_frac_tough\'] = 1.e6# assign parameters\n'
 			ws += '>>> pm.param[\'static_frict_coef\'] = 0.65\n'
@@ -88,7 +120,7 @@ class fhelp(object):
 			print ws
 			print textline('-',len(ws))
 			if index == 21:
-				ws = 'Permebaility and Youngs modulus are modified following Mohr-Coulomb failure on a user-specified fracture orientation.'			
+				ws = 'Permeability and Youngs modulus are modified following Mohr-Coulomb failure on a user-specified fracture orientation.'			
 				ws += ' The user supplies the components of the fracture normal in the model coordinate system. This fracture is assessed for' 
 				ws += ' Mohr-Coulomb failure. If failure occurs, permeability multipliers are applied in the fracture frame and then rotated back into the model frame.\n'
 				print ws
@@ -116,7 +148,7 @@ class fhelp(object):
 				
 				ws = 'Assign permmodel 21 to the zone called \'damage\'. Youngs modulus is unchanged and permeability'
 				ws += ' in the fracture plane (x and y directions) can increase by a factor of 100.\n\n'
-				ws += '>>> pm = fmacro(\'permmodel\',index=21)  # create the permmodel object\n'
+				ws += '>>> pm = fmodel(\'permmodel\',index=21)  # create the permmodel object\n'
 				ws += '>>> pm.zone = dat.zone[\'damage\']       # assign a zone\n'
 				ws += '>>> pm.param[\'nx\'] = 0.86\n'
 				ws += '>>> pm.param[\'ny\'] = 0\n'
@@ -134,7 +166,7 @@ class fhelp(object):
 				ws += '>>> dat.add(pm)\n'
 				print ws
 			if index == 22:
-				ws = 'Permebaility and Youngs modulus are modified following Mohr-Coulomb failure on the plane of maximum shear.'			
+				ws = 'Permeability and Youngs modulus are modified following Mohr-Coulomb failure on the plane of maximum shear.'			
 				ws += ' Permeability enhancement is specified for three axes in a fracture coordinate frame, with the modified permeability' 
 				ws += ' tensor subsequently rotated back into the global frame.\n'
 				print ws
@@ -162,7 +194,7 @@ class fhelp(object):
 				
 				ws = 'Assign permmodel 22 to the zone called \'damage\'. Youngs modulus is unchanged and permeability'
 				ws += ' in the fracture plane (x and y directions) can increase by a factor of 100.\n\n'
-				ws += '>>> pm = fmacro(\'permmodel\',index=22)  # create the permmodel object\n'
+				ws += '>>> pm = fmodel(\'permmodel\',index=22)  # create the permmodel object\n'
 				ws += '>>> pm.zone = dat.zone[\'damage\']       # assign a zone\n'
 				ws += '>>> pm.param[\'frict_coef\'] = 0.65      # assign parameters\n'
 				ws += '>>> pm.param[\'cohesion\'] = 1.\n'
@@ -204,7 +236,7 @@ class fhelp(object):
 				print textline('-',len(ws))
 				
 				ws = 'Assign permmodel 24 to the zone called \'damage\'.\n\n'
-				ws += '>>> pm = fmacro(\'permmodel\',index=24)  # create the permmodel object\n'
+				ws += '>>> pm = fmodel(\'permmodel\',index=24)  # create the permmodel object\n'
 				ws += '>>> pm.zone = dat.zone[\'damage\']       # assign a zone\n'
 				ws += '>>> pm.param[\'shear_frac_tough\'] = 1.e6    # assign parameters\n'
 				ws += '>>> pm.param[\'static_frict_coef\'] = 0.65\n'

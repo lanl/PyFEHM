@@ -475,8 +475,12 @@ class fgrid(object):				#Grid object.
 		self._parent = None
 		self._full_connectivity = full_connectivity
 		self._path = fpath(parent=self)	
-		self._path.filename=''	
-	def __repr__(self): return self.filename
+		#self._path.filename=None	
+	def __repr__(self): 
+		if self.filename == None:
+			return 'no grid'
+		else:
+			return self.filename			#Print out details
 	def read(self,gridfilename,full_connectivity=False): 
 		"""Read data from an FEHM grid file.
 
