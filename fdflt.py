@@ -48,6 +48,7 @@ class fdflt(object):
 
 		# set this to the fehm executable to be used if no default assigned
 		self.fehm_path 				=	'c:\\users\\264485\\fehm\\source\\src\\fehm.exe'
+		self.lagrit_path			=	'c:\\users\\264485\\python\\pyfehm\\lagrit_win.exe'
 		self.files 					=	['outp','hist','check']
 		self.co2_interp_path 		= 	'c:\\users\\264485\\python\\pyfehm\\co2_interp_table.txt'
 		self.co2_interp_path_2 		= 	'/home/ddempsey/python/pyfehm/co2_interp_table.txt'

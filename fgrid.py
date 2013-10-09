@@ -22,10 +22,12 @@ Public License for more details.
 """
 
 import numpy as np
-import os,math,platform
+import os,math,platform,string,subprocess,shutil
+from subprocess import Popen
 
 from time import time
 from copy import deepcopy
+from glob import glob
 
 try:
 	from matplotlib import pyplot as plt
@@ -36,9 +38,11 @@ except ImportError:
 from fpost import*
 from ftool import*
 
+dflt = fdflt()
+
 WINDOWS = platform.system()=='Windows'
-if WINDOWS: copyStr = 'copy'; delStr = 'del'; slash = '\\'
-else: copyStr = 'cp'; delStr = 'rm'; slash = '/'
+if WINDOWS: slash = '\\'
+else: slash = '/'
 
 node_props = ('kx','ky','kz','cond_x','cond_y','cond_z','density','specific_heat','porosity','thermal_expansion','pressure_coupling',
 'youngs_modulus','poissons_ratio')
@@ -474,8 +478,7 @@ class fgrid(object):				#Grid object.
 		self._dimensions=3
 		self._parent = None
 		self._full_connectivity = full_connectivity
-		self._path = fpath(parent=self)	
-		#self._path.filename=None	
+		self._path = fpath(parent=self)		
 	def __repr__(self): 
 		if self.filename == None:
 			return 'no grid'
@@ -572,7 +575,7 @@ class fgrid(object):				#Grid object.
 
 		"""
 		if filename: self._path.filename=filename
-		if self.filename == None: self._path.filename='default_GRID.inp'
+		if filename == None: self._path.filename='default_GRID.inp'
 		
 		# ASSUME THAT IF FILENAME IS PASSED - THIS IS WHERE THE FILE WILL BE WRITTEN
 		if filename:
@@ -624,7 +627,7 @@ class fgrid(object):				#Grid object.
 			
 		outfile.write('\nstop\n')
 		outfile.close()
-	def _write_avs(self,infile):
+	def _write_avs(self,outfile):
 		outfile.write(str(self.number_nodes)+' '+str(self.number_elems)+' 0 0 0\n')
 		for nd in self.nodelist: 
 			outfile.write('%11d' % nd.index +'        ')
@@ -684,6 +687,108 @@ class fgrid(object):				#Grid object.
 			fm = fmake(temp_path.full_path,x,y,z,self._full_connectivity)
 			fm.write()		
 			self.read(temp_path.full_path,self._full_connectivity)
+	def lagrit_stor(self, grid = None, stor = None, exe = dflt.lagrit_path, overwrite = False):
+		"""Uses LaGriT to create a stor file for the simulation, this will be used in subsequent runs.
+		To create the stor file, LaGriT will convert a mesh comprised of hexahedral elements into one comprising
+		only tetrahedrals. Therefore, a new FEHM grid file will be created and parsed, reflecting the modified 
+		element structure.
+		
+		:param grid: Name of grid file to be created. Destination directory supported.
+		:type grid: str
+		:param stor: Name of stor file to be created. Destination directory supported.
+		:type stor: str
+		:param exe: Path to lagrit executable.
+		:type exe: str
+		:param overwrite: Flag to request that the new FEHM grid file overwrites the old one.
+		:type overwrite: bool
+		
+		"""
+		if self.filename == None: print 'ERROR: a grid must first be loaded/created before a stor file can be created.'; return
+		if not os.path.isfile(exe): print 'ERROR: cannot find lagrit executable at '+exe; return
+		
+		# assign default stor file name if none given
+		if stor == None:
+			stor = self._path.full_path.split('.')[:-1]
+			stor = string.join(stor,'.')+'.stor'
+		# assign default grid file name, location if none given
+		if grid == None:
+			grid = self._path.full_path.split('.')[:-1]
+			grid = string.join(grid,'.')+'_lg.'+self.filename.split('.')[-1]
+		# write mesh to avs
+		avs = self.filename.split('.')[:-1]
+		avs = string.join(avs,'.')+'.avs'
+		fname_save = self._path.full_path
+		self.write(filename = avs, format = 'avs')
+		self._path.filename = fname_save
+		
+		# create lagrit instruction file
+		fp = open('lagrit_instructions.lgi','w')
+		lns = []
+		lns.append('# read the mesh in AVS format\n')
+		lns.append('read avs '+avs+' cmohex\n')
+		lns.append('\n')
+		lns.append('# create a tet version of this point distribution\n')
+		lns.append('cmo / create / cmotet / / / tet\n')
+		lns.append('copypts / cmotet / cmohex\n')
+		lns.append('  cmo / select cmotet\n')
+		lns.append('  cmo / setatt / cmotet / imt / 1 0 0 / 1\n')
+		lns.append('  cmo / setatt / cmotet / itp / 1 0 0 / 0\n')
+		lns.append('\n')
+		lns.append('# remove duplicates\n')
+		lns.append('filter / 1 0 0\n')
+		lns.append('rmpoint / compress\n')
+		lns.append('\n')
+		lns.append('# if sort is needed to reorder the nodes\n')
+		lns.append('# otherwise keep same node odering and comment out\n')
+		lns.append('#sort / cmotet / index / ascending / ikey / zic yic xic\n')
+		lns.append('#reorder / cmotet / ikey\n')
+		lns.append('#cmo / DELATT / cmotet / ikey\n')
+		lns.append('#cmo / status\n')
+		lns.append('\n')
+		lns.append('# connect into delaunay tet mesh \n')
+		lns.append('connect noadd\n')
+		lns.append('resetpts / itp\n')
+		lns.append('quality\n')
+		lns.append('\n')
+		lns.append('# write tet and stor files\n')
+		lns.append('dump fehm lagrit_out cmotet ascii \n')
+		lns.append('\n')
+		lns.append('\n')
+		lns.append('finish\n')
+		fp.writelines(lns)
+		fp.close()
+		
+		os.system(exe+' < lagrit_instructions.lgi > nul')
+				
+		# isolate new grid and stor files, delete others
+		files = glob('lagrit_out*.*')
+		for file in files:
+			if not file.endswith('.stor') and not file.endswith('.fehmn'):
+				os.remove(file)
+		os.remove('lagrit_instructions.lgi')
+		os.remove(avs)
+		
+		# rename and move files, parse
+		if overwrite: 	# overwriting old grid file
+			shutil.move('lagrit_out.fehmn',self._path.full_path)
+			self.read(self._path.full_path)
+		elif grid: 			# grid name/location specified
+			temp_path = fpath()
+			temp_path.filename = grid
+			try: os.makedirs(temp_path.absolute_to_file)
+			except: pass
+			shutil.move('lagrit_out.fehmn',grid)
+			self.read(grid)
+		
+		temp_path = fpath()
+		temp_path.filename = stor
+		try: os.makedirs(temp_path.absolute_to_file)
+		except: pass
+		shutil.move('lagrit_out.stor',stor)
+		if self._parent:
+			self._parent.files.stor = stor
+			self._parent.ctrl['stor_file_LDA'] = 1
+		
 	def volumes(self,volumefilename):
 		""" Reads a lagrit generated file containing control volume information.
 		

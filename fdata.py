@@ -4344,7 +4344,9 @@ class fdata(object):						#FEHM data file.
 				temp_path = fpath()
 				temp_path.filename = self.files.stor
 				if os.path.isfile(temp_path.full_path):
-					shutil.copyfile(temp_path.full_path,wd+filename)
+					try:
+						shutil.copy(temp_path.full_path,wd+temp_path.filename)
+					except: pass
 				else:
 					print 'ERROR: cant find stor file at '+temp_path.full_path
 					return

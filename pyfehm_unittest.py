@@ -70,6 +70,7 @@ def test_input():
 	dat = fdata()
 	x = np.linspace(0,10,11)
 	dat.grid.make('pyfehm_unittest_GRID.inp',x=x,y=x,z=x)
+	#dat.grid.lagrit_stor(overwrite=True)
 	dat.grid.what
 	# zone creation
 	# 1. rect
@@ -95,35 +96,35 @@ def test_input():
 	dat.add(fzone(1,nodelist=[nd1,nd2]))
 	dat.delete(dat.zonelist[-1])
 	# 3. new_zone()
-	dat.new_zone(1,'hi',rect=[[2.,2.,2.],[3.,3.,3.]],permeability = 1., density = 1., porosity = 1., specific_heat = 1.,
-		Pi = 1., Ti = 1., youngs_modulus = 1., poissons_ratio = 1., thermal_expansion = 1., pressure_coupling = 1.)
-	if dat.zone[1].permeability != 1.: print 'perm error'; return False
-	if dat.zone[1].density != 1.: print 'density error'; return False
-	if dat.zone[1].specific_heat != 1.: print 'spec heat error'; return False
-	if dat.zone[1].porosity != 1.: print 'por error'; return False
+	dat.new_zone(1,'hi',rect=[[2.,2.,2.],[3.,3.,3.]],permeability = 1.e-14, density = 2500., porosity = 0.1, specific_heat = 800.,
+		Pi = 1., Ti = 50., youngs_modulus = 10.e3, poissons_ratio = 1., thermal_expansion = 1., pressure_coupling = 1.)
+	if dat.zone[1].permeability != 1.e-14: print 'perm error'; return False
+	if dat.zone[1].density != 2500.: print 'density error'; return False
+	if dat.zone[1].specific_heat != 800.: print 'spec heat error'; return False
+	if dat.zone[1].porosity != 0.1: print 'por error'; return False
 	if dat.zone[1].Pi != 1.: print 'Pi error'; return False
-	if dat.zone[1].Ti != 1.: print 'Ti error'; return False
-	if dat.zone[1].youngs_modulus != 1.: print 'youngs mod error'; return False
+	if dat.zone[1].Ti != 50.: print 'Ti error'; return False
+	if dat.zone[1].youngs_modulus != 10.e3: print 'youngs mod error'; return False
 	if dat.zone[1].poissons_ratio != 1.: print 'poissons ratio error'; return False
 	if dat.zone[1].thermal_expansion != 1.: print 'alpha error'; return False
 	if dat.zone[1].pressure_coupling != 1.: print 'biot error'; return False
 	dat.new_zone(1,'hi',nodelist = 5)
 	dat.new_zone(1,'hi',nodelist = 5,overwrite=True)
-	dat.new_zone(1,'hi',nodelist = [nd1,nd2],permeability =[1.,2.,1.], density = 1., Pi = 1., youngs_modulus = 1., thermal_expansion = 1.,
+	dat.new_zone(1,'hi',nodelist = [nd1,nd2],permeability =[1.e-14,2.e-14,1.e-14], density = 2500., Pi = 1., youngs_modulus = 1., thermal_expansion = 1.,
 		overwrite=True)
 	#dat.delete(dat.zonelist[-1])
 	
 	# macro creation
-	dat.zone[0].permeability = 1.
+	dat.zone[0].permeability = 1.e-14
 	dat.add(fmacro('cond',zone=0,param=(('cond_x',1.),('cond_y',1.),('cond_z',1.))))
-	dat.add(fmacro('rock',zone=0,param=(('density',1.),('porosity',1.),('specific_heat',1.))))
+	dat.add(fmacro('rock',zone=0,param=(('density',2500.),('porosity',.1),('specific_heat',800.))))
 	dat.add(fmacro('elastic',zone=0,param=(('youngs_modulus',1.),('poissons_ratio',1.))))
 	dat.add(fmacro('biot',zone=0,param=(('pressure_coupling',1.),('thermal_expansion',1.))))
 	dat.add(fmacro('flow',zone=0,param=(('rate',1.),('energy',1.),('impedance',1.))))
-	dat.add(fmacro('grad',zone=0,param=(('reference_coord',1),('direction',3),
-		('variable',1),('reference_value',1),('gradient',1))))
-	dat.add(fmacro('grad',zone=0,param=(('reference_coord',1),('direction',3),
-		('variable',2),('reference_value',1),('gradient',1))))
+	dat.add(fmacro('grad',zone=0,param=(('reference_coord',0),('direction',3),
+		('variable',1),('reference_value',1),('gradient',-9.81*1e3/1e6))))
+	dat.add(fmacro('grad',zone=0,param=(('reference_coord',0),('direction',3),
+		('variable',2),('reference_value',1),('gradient',-0.04))))
 	dat.add(fmacro('co2frac',param=(('water_rich_sat',1.),('co2_rich_sat',0.),('co2_mass_frac',0.),
 		('init_salt_conc',0.),('override_flag',1))))
 	dat.add(fmacro('co2pres',param=(('pressure',1),('temperature',1),('phase',1))))
@@ -220,7 +221,9 @@ def test_input():
 	dat.verbose = True
 	
 	print 'test running'
+	dat.strs.off()
 	dat.run(verbose = False)
+	
 	dat.verbose = True
 	
 	dat.output_times = [10,20,30]
@@ -228,6 +231,7 @@ def test_input():
 	
 	print 'test incon reading'
 	dat.incon.read('pyfehm_unittest_OUT.rsto')
+	
 	dat0 = fdata('pyfehm_unittest_INPUT.dat','pyfehm_unittest_GRID.inp','pyfehm_unittest_OUT.rsto')
 	dat.incon.stressgrad(1.,1.,1.)
 	dat.incon.critical_stress()
@@ -255,6 +259,8 @@ dat = fdata()
 dat = fdata(work_dir = 'test/test')
 x = np.linspace(0,10,11)
 dat.grid.make('pyfehm_unittest_GRID.inp',x=x,y=x,z=x)
+dat.grid.lagrit_stor(overwrite=True)
+
 if not os.path.isdir(dat.work_dir): print 'where work dir?'
 if not os.path.isfile(dat.work_dir+'\\pyfehm_unittest_GRID.inp'): print 'where grid in work dir?'
 
