@@ -654,7 +654,7 @@ class fgrid(object):				#Grid object.
 	def write(self,filename=None,format='fehm'):
 		"""Write grid object to a grid file (FEHM and AVS formats supported).
 
-		:param filename: name of FEHM grid file to write to, including path specification, e.g. 'c:\\path\\file_out.inp'
+		:param filename: name of FEHM grid file to write to, including path specification, e.g. c:\\path\\file_out.inp
 		:type filename: str
 		:param format: FEHM grid file format - currently options are 'fehm' (default) and 'avs'. 'avs' is the required format for reading into LaGrit.
 		:type format: str
