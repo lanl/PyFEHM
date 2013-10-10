@@ -485,23 +485,46 @@ class fgrid(object):				#Grid object.
 		else:
 			return self.filename			#Print out details
 	def read(self,gridfilename,full_connectivity=False): 
-		"""Read data from an FEHM grid file.
+		"""Read data from an FEHM or AVS grid file. If an AVS grid is specified, PyFEHM will write out the corresponding FEHM grid file.
 
-		:param gridfilename: name of FEHM grid file, including path specification.
+		:param gridfilename: name of grid file, including path specification.
 		:type gridfilename: str
 		:param full_connectivity: read element and connection data and construct corresponding objects. Defaults to False. Use if access to connectivity information will be useful.
 		:type full_connectivity: bool
 		"""
-		
 		self._full_connectivity = full_connectivity
 		self._path.filename = gridfilename 
+		if not os.path.isfile(gridfilename):
+			print 'ERROR: file at '+self._path.full_path+' not found.'; return
+		# assess format of file	from first two lines
+		infile = open(self._path.full_path)
+		ln1 = infile.readline()
+		ln2 = infile.readline()
+		infile.close()
+		isAvs = False
+		try:
+			a = int(ln2.split()[0]) 	# first number of second line is a 1, five numbers in header
+			if a  == 1 and len(ln1.strip().split())==5: isAvs = True
+		except ValueError: pass
 		if gridfilename.endswith('.stor'):
 			self.read_stor()
+			return
+		elif ln1.strip().split()[0].startswith('coor'):
+			self._read_fehm() 	# first line starts with 'coor'
+		elif isAvs:
+			self._read_avs()		
+			newgridfilename = self._path.full_path.split('.')[:-1]
+			newgridfilename = string.join(newgridfilename,'.')+'.inp'
+			if os.path.isfile(newgridfilename):
+				newgridfilename = newgridfilename[:-4] + '_new' + newgridfilename[-4:]
+			self.write(newgridfilename, 'fehm')		# write out equivalent fehm grid
+			if self._parent: self._parent.files.grid = self._path.filename
 		else:
-			self._read_inp()
-			self.add_nodetree()
+			print 'ERROR: Unrecognized grid format.'
+			
+		self.add_nodetree()
 		if self._parent: self._parent._add_boundary_zones()
-	def _read_inp(self): 		#Read in fehm meshfile for node,element data .
+	def _read_fehm(self): 		#Read in fehm meshfile for node,element data .
 		self._nodelist = []
 		self._connlist = []
 		self._elemlist = []
@@ -559,14 +582,77 @@ class fgrid(object):				#Grid object.
 				self._elemlist.append(el[1:])
 				self._elem[el[0]] = self.elemlist[-1]
 		infile.close()		
-
+		if ((len(np.unique([nd.position[0] for nd in self.nodelist])) == 1) or
+			 (len(np.unique([nd.position[1] for nd in self.nodelist])) == 1) or
+			 (len(np.unique([nd.position[2] for nd in self.nodelist])) == 1)):
+			self._dimensions = 2
+		else: self._dimensions = 3
+	def _read_avs(self): 		#Read in avs meshfile for node, element data.
+		self._nodelist = []
+		self._connlist = []
+		self._elemlist = []
+		infile = open(self._path.full_path)
+		
+		if self._parent: self._parent.files.grid = self._path.filename
+			
+		ln = infile.readline()
+		N = int(ln.strip().split()[0]) 			# number nodes
+		N_el = int(ln.strip().split()[1])		# number elements
+		for i in range(N): 						# FOR each node
+			nd = infile.readline().strip().split()	# read line
+			new_node = fnode(index=int(nd[0]),position=np.array([float(nd[1]),float(nd[2]),float(nd[3])]))
+			self.add_node(new_node)	 				# add node object
+		
+		N = N_el
+		connectivity = None
+		for i in range(N): 						# FOR each element
+			el = infile.readline().strip().split()
+			el = [el[0],] + el[3:]
+			el = [int(eli) for eli in el]
+			if connectivity == None: connectivity = len(el) - 1
+			
+			if self._full_connectivity:
+				new_elem = felem(index = el[0], nodes = [self.node[eli] for eli in el[1:]])
+				self.add_elem(new_elem)
+				if connectivity == 8:
+					nds1 = [el[1],el[1],el[1],el[7],el[7],el[7],el[4],el[4],el[6],el[6],el[2],el[5]]
+					nds2 = [el[5],el[2],el[4],el[6],el[3],el[8],el[3],el[8],el[5],el[2],el[3],el[8]]
+				elif connectivity == 4:
+					nds1 = [el[1],el[2],el[3],el[4]]
+					nds2 = [el[2],el[3],el[4],el[1]]
+				elif connectivity == 3:
+					nds1 = [el[1],el[2],el[3]]
+					nds2 = [el[2],el[3],el[1]]
+				else:
+					print 'ERROR: unrecognized connectivity'; return
+				for nd1,nd2 in zip(nds1,nds2):
+					if nd1>nd2: ndi = nd2; nd2 = nd1; nd1 = ndi
+					nd1 = self.node[nd1]; nd2 = self.node[nd2]
+					new_conn = fconn(nodes = [nd1,nd2])
+					
+					nd1inds = []
+					for con in nd1.connections:
+						for nd in con.nodes: nd1inds.append(nd.index)
+					
+					if nd2.index in nd1inds: continue
+					
+					self.add_conn(new_conn)
+					nd1.connections.append(new_conn)
+					nd2.connections.append(new_conn)
+				# associate element nodes with element
+				for nd in self.elemlist[-1].nodes: 
+					self._node[nd.index].elements.append(self.elemlist[-1])		
+			else:
+				self._elemlist.append(el[1:])
+				self._elem[el[0]] = self.elemlist[-1]
+		infile.close()		
 		if ((len(np.unique([nd.position[0] for nd in self.nodelist])) == 1) or
 			 (len(np.unique([nd.position[1] for nd in self.nodelist])) == 1) or
 			 (len(np.unique([nd.position[2] for nd in self.nodelist])) == 1)):
 			self._dimensions = 2
 		else: self._dimensions = 3
 	def write(self,filename=None,format='fehm'):
-		"""Write grid object to an FEHM grid file.
+		"""Write grid object to a grid file (FEHM and AVS formats supported).
 
 		:param filename: name of FEHM grid file to write to, including path specification, e.g. 'c:\\path\\file_out.inp'
 		:type filename: str
@@ -697,7 +783,7 @@ class fgrid(object):				#Grid object.
 		:type grid: str
 		:param stor: Name of stor file to be created. Destination directory supported.
 		:type stor: str
-		:param exe: Path to lagrit executable.
+		:param exe: Path to lagrit executable (default, fdflt.lagrit_path, in environment file 'fdflt.py').
 		:type exe: str
 		:param overwrite: Flag to request that the new FEHM grid file overwrites the old one.
 		:type overwrite: bool
@@ -788,7 +874,6 @@ class fgrid(object):				#Grid object.
 		if self._parent:
 			self._parent.files.stor = stor
 			self._parent.ctrl['stor_file_LDA'] = 1
-		
 	def volumes(self,volumefilename):
 		""" Reads a lagrit generated file containing control volume information.
 		

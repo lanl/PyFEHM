@@ -24,6 +24,10 @@ print path.full_path
 print ''
 
 def test_grid(geo):
+
+	geo = fgrid()
+	geo.read('mesh_avs.avs')
+
 	x = np.linspace(0,10,11)
 	geo.make('pyfehm_unittest_GRID.inp',x=x,y=x,z=x)
 	if not os.path.isfile('pyfehm_unittest_GRID.inp'): print 'where is file?'; return False
