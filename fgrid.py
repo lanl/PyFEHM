@@ -766,9 +766,10 @@ class fgrid(object):				#Grid object.
 				fm = fmake(self._path.absolute_to_workdir+slash+temp_path.filename,x,y,z,self._full_connectivity)
 				fm.write()		
 				self.read(self._path.absolute_to_workdir+slash+temp_path.filename,self._full_connectivity)
-			fm = fmake(temp_path.full_path,x,y,z,self._full_connectivity)
-			fm.write()		
-			self.read(temp_path.full_path,self._full_connectivity)
+			else:
+				fm = fmake(temp_path.full_path,x,y,z,self._full_connectivity)
+				fm.write()		
+				self.read(temp_path.full_path,self._full_connectivity)
 		else:
 			fm = fmake(temp_path.full_path,x,y,z,self._full_connectivity)
 			fm.write()		
