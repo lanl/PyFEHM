@@ -1542,6 +1542,7 @@ class fnodeflux(object): 					# Reading and plotting methods associated with int
 		self._filename = filename
 		self._nodepairs = []
 		self._times = []
+		self._timesteps = []
 		self._data = {}
 		if self._filename: self.read(self._filename)
 	def __getitem__(self,key):
@@ -1563,6 +1564,7 @@ class fnodeflux(object): 					# Reading and plotting methods associated with int
 		tind = 0
 		while ln != '':
 			nums = ln.split()
+			self._timesteps.append(float(nums[2]))
 			self._times.append(float(nums[3]))
 			if N == None:
 				N = int(nums[1])
@@ -1589,6 +1591,9 @@ class fnodeflux(object): 					# Reading and plotting methods associated with int
 	def _get_filename(self): return self._filename
 	def _set_filename(self,value): self._filename = value
 	filename = property(_get_filename, _set_filename) #: (*str*) filename target for internode flux file.
+	def _get_timesteps(self): return np.sort(self._timesteps)
+	def _set_timesteps(self,value): self._timesteps = value
+	timesteps = property(_get_timesteps, _set_timesteps) #: (*lst*) timestep for which node flux information is reported.
 	def _get_times(self): return np.sort(self._times)
 	def _set_times(self,value): self._times = value
 	times = property(_get_times, _set_times) #: (*lst*) times for which node flux information is reported.
