@@ -1574,19 +1574,19 @@ class fnodeflux(object): 					# Reading and plotting methods associated with int
 					ln = fp.readline().strip().split()
 					self._nodepairs.append((int(float(ln[0])),int(float(ln[1])))) 	# append node pair
 					data[i,tind,0] = float(ln[2])
-					data[i,tind,1] = float(ln[2])
+					data[i,tind,1] = float(ln[3])
 			else:
 				for i in range(N):
 					ln = fp.readline().strip().split()
 					data[i,tind,0] = float(ln[2])
-					data[i,tind,1] = float(ln[2])
+					data[i,tind,1] = float(ln[3])
 			ln = fp.readline()
 			tind +=1
 		fp.close()	
 		data = data[:,:tind,:] 		# truncate unused section of data
 		
 		for i,nodepair in enumerate(self.nodepairs):
-			self._data[nodepair] = dict([(var,data[i,:,icol]) for icol,var in enumerate(['liquid','vapor'])])
+			self._data[nodepair] = dict([(var,data[i,:,icol]) for icol,var in enumerate(['vapor','liquid'])])
 			
 	def _get_filename(self): return self._filename
 	def _set_filename(self,value): self._filename = value
