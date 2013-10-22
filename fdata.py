@@ -2766,7 +2766,7 @@ class fdata(object):						#FEHM data file.
 		self._add_boundary_zones()
 		return self
 	def write(self,filename='',writeSubFiles = True, use_paths=False):	#Writes data to a file.
-		'''Write fdata object to FEHM input file.
+		'''Write fdata object to FEHM input file and fehmn.files file.
 		
 		:param filename: Name of FEHM input file to write to.
 		:type filename: str
