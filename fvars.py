@@ -927,12 +927,29 @@ def fluid_column(z,Tgrad,Tsurf,Psurf,iterations = 3):
 	
 	'''
 	z = abs(np.array(z))
-	Tgrad = abs(Tgrad)
 	
 	if z[-1] < z[0]: z = np.flipud(z)
 	if z[0] != 0: z = np.array([0,]+list(z))
 	
-	T = Tsurf + Tgrad*z
+	if isinstance(Tgrad,str): 		# interpret Tgrad as a down well temperature profile
+		if not os.path.isfile(Tgrad): print 'ERROR: cannot find temperature gradient file \''+Tgrad+'\'.'; return
+		
+		tempfile = open(Tgrad,'r')
+		ln = tempfile.readline()
+		tempfile.close()
+		commaFlag = False; spaceFlag = False
+		if len(ln.split(',')) > 1: commaFlag = True
+		elif len(ln.split()) > 1: spaceFlag = True
+		if not commaFlag and not spaceFlag: print 'ERROR: incorrect formatting for \''+Tgrad+'\'. Expect first column depth (m) and second column temperature (degC), either comma or space separated.'; return
+		if commaFlag: tempdat = np.loadtxt(Tgrad,delimiter=',')
+		else: tempdat = np.loadtxt(Tgrad)
+		zt = tempdat[:,0]; tt = tempdat[:,1]
+		
+		T = np.interp(z,zt,tt)
+		
+	else:
+		Tgrad = abs(Tgrad)
+		T = Tsurf + Tgrad*z
 	Pgrad = 800*9.81/1e6
 	Phgrad = 1000*9.81/1e6
 	if co2Vars:

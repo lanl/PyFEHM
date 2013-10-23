@@ -4577,7 +4577,7 @@ class fdata(object):						#FEHM data file.
 			print ' !!!!---------------------------------------------------------!!!!'
 			print ''
 		return False
-	def temperature_gradient(self,filename,offset=0.,first_zone = 100,auxiliary_file=None):
+	def temperature_gradient(self,filename,offset=0.,first_zone = 100,auxiliary_file=None,hydrostatic = 0):
 		'''Assign initial temperature distribution to model based on supplied temperature profile.
 		
 		:param filename: Name of a file containing temperature gradient data. File should be two columns, comma or space separated, with elevation in the first column and temperature (degC) in the second.
@@ -4588,6 +4588,8 @@ class fdata(object):						#FEHM data file.
 		:type first_zone: int
 		:param auxiliary_file: Name of auxiliary file in which to store **PRES** macros.
 		:type auxiliary_file: str
+		:param hydrostatic: Pressure at top of well profile. PyFEHM will calculate hydrostatic pressures consistent with the temperature profile. If left blank, default pressures will be used.
+		:type hydrostatic: fl64
 		'''
 		# check if file exists
 		if not os.path.isfile(filename): print 'ERROR: cannot find temperature gradient file \''+filename+'\'.'; return
@@ -4607,7 +4609,7 @@ class fdata(object):						#FEHM data file.
 		else: tempdat = np.loadtxt(filename)
 		zt = tempdat[:,0]; tt = tempdat[:,1]
 		zt = zt + offset
-		if zt[0]>zt[-1]: zt = np.flipud(zt); tt = np.flipud(tt)
+		if (zt[0]>zt[-1] and z[0]<z[-1]) or (zt[0]<zt[-1] and z[0]>z[-1]): zt = np.flipud(zt); tt = np.flipud(tt)
 		# calculate pressure to assign
 		if 0 in self.pres.keys():
 			p0 = self.pres[0].param['pressure']
@@ -4619,11 +4621,19 @@ class fdata(object):						#FEHM data file.
 			ind = first_zone
 			x0,x1 = self.grid.xmin,self.grid.xmax
 			y0,y1 = self.grid.ymin,self.grid.ymax
-			for zi,ti in zip(z,np.interp(z,zt,tt)):
+			T = np.interp(abs(z),zt,tt)
+			if hydrostatic != 0:				
+				P = fluid_column(z,Tgrad = filename, Tsurf = 25., Psurf = hydrostatic)[0][:,0]
+			else:
+				P = p0*np.ones((1,len(z)))[0]
+			
+			if z[0]<z[-1]: P = np.flipud(P)
+			
+			for zi,ti,pi in zip(z,T,P):
 				zn = fzone(index=ind)
 				zn.rect([x0-0.1,y0-0.1,zi-0.1],[x1+0.1,y1+0.1,zi+0.1])
 				self.add(zn)
-				self.add(fmacro('pres',zone=ind,file = auxiliary_file, param=(('pressure',p0),('temperature',ti),('saturation',1))))
+				self.add(fmacro('pres',zone=ind,file = auxiliary_file, param=(('pressure',pi),('temperature',ti),('saturation',1))))
 				ind +=1
 		else:
 			for nd,ti in zip(self.grid.nodelist,np.interp([nd.position[2] for nd in self.grid.nodelist],zt,tt)):
