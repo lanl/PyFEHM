@@ -2765,7 +2765,7 @@ class fdata(object):						#FEHM data file.
 		infile.close()
 		self._add_boundary_zones()
 		return self
-	def write(self,filename='',writeSubFiles = True, use_paths=False):	#Writes data to a file.
+	def write(self,filename='',writeSubFiles = True):	#Writes data to a file.
 		'''Write fdata object to FEHM input file and fehmn.files file.
 		
 		:param filename: Name of FEHM input file to write to.
@@ -2830,16 +2830,16 @@ class fdata(object):						#FEHM data file.
 		if self.trac._on: self._write_trac(outfile); self._write_unparsed(outfile,'trac')
 		outfile.write('stop\n')
 		outfile.close()
-		if not use_paths:
-			self.files.grid = self.grid._path.filename
-			if self.files._use_incon:
-				self.files.incon = self.incon._path.filename
-		else:	
-			self.files.grid = self.grid._path.full_path
-			if self.files._use_incon:
-				self.files.incon = self.incon._path.full_path
-		self.files.input = self._path.filename
-		self.files.write()				# ALWAYS write fehmn.files
+		#if not use_paths:
+		#	self.files.grid = self.grid._path.filename
+		#	if self.files._use_incon:
+		#		self.files.incon = self.incon._path.filename
+		#else:	
+		#	self.files.grid = self.grid._path.full_path
+		#	if self.files._use_incon:
+		#		self.files.incon = self.incon._path.full_path
+		#self.files.input = self._path.filename
+		#self.files.write()				# ALWAYS write fehmn.files
 	def add(self,obj,overwrite=False):									#Adds a new object to the file
 		'''Attach a zone, boundary condition or macro object to the data file.
 		
@@ -4285,7 +4285,7 @@ class fdata(object):						#FEHM data file.
 			self.zone[index]._Pi = Pi
 			self.zone[index]._Ti = Ti
 			self.zone[index]._Si = Si
-	def run(self,input='',grid = '',incon='',exe=dflt.fehm_path,files=dflt.files,verbose = None, until=None,autorestart=0,use_paths=False):
+	def run(self,input='',grid = '',incon='',exe=dflt.fehm_path,files=dflt.files,verbose = None, until=None,autorestart=0,use_paths=False,write_files_only = False):
 		'''Run an fehm simulation. This command first writes out the input file, *fehmn.files* and this incon file
 		if changes have been made. A command line call is then made to the FEHM executable at the specified path (defaults
 		to *fehm.exe* in the working directory if not specified).
@@ -4306,6 +4306,8 @@ class fdata(object):						#FEHM data file.
 		:type autorestart: int
 		:param use_paths: Flag to indicate that PyFEHM should favour full paths in fehmn.files rather than duplication of source files.
 		:type use_paths: bool
+		:param write_files_only: Flag to indicate the PyFEHM should write out input, incon, grid, fehmn.files, etc. but should not execute a simulation.
+		:type write_files_only: bool
 		'''
 		
 		if verbose != None: self._verbose = verbose
@@ -4375,6 +4377,7 @@ class fdata(object):						#FEHM data file.
 		if self.ctrl['stor_file_LDA']: self.files._use_stor = True 		# stor file requested?
 			
 		self.files.write()				# ALWAYS write fehmn.files
+		if write_files_only: return 		# return here if user requests only write out of files
 		self.files.exe = exe
 		# RUN SIMULATION
 		cwd = os.getcwd()

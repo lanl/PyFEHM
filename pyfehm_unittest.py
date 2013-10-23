@@ -225,8 +225,7 @@ def test_input():
 	dat.verbose = True
 	
 	print 'test running'
-	dat.strs.off()
-	dat.run(verbose = False)
+	dat.run(verbose = False, write_files_only = True)
 	
 	dat.verbose = True
 	
