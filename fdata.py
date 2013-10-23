@@ -2772,7 +2772,6 @@ class fdata(object):						#FEHM data file.
 		:type filename: str
 		:param writeSubFiles: Boolean indicating whether macro and zone information, designated as contained within other input files, should be written out, regardless of its existence. Non-existant files will always be written out.
 		:type writeSubFiles: bool
-		:type use_paths: bool
 		'''
 		if writeSubFiles: self._writeSubFiles = writeSubFiles
 		if filename: self._path.filename=filename
@@ -2830,16 +2829,6 @@ class fdata(object):						#FEHM data file.
 		if self.trac._on: self._write_trac(outfile); self._write_unparsed(outfile,'trac')
 		outfile.write('stop\n')
 		outfile.close()
-		#if not use_paths:
-		#	self.files.grid = self.grid._path.filename
-		#	if self.files._use_incon:
-		#		self.files.incon = self.incon._path.filename
-		#else:	
-		#	self.files.grid = self.grid._path.full_path
-		#	if self.files._use_incon:
-		#		self.files.incon = self.incon._path.full_path
-		#self.files.input = self._path.filename
-		#self.files.write()				# ALWAYS write fehmn.files
 	def add(self,obj,overwrite=False):									#Adds a new object to the file
 		'''Attach a zone, boundary condition or macro object to the data file.
 		
@@ -4386,10 +4375,7 @@ class fdata(object):						#FEHM data file.
 		self.grid._summary()
 		if self.files.incon: self.incon._summary()
 		self._summary()		
-		#self.write()
 		
-		#self.files.write()
-
 		if self.work_dir: os.chdir(self.work_dir)
 		
 		# remove restart file if left over from old simulation
@@ -4401,7 +4387,8 @@ class fdata(object):						#FEHM data file.
 		for attempt in range(autorestart+1): 	# restart execution
 			if breakAutorestart: break
 			untilFlag = False
-			p = Popen(exe)
+			#p = Popen(exe)
+			p = Popen(exe_path.full_path)
 			if until is None:
 				p.communicate()
 			else:

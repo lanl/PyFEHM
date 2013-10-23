@@ -1121,7 +1121,7 @@ class fgrid(object):				#Grid object.
 		if self._parent:
 			if self._parent.work_dir and not os.path.isdir(self._parent.work_dir): 
 				os.makedirs(self._parent.work_dir)	
-			plt.savefig(self._parent.work_dir+save_fname, dpi=200, facecolor='w', edgecolor='w',orientation='portrait', 
+			plt.savefig(self._parent.work_dir+slash+save_fname, dpi=200, facecolor='w', edgecolor='w',orientation='portrait', 
 			format=extension,transparent=True, bbox_inches=None, pad_inches=0.1)
 		else:
 			plt.savefig(save_fname, dpi=200, facecolor='w', edgecolor='w',orientation='portrait', 
