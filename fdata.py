@@ -4513,6 +4513,11 @@ class fdata(object):						#FEHM data file.
 					self.strs.excess_she['PAR1']=0.9
 					self.strs.excess_she['PAR2']=10.
 					self.strs.excess_she['PAR3']=1.
+					
+			if 1 not in [pm.index for pm in self.permmodellist]:
+				new_permmodel = fmodel('permmodel',index=1)
+				new_permmodel.zonelist=self.zone[0]
+				self.add(new_permmodel)	
 		for boun in self.bounlist: boun._check()
 		for zone in self.zonelist: zone._check()
 		for key in self._allMacro.keys():
