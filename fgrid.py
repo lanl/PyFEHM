@@ -1120,12 +1120,16 @@ class fgrid(object):				#Grid object.
 		extension, save_fname, pdf = save_name(save,variable='grid',time=1)
 		if self._parent:
 			if self._parent.work_dir and not os.path.isdir(self._parent.work_dir): 
-				os.makedirs(self._parent.work_dir)	
-			plt.savefig(self._parent.work_dir+slash+save_fname, dpi=200, facecolor='w', edgecolor='w',orientation='portrait', 
-			format=extension,transparent=True, bbox_inches=None, pad_inches=0.1)
+				os.makedirs(self._parent.work_dir)
+			if self._parent.work_dir:
+				plt.savefig(self._parent.work_dir+slash+save_fname, dpi=200, facecolor='w', edgecolor='w',orientation='portrait', 
+					format=extension,transparent=True, bbox_inches=None, pad_inches=0.1)
+			else:
+				plt.savefig(save_fname, dpi=200, facecolor='w', edgecolor='w',orientation='portrait', 
+					format=extension,transparent=True, bbox_inches=None, pad_inches=0.1)
 		else:
 			plt.savefig(save_fname, dpi=200, facecolor='w', edgecolor='w',orientation='portrait', 
-			format=extension,transparent=True, bbox_inches=None, pad_inches=0.1)
+				format=extension,transparent=True, bbox_inches=None, pad_inches=0.1)
 		if pdf: 
 			os.system('epstopdf ' + save_fname)
 			os.remove(save_fname)			
