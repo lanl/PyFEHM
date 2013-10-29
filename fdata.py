@@ -1106,7 +1106,7 @@ class fmodel(object): 						#FEHM model object.
 		- an index for the specific model.
 		- a dictionary of parameters for the model.	
 	'''
-	slots = ['_type','_param','_index','_parent','_zonelist','_zone','_file']
+	__slots__ = ['_type','_param','_index','_parent','_zonelist','_zone','_file']
 	def __init__(self,type='',zonelist=[],param=[],index = None,file = None):
 		self._type = type 		
 		self._param = None 		
@@ -1983,8 +1983,9 @@ class fcont(object):						#FEHM contour output object.
 	at fixed times (one file = one time). The data can be output in several formats (all of which are readable by
 	PyFEHM) and at specified times.
 	"""
-	def __init__(self,type=dflt.cont_format,timestep_interval=1000,time_interval=1.e30,time_flag=True,variables=[],zones=[]):
-		self._type = type 			
+	__slots__ = ['_format','_timestep_interval','_time_interval','_time_flag','_variables','_zones']
+	def __init__(self,format=dflt.cont_format,timestep_interval=1000,time_interval=1.e30,time_flag=True,variables=[],zones=[]):
+		self._format = format 			
 		self._timestep_interval=timestep_interval 
 		self._time_interval=time_interval		
 		self._time_flag=time_flag		
@@ -1993,7 +1994,7 @@ class fcont(object):						#FEHM contour output object.
 		self._zones=[]
 		if zones: self.zones=zones
 	def __repr__(self): 
-		retStr = self.type + ' contour output:\n'
+		retStr = self.format + ' contour output:\n'
 		for v in list(flatten(self.variables)):
 			retStr += v+'\n'
 		return retStr
@@ -2006,7 +2007,7 @@ class fcont(object):						#FEHM contour output object.
 				else: print '    '+v
 	options = property(_get_options) 		#: Print out eligible variables for output.
 	def _get_info(self):
-		print 'Contour output requested ('+self.type+' format): '
+		print 'Contour output requested ('+self.format+' format): '
 		print '    every ' + str(self.timestep_interval)+ ' timesteps'
 		print '    every ' + str(self.time_interval)+ ' days'
 		print '    for variables:'
@@ -2014,9 +2015,9 @@ class fcont(object):						#FEHM contour output object.
 			print '         '+var
 		print 
 	what = property(_get_info) 				#: Print out information about the attribute.
-	def _get_type(self): return self._type
-	def _set_type(self,value): self._type = value
-	type = property(_get_type, _set_type) #: (*str*) File format for contour output: 'tec', 'surf', 'avs', 'avsx'
+	def _get_format(self): return self._format
+	def _set_format(self,value): self._format = value
+	format = property(_get_format, _set_format) #: (*str*) File format for contour output: 'tec', 'surf', 'avs', 'avsx'
 	def _get_time_interval(self): return self._time_interval
 	def _set_time_interval(self,value): self._time_interval = value
 	time_interval = property(_get_time_interval, _set_time_interval) #: (*flt*) Time interval to output data.
@@ -2036,8 +2037,9 @@ class fhist(object):						#FEHM history output object.
 	"""FEHM history output object.
 	
 	"""
-	def __init__(self,type=dflt.hist_format,timestep_interval=1,time_interval=1.e30,variables=[],nodelist=[],zonelist=[],zoneflux=[]):
-		self._type = type			
+	__slots__ =['_format','_timestep_interval','_time_interval','_variables','_nodelist','_zonelist','_zoneflux']
+	def __init__(self,format=dflt.hist_format,timestep_interval=1,time_interval=1.e30,variables=[],nodelist=[],zonelist=[],zoneflux=[]):
+		self._format = format			
 		self._timestep_interval=timestep_interval	
 		self._time_interval=time_interval	
 		self._variables=[]			
@@ -2049,7 +2051,7 @@ class fhist(object):						#FEHM history output object.
 		if zoneflux: self._zoneflux = zoneflux
 		if variables: self.variables=variables
 	def __repr__(self): 
-		retStr = self.type + ' history output:\n'
+		retStr = self.format + ' history output:\n'
 		for v in self.variables:
 			retStr += v[0]+'\n'
 		return retStr
@@ -2073,7 +2075,7 @@ class fhist(object):						#FEHM history output object.
 	def _get_zone(self): return dict([(zn.index,zn) for zn in self.zonelist]+[(zn.name,zn) for zn in self.zonelist if zn.name != ''])
 	zone = property(_get_zone) #: (*dict[fzone]*) Dictionary of zones, indexed by number and name, for which history output is required.
 	def _get_info(self):
-		print 'History output requested ('+self.type+' format): '
+		print 'History output requested ('+self.format+' format): '
 		if self.timestep_interval == None:
 			print '    every timestep'
 		else:
@@ -2101,9 +2103,9 @@ class fhist(object):						#FEHM history output object.
 	def _get_variables(self): return self._variables
 	def _set_variables(self,value): self._variables = value
 	variables = property(_get_variables, _set_variables) #: (*lst[str]*)List of variables to write contour data for, e.g., ['temperature','pressure']
-	def _get_type(self): return self._type
-	def _set_type(self,value): self._type = value
-	type = property(_get_type, _set_type) #: (*str*) File format for contour output: 'tecplot', 'csv', 'surfer'
+	def _get_format(self): return self._format
+	def _set_format(self,value): self._format = value
+	format = property(_get_format, _set_format) #: (*str*) File format for contour output: 'tecplot', 'csv', 'surfer'
 	def _get_timestep_interval(self): return self._timestep_interval
 	def _set_timestep_interval(self,value): self._timestep_interval = value
 	timestep_interval = property(_get_timestep_interval, _set_timestep_interval) #: (*int*) Time step interval to output data.
@@ -2345,7 +2347,7 @@ class frlpm_table(object):						# different object for specifying tables
 class files(object):						#FEHM file constructor.
 	'''Class containing information necessary to write out fehmn.files.
 	'''
-	slots = ['_root','_input','_grid','_incon','_use_incon','_rsto','_use_rsto','_outp','_use_outp','_check',
+	__slots__ = ['_root','_input','_grid','_incon','_use_incon','_rsto','_use_rsto','_outp','_use_outp','_check',
 		'_use_check','_hist','_use_hist','_co2in','_use_co2in','_stor','_use_stor','_parent','_exe','_co2_inj_time']
 	def __init__(self,root='',input='',grid='',incon='',rsto='',outp='',check='',hist='',co2in='',stor='',exe='fehm.exe',co2_inj_time=None):
 		self._root = ''
@@ -3131,7 +3133,7 @@ class fdata(object):						#FEHM data file.
 		for i in range(4-len(nums)): nums.append(None)
 		self._cont = fcont()
 		if nums[0] in ['avs','avsx','fehm','free','surf','tec','sur']:
-			self.cont.type=nums[0]
+			self.cont.format=nums[0]
 			self.cont.timestep_interval=int(float(nums[1]))
 			self.cont.time_interval=float(nums[2])
 			if nums[3] == None: self.cont.time_flag=False
@@ -3163,7 +3165,7 @@ class fdata(object):						#FEHM data file.
 		self.cont.variables = list(flatten(self.cont.variables))
 		outfile.write(ws)
 		outfile.write('cont\n')
-		outfile.write(self.cont.type+'\t')
+		outfile.write(self.cont.format+'\t')
 		outfile.write(str(self.cont.timestep_interval)+'\t')
 		outfile.write(str(self.cont.time_interval)+'\t')
 		if self.cont.time_flag: outfile.write('time\t')
@@ -3261,7 +3263,7 @@ class fdata(object):						#FEHM data file.
 		if len(nums)<2: nums.append(1)
 		if len(nums)<3: nums.append(1e30)
 		if nums[0] in ['csv','surf','tec']:
-			self.hist.type=nums[0]
+			self.hist.format=nums[0]
 			self.hist.timestep_interval=int(nums[1])
 			self.hist.time_interval=float(nums[2])			
 			line=infile.readline().strip()
@@ -3404,8 +3406,8 @@ class fdata(object):						#FEHM data file.
 				if cnt == 10: outfile.write('\n'); cnt = 0
 			if cnt != 0: outfile.write('\n')
 		outfile.write('hist\n')
-		if self.hist.type:
-			outfile.write(self.hist.type+'\t')
+		if self.hist.format:
+			outfile.write(self.hist.format+'\t')
 			outfile.write(str(self.hist.timestep_interval)+'\t')
 			outfile.write(str(self.hist.time_interval)+'\t')
 			outfile.write('\n')
@@ -4409,9 +4411,9 @@ class fdata(object):						#FEHM data file.
 							interval += 1
 							if interval%oldCont.timestep_interval == 0: continue
 							
-							if self.cont.type == 'surf': suffix = 'csv'
-							elif self.cont.type == 'tec': suffix = 'dat'
-							elif self.cont.type == 'avsx': suffix = 'avsx'
+							if self.cont.format == 'surf': suffix = 'csv'
+							elif self.cont.format == 'tec': suffix = 'dat'
+							elif self.cont.format == 'avsx': suffix = 'avsx'
 							
 							# use glob to find most recently created file							
 							from glob import glob
@@ -4443,9 +4445,9 @@ class fdata(object):						#FEHM data file.
 			if abs((self.incon.time - self.tf)/self.tf)<0.001: breakAutorestart = True
 						
 		if not contUnchanged: 
-			if self.cont.type == 'surf': suffix = 'csv'
-			elif self.cont.type == 'tec': suffix = 'dat'
-			elif self.cont.type == 'avsx': suffix = 'avsx'
+			if self.cont.format == 'surf': suffix = 'csv'
+			elif self.cont.format == 'tec': suffix = 'dat'
+			elif self.cont.format == 'avsx': suffix = 'avsx'
 			self._cont = oldCont
 			if len(self.cont.variables) == 0:
 				outtypes = ['_vec','_sca','_con']
@@ -4546,8 +4548,8 @@ class fdata(object):						#FEHM data file.
 			if self.sol['element_integration_INTG'] == 1:
 				warnings.append('Gaussian integration scheme can cause spatial osciallations in pressure solution - try sol[\'element_integration_INTG\'] = 1 if this occurs.')
 		# WARNING: instability if using zoneflux and surf output
-		if self.hist.zoneflux and self.hist.type != 'tec':
-			warnings.append('Use of history output format \''+self.hist.type+'\' may not be compatible with zoneflux output (fehm macro: flxz). Use \'tec\' if problems experienced.')
+		if self.hist.zoneflux and self.hist.format != 'tec':
+			warnings.append('Use of history output format \''+self.hist.format+'\' may not be compatible with zoneflux output (fehm macro: flxz). Use \'tec\' if problems experienced.')
 		# WARNING: if a co2 relperm is specified without the carb macro, there will be issues
 		co2_rlpm_flag = False
 		for rlpm in self.rlpmlist:
@@ -5046,11 +5048,11 @@ class fdata(object):						#FEHM data file.
 				print '    %%%%% no stress-permeability models specified %%%%%'
 			print ' '
 		if self.cont.variables:											# contour output
-			print 'Contour output ('+self.cont.type+' format) requested for - '
+			print 'Contour output ('+self.cont.format+' format) requested for - '
 			vars = list(itertools.chain(*self.cont.variables))
 			for var in vars: print '    '+var
 		if self.hist.variables:											# history output
-			print 'History output ('+self.hist.type+' format) requested for - '			
+			print 'History output ('+self.hist.format+' format) requested for - '			
 			vars = list(itertools.chain(*self.hist.variables))
 			for var in vars: print '    '+var
 		if not self.cont.variables and not self.hist.variables:

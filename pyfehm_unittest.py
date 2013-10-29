@@ -146,12 +146,12 @@ def test_input():
 	
 	#output stuff
 	dat.hist.variables.append(['flow','temperature'])
-	dat.hist.type = 'surf'
+	dat.hist.format = 'surf'
 	dat.hist.nodelist.append(4)
 	dat.hist.nodelist.append(nd1)
 	
 	dat.cont.variables.append(['xyz','pressure'])
-	dat.cont.type = 'surf'
+	dat.cont.format = 'surf'
 
 	dat.flxo.append((2,5))
 	dat.flxo.append((dat.grid.node[8],10))
@@ -220,7 +220,7 @@ def test_input():
 	dat.change_timestepping(40.,new_dtmax = 10.)
 	dat.change_timestepping(50.,new_dtx = 1.1)
 	dat.change_timestepping(60.)
-	dat.cont.type = 'avsx'
+	dat.cont.format = 'avsx'
 	dat.files.rsto='pyfehm_unittest_OUT.rsto'
 	dat.verbose = True
 	
