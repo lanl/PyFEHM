@@ -1184,6 +1184,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 			for t in self.times:
 				dat = self[t]
 				outdat.append(dat[variable][nd])
+			outdat = np.array(outdat)
 		elif variable == None:
 			ks = copy(self.variables); ks.remove('n')
 			outdat = dict([(k,self[time][k][nd]) for k in ks])			
