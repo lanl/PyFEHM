@@ -1560,32 +1560,25 @@ class fnodeflux(object): 					# Reading and plotting methods associated with int
 			print 'ERROR: cannot find file at '+filename
 			return
 		fp = open(filename)
-		ln = fp.readline()
-		N = None
-		tind = 0
-		while ln != '':
-			nums = ln.split()
+		lns = fp.readlines()
+		N = int(lns[0].split()[1])
+		
+		data = np.zeros((N,len(lns)/N-2,2)) 		# temporary data storage struc
+		
+		for ln in lns[1:N+1]:
+			ln = ln.split()
+			self._nodepairs.append((int(float(ln[0])),int(float(ln[1])))) 	# append node pair
+		
+		for i in range(len(lns)/(N+1)):
+			ln = lns[(N+1)*i:(N+1)*(i+1)]
+			
+			nums = ln[0].split()
 			self._timesteps.append(float(nums[2]))
 			self._times.append(float(nums[3]))
-			if N == None:
-				N = int(nums[1])
-				# construct data array - times (undetermine length), node_pairs, phase (liquid/vapour)
-				data = np.zeros((N,10000,2))
-				for i in range(N):
-					ln = fp.readline().strip().split()
-					self._nodepairs.append((int(float(ln[0])),int(float(ln[1])))) 	# append node pair
-					data[i,tind,0] = float(ln[2])
-					data[i,tind,1] = float(ln[3])
-			else:
-				for i in range(N):
-					ln = fp.readline().strip().split()
-					data[i,tind,0] = float(ln[2])
-					data[i,tind,1] = float(ln[3])
-			ln = fp.readline()
-			tind +=1
-		fp.close()	
-		data = data[:,:tind,:] 		# truncate unused section of data
-		
+			for j,lni in enumerate(ln[1:]):
+				data[j,i,0] = float(lni[2])
+				data[j,i,1] = float(lni[3])
+				
 		for i,nodepair in enumerate(self.nodepairs):
 			self._data[nodepair] = dict([(var,data[i,:,icol]) for icol,var in enumerate(['vapor','liquid'])])
 			
