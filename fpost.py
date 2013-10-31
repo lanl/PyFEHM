@@ -1563,7 +1563,7 @@ class fnodeflux(object): 					# Reading and plotting methods associated with int
 		lns = fp.readlines()
 		N = int(lns[0].split()[1])
 		
-		data = np.zeros((N,len(lns)/N-2,2)) 		# temporary data storage struc
+		data = np.zeros((N,len(lns)/(N+1),2)) 		# temporary data storage struc
 		
 		for ln in lns[1:N+1]:
 			ln = ln.split()
