@@ -1576,8 +1576,9 @@ class fnodeflux(object): 					# Reading and plotting methods associated with int
 			self._timesteps.append(float(nums[2]))
 			self._times.append(float(nums[3]))
 			for j,lni in enumerate(ln[1:]):
-				data[j,i,0] = float(lni[2])
-				data[j,i,1] = float(lni[3])
+				lnis = lni.split()
+				data[j,i,0] = float(lnis[2])
+				data[j,i,1] = float(lnis[3])
 				
 		for i,nodepair in enumerate(self.nodepairs):
 			self._data[nodepair] = dict([(var,data[i,:,icol]) for icol,var in enumerate(['vapor','liquid'])])
