@@ -124,6 +124,11 @@ class fnode(object):				#Node object.
 		self._pormodel = None
 		self._condmodel = None
 	def __repr__(self): return 'nd'+str(self.index)
+	def __getstate__(self):
+		return dict((k, getattr(self, k)) for k in self.__slots__)
+	def __setstate__(self, data_dict):
+		for (name, value) in data_dict.iteritems():
+			setattr(self, name, value)
 	def _get_index(self): return self._index
 	index = property(_get_index) #: (*int*) Integer number denoting the node.	
 	def _get_position(self): return self._position

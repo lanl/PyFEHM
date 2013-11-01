@@ -269,6 +269,11 @@ class fzone(object):						#FEHM zone object.
 		self._fixedP = None
 		self._updateFlag = True
 	def __repr__(self): return 'zn'+str(self.index)	
+	def __getstate__(self):
+		return dict((k, getattr(self, k)) for k in self.__slots__)
+	def __setstate__(self, data_dict):
+		for (name, value) in data_dict.iteritems():
+			setattr(self, name, value)
 	def _get_index(self): return self._index
 	def _set_index(self,value): self._index = value
 	index = property(_get_index,_set_index) #: (*int*) Integer number denoting the zone.
@@ -1006,6 +1011,11 @@ class fmacro(object): 						#FEHM macro object
 			zn = self.zone
 			prntStr += '('+str(zn[0]) +', '	+str(zn[1]) +', '+str(zn[2]) +')'
 		return prntStr
+	def __getstate__(self):
+		return dict((k, getattr(self, k)) for k in self.__slots__)
+	def __setstate__(self, data_dict):
+		for (name, value) in data_dict.iteritems():
+			setattr(self, name, value)
 	def _get_type(self): return self._type
 	def _set_type(self,type): 
 		oldtype = self._type
@@ -1174,6 +1184,21 @@ class fmodel(object): 						#FEHM model object.
 				if zn in self._parent.zone.keys():
 					newlist.append(self._parent.zone[zn])
 			self.zonelist = newlist
+	def __repr__(self): 
+		prntStr = self.type +': '
+		if isinstance(self.zonelist,fzone): prntStr += str(self.zonelist.index)
+		elif isinstance(self.zonelist,list): 
+			for zn in self.zonelist: prntStr += str(self.zonelist.index)+ ' ,'
+			prntStr = prntStr[:-2]
+		elif isinstance(self.zonelist,tuple):
+			zn = self.zonelist
+			prntStr += '('+str(zn[0]) +', '	+str(zn[1]) +', '+str(zn[2]) +')'
+		return prntStr
+	def __getstate__(self):
+		return dict((k, getattr(self, k)) for k in self.__slots__)
+	def __setstate__(self, data_dict):
+		for (name, value) in data_dict.iteritems():
+			setattr(self, name, value)
 	def _get_type(self): return self._type
 	def _set_type(self,value): 
 		oldtype = self._type
@@ -1998,6 +2023,11 @@ class fcont(object):						#FEHM contour output object.
 		for v in list(flatten(self.variables)):
 			retStr += v+'\n'
 		return retStr
+	def __getstate__(self):
+		return dict((k, getattr(self, k)) for k in self.__slots__)
+	def __setstate__(self, data_dict):
+		for (name, value) in data_dict.iteritems():
+			setattr(self, name, value)		
 	def _get_options(self): 							#print out available variables
 		print 'The following are acceptable variables'
 		allVariables = list(flatten(self.variables))
@@ -2055,6 +2085,11 @@ class fhist(object):						#FEHM history output object.
 		for v in self.variables:
 			retStr += v[0]+'\n'
 		return retStr
+	def __getstate__(self):
+		return dict((k, getattr(self, k)) for k in self.__slots__)
+	def __setstate__(self, data_dict):
+		for (name, value) in data_dict.iteritems():
+			setattr(self, name, value)
 	def _get_options(self): 							#print out available variables
 		print 'The following are acceptable variables'
 		for var in history_variables:
@@ -2382,6 +2417,11 @@ class files(object):						#FEHM file constructor.
 		if hist: self._hist = hist; self._use_hist = True
 		if stor: self._stor = stor; self._use_stor = True
 	def __repr__(self): return 'fehmn.files constructor'
+	def __getstate__(self):
+		return dict((k, getattr(self, k)) for k in self.__slots__)
+	def __setstate__(self, data_dict):
+		for (name, value) in data_dict.iteritems():
+			setattr(self, name, value)
 	def _assign_root(self):
 		'''Use root name for all inputs.
 		'''
@@ -2508,24 +2548,20 @@ class fdata(object):						#FEHM data file.
 	"""Class for FEHM data file. 
 	
 	"""		
-	__slots__ = ['_filename','_gridfilename','_inconfilename','_sticky_zones','_allMacro','_allModel','_associate','_work_dir',
-			'_bounlist','_cont','_ctrl','_grid','_incon','_hist','_iter','_nfinv','_nobr','_vapl','_adif','_rlpmlist','_pporlist','_vconlist','_sol',
+	__slots__ = ['_gridfilename','_inconfilename','_sticky_zones','_allMacro','_allModel','_associate',
+			'_bounlist','_cont','_ctrl','_grid','_incon','_hist','_iter','_nfinv','_nobr','_vapl','_adif','_rlpmlist','_sol',
 			'_time','text','_times','_zonelist','_writeSubFiles','_strs','_ngas','_carb','_trac','_files','_verbose',
 			'_tf','_ti','_dti','_dtmin','_dtmax','_dtn','_dtx','_sections','_help','_running','_unparsed_blocks','keep_unknown','_flxo',
 			'_output_times','_path']
 	def __init__(self,filename='',gridfilename='',inconfilename='',sticky_zones=dflt.sticky_zones,associate=dflt.associate,work_dir = None,
 		full_connectivity=dflt.full_connectivity,skip=[],keep_unknown=dflt.keep_unknown):		#Initialise data file
 		from copy import copy
-		#self._filename=filename			
 		self._gridfilename=gridfilename	
 		self._inconfilename=inconfilename 
 		self._sticky_zones = sticky_zones
 		self._allMacro = dict([(key,[]) for key in macro_list.keys()])
 		self._allModel = dict([(key,[]) for key in model_list.keys()])
 		self._associate = associate 
-#		if work_dir:
-#			if not os.path.isdir(work_dir): os.makedirs(work_dir)		
-		# model objects
 		self._bounlist = []				
 		self._cont = fcont()				
 		self._ctrl=ImmutableDict(copy(dflt.ctrl))	
@@ -2546,7 +2582,6 @@ class fdata(object):						#FEHM data file.
 		self._times=[]					
 		self._zonelist=[]	
 		self._flxo = []
-		#self._zone={}				
 		self._writeSubFiles = True 		# Boolean indicating macro and zone sub files should be written every time
 		# additional modules
 		self._strs = fstrs(parent=self)	
@@ -2562,6 +2597,7 @@ class fdata(object):						#FEHM data file.
 		self._verbose = True
 		self._running = False 		# boolean indicating whether a simulation is in progress
 		self._unparsed_blocks = {}
+		self._sections = []
 		self.keep_unknown = keep_unknown
 		self.work_dir = work_dir
 		if self.work_dir:
@@ -2636,6 +2672,11 @@ class fdata(object):						#FEHM data file.
 			return 'empty object'
 		else:
 			return self.filename			#Print out details
+	def __getstate__(self):
+		return dict((k, getattr(self, k)) for k in self.__slots__)
+	def __setstate__(self, data_dict):
+		for (name, value) in data_dict.iteritems():
+			setattr(self, name, value)
 	def read(self,filename='',gridfilename='',inconfilename='',full_connectivity=dflt.full_connectivity,skip=[]):			#Reads data from file.
 		'''Read FEHM input file and construct fdata object.
 		
@@ -2672,19 +2713,6 @@ class fdata(object):						#FEHM data file.
 		
 		self.files.input = self._path.full_path
 			
-		
-		#if gridfilename and (self.grid.number_nodes==0):
-		#	print 'reading grid file'
-		#	#self.gridfilename=gridfilename
-		#	self.grid.read(gridfilename,full_connectivity=full_connectivity)
-		#if inconfilename:
-		#	print 'reading incon file'
-		#	self.inconfilename=inconfilename
-		#	if isinstance(inconfilename,str):
-		#		#self.incon.read(inconfilename)
-		#		#self.incon._parent=self
-		#		self.files.incon = inconfilename
-		#if filename: self._path.filename=filename; self.files.input = filename
 		print 'reading input file'
 		#infile = open(filename,'r')
 		infile = open(self._path.full_path,'r')
