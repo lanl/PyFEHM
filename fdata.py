@@ -71,10 +71,6 @@ permDicts = dict((
 	(24,['shear_frac_tough','static_frict_coef','dynamic_frict_coef','frac_num','onset_disp',
 	'disp_interval','max_perm_change','frac_cohesion','frac_dens']),
 	
-	#(25,['frac_spacing','init_frac_aperture','norm_frac_tough','shear_frac_tough','frac_dilat_angle',
-	#'static_frict_coef','dynamic_frict_coef','frac_num','onset_disp','disp_interval','max_perm_change',
-	#'frac_cohesion','frac_dens']),
-	
 	(25,['shear_frac_tough',
 	'static_frict_coef','dynamic_frict_coef','frac_num','onset_disp','disp_interval','max_perm_change',
 	'frac_cohesion']),
@@ -976,7 +972,6 @@ class fmacro(object): 						#FEHM macro object
 	def _assign_param(self): 
 		'''Assign parameters if supplied on initialisation.'''
 		self._param = dict(macro_list[self.type])
-		if self.type not in ['stressboun']:self._param = ImmutableDict(self._param)
 	def _set_param2(self,param):
 		'''Assign keys in param attribute appropriate to specific macro.'''
 		for par,key in zip(param,macro_list[self.type]):
@@ -1020,7 +1015,7 @@ class fmacro(object): 						#FEHM macro object
 	def _set_type(self,type): 
 		oldtype = self._type
 		self._type = type
-		if oldtype != type: self.param = ImmutableDict(dict(macro_list[self._type]))
+		if oldtype != type: self.param = dict(macro_list[self._type])
 	type = property(_get_type,_set_type)#: (*str*) Name of the macro. Macro names are identical to those invoked in FEHM.
 	def _get_param(self): return self._param
 	def _set_param(self,value): self._param = value
@@ -1141,16 +1136,13 @@ class fmodel(object): 						#FEHM model object.
 		'''Assign parameters if supplied on initialisation.'''
 		if self.index in model_list[self.type].keys():
 			self._param = dict([(par,None) for par in model_list[self.type][self.index]])
-			self._param = ImmutableDict(self._param)
 		else: 
 			self._param = {}
 	def _set_param2(self,param):
 		'''Assign keys in param attribute appropriate to specific macro.'''
 		if self.index not in model_list[self.type].keys():	
-			self._param = dict([('param'+str(i+1),par[1]) for i,par in enumerate(param)])
-			self._param = ImmutableDict(self._param)		
+			self._param = dict([('param'+str(i+1),par[1]) for i,par in enumerate(param)])	
 			return																		
-		#elif len(param) != len(self._param.keys()): 									
 		elif param.__len__() != len(self._param.keys()): 
 			print param
 			print param.__len__(), len(self._param.keys()) 	
@@ -1208,7 +1200,7 @@ class fmodel(object): 						#FEHM model object.
 			if self.index not in param_dicts:
 				print 'ERROR: model index not known.'
 				return
-			self.param = ImmutableDict(param_dicts[self.index])
+			self.param = param_dicts[self.index]
 	type = property(_get_type, _set_type) #: (*str*) Name of the macro for this model. Macro names are identical to those invoked in FEHM.
 	def _get_param(self): return self._param
 	def _set_param(self,value): self._param = value
@@ -1645,12 +1637,10 @@ class fstrs(object):						#FEHM stress module.
 		self._param={}					
 		self._param['IHMS']=-3
 		self._param['ISTRS']=0
-		self._param = ImmutableDict(self._param)
 		self._excess_she = {}			
 		self._excess_she['PAR1']=None
 		self._excess_she['PAR2']=None
 		self._excess_she['PAR3']=None
-		self._excess_she = ImmutableDict(self._excess_she)
 		if param: self._param = param
 	def __repr__(self): 
 		if not self.param['ISTRS']: return 'stress module inactive'
@@ -1660,7 +1650,6 @@ class fstrs(object):						#FEHM stress module.
 		
 		"""
 		self.param['ISTRS']=1
-		#self._parent.sol['element_integration_INTG']=1
 		self._parent.ctrl['stor_file_LDA']=0 		# seg fault when using stress module without this set
 	def off(self):
 		"""Set param to turn stress calculations OFF.
@@ -1789,7 +1778,7 @@ class ftrac(object): 						#FEHM chemistry module.
 	
 	"""
 	def __init__(self, parent=None, ldsp=False):
-		self._param=ImmutableDict(copy(dflt.trac))	
+		self._param=copy(dflt.trac)
 		self._on=False
 		self._ldsp = ldsp
 		self._specieslist = []
@@ -2210,9 +2199,9 @@ class frlpm(object): 						#FEHM relative permeability object (different to rlp 
 		if zone: self._zone = zone
 		self._group = None
 		if group: self._group = group
-		self._relperm = ImmutableDict({})
+		self._relperm = {}
 		if relperm: self._assign_relperm(relperm)
-		self._capillary = ImmutableDict({})
+		self._capillary = {}
 		if capillary: self._assign_capillary(capillary)
 		self._parent = None
 	def __repr__(self):
@@ -2296,7 +2285,6 @@ class _relperm(object): 						# private class for relative permeability model
 	def _assign_param(self):
 		'''Assign parameters if supplied on initialisation.'''
 		self._param = dict(rlpm_dicts[self.type])
-		self._param = ImmutableDict(self._param)
 	def _set_param(self,param):
 		if len(param) != len(self.param.keys()): return		# return if numbers don't match up
 		for par,key in zip(param,rlpm_dicts[self.type]):
@@ -2314,7 +2302,7 @@ class _relperm(object): 						# private class for relative permeability model
 		if value == self._type: return
 		if value not in rlpm_dicts.keys(): print 'WARNING: '+str(value)+' not an available model.';return
 		self._type = value
-		self._param = ImmutableDict(rlpm_dicts[value])
+		self._param = rlpm_dicts[value]
 	type = property(_get_type, _set_type) #: (**)
 	def _get_param(self): return self._param
 	param = property(_get_param) #: (**)		
@@ -2564,21 +2552,21 @@ class fdata(object):						#FEHM data file.
 		self._associate = associate 
 		self._bounlist = []				
 		self._cont = fcont()				
-		self._ctrl=ImmutableDict(copy(dflt.ctrl))	
+		self._ctrl=copy(dflt.ctrl)
 		self._grid=fgrid()				
 		self.grid._parent = self
 		self._incon=fincon() 			
 		self.incon._parent = self
 		self._hist = fhist()				
-		self._iter=ImmutableDict(copy(dflt.iter))	
+		self._iter=copy(dflt.iter)
 		self._nfinv = False
 		self._nobr = False					
 		self._vapl = False					
 		self._adif = None
 		self._rlpmlist=[]
-		self._sol = ImmutableDict(copy(dflt.sol))
+		self._sol = copy(dflt.sol)
 		self.text=[]					#: (*str*) Information about the model printed at the top of the input file.
-		self._time=ImmutableDict(copy(dflt.time))	
+		self._time=copy(dflt.time)
 		self._times=[]					
 		self._zonelist=[]	
 		self._flxo = []
@@ -2591,7 +2579,6 @@ class fdata(object):						#FEHM data file.
 		self._help = fhelp(parent=self)
 		# run object
 		self._path = fpath(parent=self)
-		#self._path.filename=filename	
 		self._files = files() 				
 		self._files._parent = self
 		self._verbose = True
@@ -5558,6 +5545,10 @@ class fdata(object):						#FEHM data file.
 		from operator import itemgetter
 		self._allModel[modelName].sort(key=lambda x: x.index)
 		for model in self._allModel[modelName]:
+			# check no additional parameters defined
+			if model.index in model_list[model.type].keys():
+				keys = model_list[modelName][model.index]
+				if dict_key_check(model.param,keys,'macro '+model.type): raise KeyError('model '+model.type)
 			if model.index in model_list[modelName].keys():
 				paramList = model_list[modelName][model.index] 		# parameter names
 			else: 	# enumerate generic parameter names

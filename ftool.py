@@ -306,12 +306,6 @@ class fpath(object):
 	def _get_full_path(self): 
 		return self.absolute_to_file+slash+self.filename
 	full_path = property(_get_full_path) #: (**)
-class ImmutableDict(dict):
-	'placeholder'
-#	def __setitem__(self,key,value):
-#		if key not in self:
-#			raise KeyError("Immutable dict")
-#		dict.__setitem__(self,key,value)
 def dict_key_check(dict,keys,dict_name):
 	'''Return False if dict contains only the supplied keys and no extras.
 	'''

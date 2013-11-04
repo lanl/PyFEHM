@@ -89,10 +89,8 @@ class fnode(object):				#Node object.
 		self._position=position	
 		self._connections = []	
 		self._elements = []		
-		#self._variable = ImmutableDict({}) 		
-		#self._material = ImmutableDict({}) 		
-		self._generator = ImmutableDict({}) 		
-		self._zone = ImmutableDict({}) 			
+		self._generator = {}
+		self._zone = {}
 		self._permeability = None
 		self._conductivity = None
 		self._density = None

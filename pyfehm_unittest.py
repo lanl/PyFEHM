@@ -225,7 +225,7 @@ def test_input():
 	dat.verbose = True
 	
 	print 'test running'
-	dat.permlist[0].param['Kx'] = 1.e-5
+	#dat.permlist[0].param['Kx'] = 1.e-5
 	dat.run(verbose = False)
 	asdf
 	dat.verbose = True
