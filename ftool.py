@@ -22,7 +22,7 @@ Public License for more details.
 """
 
 import numpy as np
-import os,math,platform,string
+import os,math,platform,string,difflib
 WINDOWS = platform.system()=='Windows'
 if WINDOWS: slash = '\\'
 else: slash = '/'
@@ -307,10 +307,35 @@ class fpath(object):
 		return self.absolute_to_file+slash+self.filename
 	full_path = property(_get_full_path) #: (**)
 class ImmutableDict(dict):
-	def __setitem__(self,key,value):
-		if key not in self:
-			raise KeyError("Immutable dict")
-		dict.__setitem__(self,key,value)
+	'placeholder'
+#	def __setitem__(self,key,value):
+#		if key not in self:
+#			raise KeyError("Immutable dict")
+#		dict.__setitem__(self,key,value)
+def dict_key_check(dict,keys,dict_name):
+	'''Return False if dict contains only the supplied keys and no extras.
+	'''
+	returnFlag = False
+	
+	ws = 'Key error in '+dict_name+'.\n'
+	for k in dict.keys():
+		if k not in keys:
+			ws += 'No such key \''+k+'\''
+			if len(k)>2:
+				matches = difflib.get_close_matches(k,keys)
+			else:
+				matches = difflib.get_close_matches(k,keys,cutoff = 0.5)
+			print k
+			print keys
+			if len(matches)>0:
+				ws+=', did you mean?\n'
+				for match in matches:
+					ws+='- '+match+'\n'
+			else:
+				ws+='.\n'
+			returnFlag = True
+	if returnFlag: print ws
+	return returnFlag
 def os_path(path):
 	if WINDOWS: path = path.replace('/','\\')
 	else: path = path.replace('\\','/')

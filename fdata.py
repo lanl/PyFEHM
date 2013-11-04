@@ -2807,7 +2807,7 @@ class fdata(object):						#FEHM data file.
 		if filename: self._path.filename=filename
 		if not self._path.filename: self._path.filename='default_INPUT.dat'
 		out_flag = self._write_prep()
-		if out_flag: return
+		if out_flag: return False
 		
 		# ensure directory is created
 		if self.work_dir: wd = self.work_dir
@@ -2859,6 +2859,7 @@ class fdata(object):						#FEHM data file.
 		if self.trac._on: self._write_trac(outfile); self._write_unparsed(outfile,'trac')
 		outfile.write('stop\n')
 		outfile.close()
+		return True
 	def add(self,obj,overwrite=False):									#Adds a new object to the file
 		'''Attach a zone, boundary condition or macro object to the data file.
 		
@@ -4363,7 +4364,10 @@ class fdata(object):						#FEHM data file.
 		# ASSEMBLE FILES IN CORRECT DIRECTORIES
 		if self.work_dir: wd = self.work_dir + slash
 		else: wd = os.getcwd() + slash
-		self.write(wd+self._path.filename) 				# ALWAYS write input file
+		returnFlag = self.write(wd+self._path.filename) 				# ALWAYS write input file
+		if not returnFlag: 
+			print 'ERROR: writing files'
+			return
 		self.files.input = self._path.filename
 		# 1. Copy everything to working directory 
 		if not use_paths:
@@ -4585,6 +4589,13 @@ class fdata(object):						#FEHM data file.
 				if phase.startswith('co2'): co2_rlpm_flag = True
 		if self.carb.iprtype == 1 and co2_rlpm_flag:
 			warnings.append('Specification of co2 relperm relationship without invoking the CARB module may cause crashes.')
+		# ERROR: check to see no new dictionary keys have been defined
+		ctrlFlag = dict_key_check(self.ctrl,dflt.ctrl.keys(),'ctrl')
+		iterFlag = dict_key_check(self.iter,dflt.iter.keys(),'iter')
+		timeFlag = dict_key_check(self.time,dflt.time.keys(),'time')
+		solFlag = dict_key_check(self.sol,dflt.sol.keys(),'sol')
+		if ctrlFlag or iterFlag or timeFlag or solFlag:
+			return True
 		# print warnings
 		if warnings:
 			L = 62
@@ -5277,7 +5288,10 @@ class fdata(object):						#FEHM data file.
 		filemacros = []
 		textmacros = []
 		singlemacros = []
+		keys = [k for k,nul in macro_list[macroName]]
 		for macro in self._allMacro[macroName]:
+			# check no additional parameters defined
+			if dict_key_check(macro.param,keys,'macro '+macro.type): raise KeyError('macro '+macro.type)
 			if macro.file == -1: printToFile = True; textmacros.append(macro)
 			elif macro.file: filemacros.append(macro)
 			else: 
@@ -5407,6 +5421,7 @@ class fdata(object):						#FEHM data file.
 					for macro in macros: macro.file = file_nm
 					macrofile.write('stop\n')
 					macrofile.close()
+		return True
 	def _get_macro(self,macro):									#Constructs macro lists and dictionaries
 		tempDict = []
 		for macro in self._allMacro[macro]:
