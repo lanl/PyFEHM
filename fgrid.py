@@ -88,7 +88,7 @@ class fnode(object):				#Node object.
 		self._index = index			
 		self._position=position	
 		self._connections = []	
-		self._elements = []		
+		self._elements = []	
 		self._generator = {}
 		self._zone = {}
 		self._permeability = None
@@ -294,13 +294,17 @@ class fconn(object):				#Connection object.
 	"""
 	def __init__(self,nodes=[fnode(),fnode()]):
 		self._nodes = nodes		
-	def __repr__(self):	return 'n'+str(self.nodes[0].index)+':n'+str(self.nodes[1].index)	
-	def _get_distance(self): 
 		pos1 = self.nodes[0].position; pos2 = self.nodes[1].position
-		return np.sqrt((pos1[0]-pos2[0])**2+(pos1[1]-pos2[1])**2+(pos1[2]-pos2[2])**2)
+		if pos1 == None and pos2 == None: self._distance = None
+		else: self._distance = np.sqrt((pos1[0]-pos2[0])**2+(pos1[1]-pos2[1])**2+(pos1[2]-pos2[2])**2)
+		self._geom_coef = None
+	def __repr__(self):	return 'n'+str(self.nodes[0].index)+':n'+str(self.nodes[1].index)	
+	def _get_distance(self): return self._distance
 	distance = property(_get_distance)	#: (*fl64*) Distance between the two connected nodes.
 	def _get_nodes(self): return self._nodes
 	nodes = property(_get_nodes)#: (*lst[fnode]*) List of node objects (fnode()) that define the connection.
+	def _get_geom_coef(self): return self._geom_coef
+	geom_coef = property(_get_geom_coef)#: (*fl64*) Geometric coefficient associated with the connection (connected area divided by distance).
 class felem(object):				#Element object.
 	"""Finite element object, comprising a set of connected nodes.
 	
@@ -654,15 +658,27 @@ class fgrid(object):				#Grid object.
 			 (len(np.unique([nd.position[2] for nd in self.nodelist])) == 1)):
 			self._dimensions = 2
 		else: self._dimensions = 3
-	def write(self,filename=None,format='fehm'):
-		"""Write grid object to a grid file (FEHM and AVS formats supported).
+	def write(self,filename=None,format='fehm', compression = False):
+		"""Write grid object to a grid file (FEHM, AVS STOR file formats supported). Stor file support only for orthogonal hexahedral grids.
 
 		:param filename: name of FEHM grid file to write to, including path specification, e.g. c:\\path\\file_out.inp
 		:type filename: str
-		:param format: FEHM grid file format - currently options are 'fehm' (default) and 'avs'. 'avs' is the required format for reading into LaGrit.
+		:param format: FEHM grid file format ('fehm','avs','stor'). Defaults to 'fehm' unless filename is passed with extension '*.avs' or '*.stor'.
 		:type format: str
+		:param compression: Use maximum compression when generating stor files (default = False).
+		:type compression: bool
 
 		"""
+		
+		# autodetect format
+		if filename:
+			extension = filename.split('.')[-1]
+			if extension == 'avs': format = 'avs'
+			elif extension == 'stor': format = 'stor'
+		
+		if format == 'stor' and not self._full_connectivity:
+			print 'ERROR: STOR file cannot be written without full connectivity information. Read or create grid file with flag full_connectivity=True'; return
+
 		if filename: self._path.filename=filename
 		if filename == None: self._path.filename='default_GRID.inp'
 		
@@ -687,6 +703,8 @@ class fgrid(object):				#Grid object.
 		
 		if format == 'fehm': self._write_fehm(outfile)
 		elif format == 'avs': self._write_avs(outfile)
+		elif format == 'stor': self._write_stor(outfile)
+		else: print 'ERROR: Unrecognized format '+format+'.'; return
 	def _write_fehm(self,outfile):
 			
 		outfile.write('coor\n')
@@ -740,7 +758,108 @@ class fgrid(object):				#Grid object.
 					outfile.write(str(nd)+'   ')
 				outfile.write('\n')
 		outfile.close()
-	def make(self,gridfilename,x,y,z):
+	def _write_stor(self,outfile):
+		# write headers
+		outfile.write('fehmstor ascir8i4 PyFEHM Sparse Matrix Voronoi Coefficients\n')
+		import time
+		lt = time.localtime()
+		mon = str(lt.tm_mon)
+		if len(mon) == 1: mon = '0'+mon
+		day = str(lt.tm_mday)
+		if len(day) == 1: day = '0'+day
+		yr = str(lt.tm_year)
+		hr = str(lt.tm_hour)
+		if len(hr) == 1: hr = '0'+hr
+		min = str(lt.tm_min)
+		sec = str(lt.tm_sec)
+		outfile.write(mon+'/'+day+'/'+yr+'    '+hr+':'+min+':'+sec+'\n')
+		
+		# write matrix parameters
+		outfile.write('\t%5i'%len(self.connlist))
+		outfile.write('\t%5i'%len(self.nodelist))
+		outfile.write('\t%5i'%(len(self.nodelist)+len(self.connlist)+1))
+		outfile.write('\t%5i'%1)
+		outfile.write('\t%5i'%7)
+		outfile.write('\n')
+
+		# write Voronoi Volumes
+		# PyFEHM will recalculate these
+		for conn in self.connlist: conn._geom_coef = None
+		for nd in self.nodelist: nd._vol = None
+		cnt = 0
+		Ncons = 0
+		Nnds = len(self.nodelist)
+		for nd in self.nodelist:
+			Ncons += len(nd.connections)
+			self._vorvol(nd) 		# calculate voronoi volume of node
+			outfile.write('  %13.12E'%nd.vol)
+			cnt +=1
+			if cnt ==5: 
+				outfile.write('\n')
+				cnt = 0			
+		if cnt != 0: outfile.write('\n')
+		
+		# write sparse matrix connectivity
+		sparse = np.zeros((1,Ncons+2*Nnds))[0]
+		gcStr = ''
+		cnt = 0
+		stride = Nnds+1
+		for i, nd in enumerate(self.nodelist):
+			# populate sparse
+			# add the stride
+			sparse[i] = stride
+			# add the connections
+			cons = []
+			for con in nd.connections:
+				if con.nodes[0].index == nd.index: cons.append([con.nodes[1].index,con.geom_coef])
+				else: cons.append([con.nodes[0].index,con.geom_coef])
+			cons.append([nd.index,0.])
+			cons.sort(key=lambda x: x[0])
+			for con in cons:
+				# add connection to sparse
+				sparse[stride-1] = con[0]
+				stride +=1 	# increment the stride
+				# write geometric coefficients
+				gcStr +='  %13.12E'%con[1]
+				cnt +=1
+				if cnt ==5: 
+					gcStr+='\n'
+					cnt = 0			
+		if cnt != 0: gcStr+='\n'
+		
+		# indices into coefficient list
+		cnt = 0
+		for i in sparse:
+			outfile.write('  %6i'%i)
+			cnt +=1
+			if cnt ==5: 
+				outfile.write('\n')
+				cnt = 0			
+		if cnt != 0: outfile.write('\n')
+				
+		# geometric area coefficient values
+		outfile.write(gcStr)
+	
+	def _vorvol(self,nd):
+		# array of connection mid-point positions
+		pos = np.array([(con.nodes[0].position+con.nodes[1].position)/2. for con in nd.connections])
+		# min and max of these mid-points, use to find bounding box of volume
+		xm,ym,zm,xM,yM,zM = np.min(pos[:,0]),np.min(pos[:,1]),np.min(pos[:,2]),np.max(pos[:,0]),np.max(pos[:,1]),np.max(pos[:,2])
+		# calculate volume
+		nd._vol = np.prod([xM-xm,yM-ym,zM-zm])
+		areas = [(yM-ym)*(zM-zm),(xM-xm)*(zM-zm),(yM-ym)*(xM-xm)] 	# interface areas
+		
+		for con in nd.connections:
+			if con.geom_coef != None: continue
+			# establish direction of connection
+			N = abs(con.nodes[0].position - con.nodes[1].position)
+			if N[0]>N[1] and N[0]>N[2]:	
+				con._geom_coef = areas[0]/(con.distance/2.)
+			elif N[1]>N[0] and N[1]>N[2]:	
+				con._geom_coef = areas[1]/(con.distance/2.)
+			elif N[2]>N[1] and N[2]>N[0]:	
+				con._geom_coef = areas[2]/(con.distance/2.)
+	def make(self,gridfilename,x,y,z,full_connectivity=False):
 		""" Generates an orthogonal mesh for input node positions. 
 		
 		The mesh is constructed using the ``fgrid.``\ **fmake** object and an FEHM grid file is written for the mesh.
@@ -753,6 +872,8 @@ class fgrid(object):				#Grid object.
 		:type y: list[fl64]
 		:param z: Unique set of z-coordinates.
 		:type z: list[fl64]
+		:param full_connectivity: read element and connection data and construct corresponding objects. Defaults to False. Use if access to connectivity information will be useful.
+		:type full_connectivity: bool
 		"""
 		# ASSUMPTIONS FOR MAKE
 		# if no parent - interpret string literally
@@ -764,19 +885,15 @@ class fgrid(object):				#Grid object.
 		
 		temp_path = fpath()
 		temp_path.filename = gridfilename
+		
+		path = temp_path.full_path
 		if self._parent:
 			if self._parent.work_dir:
-				fm = fmake(self._path.absolute_to_workdir+slash+temp_path.filename,x,y,z,self._full_connectivity)
-				fm.write()		
-				self.read(self._path.absolute_to_workdir+slash+temp_path.filename,self._full_connectivity)
-			else:
-				fm = fmake(temp_path.full_path,x,y,z,self._full_connectivity)
-				fm.write()		
-				self.read(temp_path.full_path,self._full_connectivity)
-		else:
-			fm = fmake(temp_path.full_path,x,y,z,self._full_connectivity)
-			fm.write()		
-			self.read(temp_path.full_path,self._full_connectivity)
+				path = self._path.absolute_to_workdir+slash+temp_path.filename
+		
+		fm = fmake(path,x,y,z,full_connectivity)
+		fm.write()		
+		self.read(path,full_connectivity)
 	def lagrit_stor(self, grid = None, stor = None, exe = dflt.lagrit_path, overwrite = False):
 		"""Uses LaGriT to create a stor file for the simulation, this will be used in subsequent runs.
 		To create the stor file, LaGriT will convert a mesh comprised of hexahedral elements into one comprising

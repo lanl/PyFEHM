@@ -4459,10 +4459,13 @@ class fdata(object):						#FEHM data file.
 						p.terminate()							# kill the process
 						self._running = False					# break the loop
 						breakAutorestart = True
-			
-			self.incon.read(self.files.rsto) 		# read fin file for autorestart
-			if abs((self.incon.time - self.tf)/self.tf)<0.001: breakAutorestart = True
-						
+
+			if autorestart != 0:
+				self.incon.read(self.files.rsto)        # read fin file for autorestart
+				if abs((self.incon.time - self.tf)/self.tf)<0.001: breakAutorestart = True
+			else:
+				breakAutorestart = True
+		
 		if not contUnchanged: 
 			if self.cont.format == 'surf': suffix = 'csv'
 			elif self.cont.format == 'tec': suffix = 'dat'
