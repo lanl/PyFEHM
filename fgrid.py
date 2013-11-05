@@ -481,7 +481,7 @@ class fgrid(object):				#Grid object.
 		self._conn={}				
 		self._elemlist=[]			
 		self._elem={}				
-		self._node_tree=None			
+		self._octree=None			
 		self._dimensions=3
 		self._parent = None
 		self._full_connectivity = full_connectivity
@@ -1036,7 +1036,7 @@ class fgrid(object):				#Grid object.
 		:returns:  fnode() -- node object closest to position.
 
 		"""
-		if self._node_tree != None:
+		if self.octree != None:
 			min_dist = 1.e10
 			nd = None
 			if self.octree.leaf(pos) == None:
@@ -1051,7 +1051,7 @@ class fgrid(object):				#Grid object.
 				if dist<min_dist: min_dist = dist; min_cube = cube
 			return min_cube.elements[0]
 		else:
-			idx = np.abs(self._pos_matrix - pos).argmin()
+			idx = np.abs(np.sum((self._pos_matrix - pos)**2,axis=1)).argmin()
 			return self.nodelist[idx]
 	def plot(self,save='',angle=[45,45],color='k',connections=False,equal_axes=True,
 		xlabel='x / m',ylabel='y / m',zlabel='z / m',title='',font_size='small',cutaway=[]): 		#generates a 3-D plot of the zone.
@@ -1261,7 +1261,7 @@ class fgrid(object):				#Grid object.
 	def add_nodetree(self,repair=False):
 		""" Constuct octree for node positions. Call to update if changes made to grid.
 		"""
-		self.octree=octree(self.bounding_box,self.nodelist,repair=self)	
+		self._octree=octree(self.bounding_box,self.nodelist,repair=self)	
 	def _summary(self):		
 		L = 62
 		print ''
@@ -1385,6 +1385,9 @@ class fgrid(object):				#Grid object.
 	number_nodes = property(get_node_number)#: Number of nodes in grid.
 	def get_element_number(self): return len(self.elemlist)
 	number_elems = property(get_element_number)#: Number of elements in grid.
+	def _get_octree(self): return self._octree
+	def _set_octree(self,value): self._octree = value
+	octree = property(_get_octree, _set_octree) #: (*octree*) Octree object associated with the grid.
 	def get_info(self):
 		print 'FEHM grid file \''+self.filename+'\' summary.'
 		print 'Model domain: x = ['+str(self.xmin) + ', ' + str(self.xmax) + ']'
@@ -1432,20 +1435,20 @@ class fmake(object): 				#Rectilinear grid constructor.
 			outfile.write('\n')
 		outfile.write('\t0\n')
 		outfile.write('elem\n')
-		if self._full_connectivity:
-			outfile.write(str(len(self.elemlist[0].nodes))+' '+str(len(self.elemlist))+'\n')		
-			for el in self.elemlist:
-				outfile.write(str(int(el.index))+'   ')
-				for nd in el.nodes:
-					outfile.write(str(nd.index)+'   ')
-				outfile.write('\n')
-		else:
-			outfile.write(str(len(self.elemlist[0]))+' '+str(len(self.elemlist))+'\n')		
-			for i,el in enumerate(self.elemlist):
-				outfile.write(str(i+1)+'   ')
-				for nd in el:
-					outfile.write(str(nd.index)+'   ')
-				outfile.write('\n')
+		#if self._full_connectivity:
+		#	outfile.write(str(len(self.elemlist[0].nodes))+' '+str(len(self.elemlist))+'\n')		
+		#	for el in self.elemlist:
+		#		outfile.write(str(int(el.index))+'   ')
+		#		for nd in el.nodes:
+		#			outfile.write(str(nd.index)+'   ')
+		#		outfile.write('\n')
+		#else:
+		outfile.write(str(len(self.elemlist[0]))+' '+str(len(self.elemlist))+'\n')		
+		for i,el in enumerate(self.elemlist):
+			outfile.write(str(i+1)+'   ')
+			for nd in el:
+				outfile.write(str(nd.index)+'   ')
+			outfile.write('\n')
 		outfile.write('\nstop\n')
 		outfile.close()
 	def refresh(self):
@@ -1487,11 +1490,11 @@ class fmake(object): 				#Rectilinear grid constructor.
 							self._nodelist[(i-1)*xL*yL + j*xL + k],
 							self._nodelist[(i-1)*xL*yL + j*xL + k-1],
 							]
-						if self._full_connectivity:
-							self._elemlist.append(felem(index=ind,nodes=nodes))
-							ind +=1
-						else:
-							self._elemlist.append(nodes)
+						#if self._full_connectivity:
+						#	self._elemlist.append(felem(index=ind,nodes=nodes))
+						#	ind +=1
+						#else:
+						self._elemlist.append(nodes)
 	def _get_x(self): return self._x
 	def _set_x(self,value): self._x = value
 	x = property(_get_x, _set_x) #: (*lst[fl64]*) x coordinates of nodes.
