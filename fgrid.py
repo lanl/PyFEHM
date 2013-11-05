@@ -486,12 +486,13 @@ class fgrid(object):				#Grid object.
 		self._parent = None
 		self._full_connectivity = full_connectivity
 		self._path = fpath(parent=self)		
+		self._pos_matrix = None
 	def __repr__(self): 
 		if self.filename == None:
 			return 'no grid'
 		else:
 			return self.filename			#Print out details
-	def read(self,gridfilename,full_connectivity=False): 
+	def read(self,gridfilename,full_connectivity=False,octree=True): 
 		"""Read data from an FEHM or AVS grid file. If an AVS grid is specified, PyFEHM will write out the corresponding FEHM grid file.
 
 		:param gridfilename: name of grid file, including path specification.
@@ -529,7 +530,8 @@ class fgrid(object):				#Grid object.
 		else:
 			print 'ERROR: Unrecognized grid format.'
 			
-		self.add_nodetree()
+		if octree: self.add_nodetree()
+		else: self._pos_matrix = np.array([nd.position for nd in self.nodelist])
 		if self._parent: self._parent._add_boundary_zones()
 	def _read_fehm(self): 		#Read in fehm meshfile for node,element data .
 		self._nodelist = []
@@ -839,7 +841,6 @@ class fgrid(object):				#Grid object.
 				
 		# geometric area coefficient values
 		outfile.write(gcStr)
-	
 	def _vorvol(self,nd):
 		# array of connection mid-point positions
 		pos = np.array([(con.nodes[0].position+con.nodes[1].position)/2. for con in nd.connections])
@@ -859,7 +860,7 @@ class fgrid(object):				#Grid object.
 				con._geom_coef = areas[1]/(con.distance/2.)
 			elif N[2]>N[1] and N[2]>N[0]:	
 				con._geom_coef = areas[2]/(con.distance/2.)
-	def make(self,gridfilename,x,y,z,full_connectivity=False):
+	def make(self,gridfilename,x,y,z,full_connectivity=False,octree=True):
 		""" Generates an orthogonal mesh for input node positions. 
 		
 		The mesh is constructed using the ``fgrid.``\ **fmake** object and an FEHM grid file is written for the mesh.
@@ -891,9 +892,9 @@ class fgrid(object):				#Grid object.
 			if self._parent.work_dir:
 				path = self._path.absolute_to_workdir+slash+temp_path.filename
 		
-		fm = fmake(path,x,y,z,full_connectivity)
+		fm = fmake(path,x,y,z)
 		fm.write()		
-		self.read(path,full_connectivity)
+		self.read(path,full_connectivity,octree)
 	def lagrit_stor(self, grid = None, stor = None, exe = dflt.lagrit_path, overwrite = False):
 		"""Uses LaGriT to create a stor file for the simulation, this will be used in subsequent runs.
 		To create the stor file, LaGriT will convert a mesh comprised of hexahedral elements into one comprising
@@ -1028,26 +1029,30 @@ class fgrid(object):				#Grid object.
 		self._elemlist.append(elem)
 		self._elem[elem.index] = self.elemlist[-1]
 	def node_nearest_point(self,pos = []):
-		"""Return node object nearest to position in space.
+		"""Return node object nearest to position in space. Method uses octree structure for speed up if available.
 
 		:param pos: Coordinates, e.g. [2300., -134.8, 0.].
 		:type pos: list
 		:returns:  fnode() -- node object closest to position.
 
 		"""
-		min_dist = 1.e10
-		nd = None
-		if self.octree.leaf(pos) == None:
-			print 'Error: point outside domain'
-			return None
-		lf = self.octree.leaf(pos)
-		min_dist= 1.e10
-		
-		for leaf in ([lf,]+lf.neighbour):
-			if leaf == None: continue
-			dist,cube = leaf.min_dist(pos)
-			if dist<min_dist: min_dist = dist; min_cube = cube
-		return min_cube.elements[0]
+		if self._node_tree != None:
+			min_dist = 1.e10
+			nd = None
+			if self.octree.leaf(pos) == None:
+				print 'Error: point outside domain'
+				return None
+			lf = self.octree.leaf(pos)
+			min_dist= 1.e10
+			
+			for leaf in ([lf,]+lf.neighbour):
+				if leaf == None: continue
+				dist,cube = leaf.min_dist(pos)
+				if dist<min_dist: min_dist = dist; min_cube = cube
+			return min_cube.elements[0]
+		else:
+			idx = np.abs(self._pos_matrix - pos).argmin()
+			return self.nodelist[idx]
 	def plot(self,save='',angle=[45,45],color='k',connections=False,equal_axes=True,
 		xlabel='x / m',ylabel='y / m',zlabel='z / m',title='',font_size='small',cutaway=[]): 		#generates a 3-D plot of the zone.
 		"""Generates and saves a 3-D plot of the grid.
@@ -1392,13 +1397,12 @@ class fgrid(object):				#Grid object.
 class fmake(object): 				#Rectilinear grid constructor.
 	"""Generate an orthogonal mesh corresponding to vectors of nodal positions.
 	"""
-	def __init__(self,meshname,x=None,y=None,z=None,full_connectivity=False):
+	def __init__(self,meshname,x=None,y=None,z=None):
 		self._x = list(np.unique(x))
 		self._y = list(np.unique(y))
 		self._z = list(np.unique(z))
 		self._dimension = None
 		self._meshname = ''
-		self._full_connectivity = full_connectivity
 		if meshname: self._meshname = meshname
 	def write(self,meshname=''):
 		"""Write out the grid file.
