@@ -784,7 +784,7 @@ class fgrid(object):				#Grid object.
 					NgcU += 1
 			gcU = gcU[:NgcU]
 			print gcU
-		asdf		
+				
 			
 		# write file
 		outfile.write('fehmstor ascir8i4 PyFEHM Sparse Matrix Voronoi Coefficients\n')
