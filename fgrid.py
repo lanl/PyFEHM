@@ -711,7 +711,6 @@ class fgrid(object):				#Grid object.
 			self._path = temp_path
 			self._parent.ctrl['stor_file_LDA'] = 1
 			self._parent.files.stor = path
-				
 	def _write_fehm(self,outfile):
 			
 		outfile.write('coor\n')
@@ -1029,7 +1028,6 @@ class fgrid(object):				#Grid object.
 		fp.close()
 		
 		os.system(exe+' < lagrit_instructions.lgi > nul')
-				
 		# isolate new grid and stor files, delete others
 		files = glob('lagrit_out*.*')
 		for file in files:
