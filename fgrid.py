@@ -681,25 +681,22 @@ class fgrid(object):				#Grid object.
 		if format == 'stor' and not self._full_connectivity:
 			print 'ERROR: STOR file cannot be written without full connectivity information. Read or create grid file with flag full_connectivity=True'; return
 
-		if format == 'stor': temp_path = copy(self._path)		# save path
+		if format == 'stor': old_path = copy(self._path)		# save path
 		if filename: self._path.filename=filename
 		if filename == None: self._path.filename='default_GRID.inp'
 		
-		# ASSUME THAT IF FILENAME IS PASSED - THIS IS WHERE THE FILE WILL BE WRITTEN
-		if filename:
-			try: os.makedirs(self._path.absolute_to_file)
-			except: pass
-			path = self._path.full_path
-		# IF FILE NAME IS NOT PASSED, GRID WILL BE WRITTEN TO WORK DIRECTORY IF IT EXISTS, OR CURRENT IF NOT
-		else:
-			if self._parent: 	# HAVE PARENT?
-				if self._parent.work_dir:	# HAVE WORKING DIRECTORY?
-					try: os.makedirs(self._path.absolute_to_workdir)
-					except:	pass
-					path = self._path.absolute_to_workdir+slash+self._path.filename
-			else:
-				path = self._path.full_path
+		temp_path = fpath()
+		temp_path.filename = filename
 		
+		path = temp_path.full_path
+		try: os.makedirs(self._path.absolute_to_file)
+		except: pass
+		if self._parent:
+			if self._parent.work_dir:
+				try: os.makedirs(self._path.absolute_to_workdir)
+				except:	pass
+				path = self._path.absolute_to_workdir+slash+temp_path.filename
+				
 		outfile = open(path,'w')
 		
 		if format == 'fehm': self._write_fehm(outfile)
@@ -708,7 +705,7 @@ class fgrid(object):				#Grid object.
 		else: print 'ERROR: Unrecognized format '+format+'.'; return
 		
 		if format == 'stor': 
-			self._path = temp_path
+			self._path = old_path
 			self._parent.ctrl['stor_file_LDA'] = 1
 			self._parent.files.stor = path
 	def _write_fehm(self,outfile):
@@ -775,7 +772,7 @@ class fgrid(object):				#Grid object.
 			tol = 1.e-5
 			indices1 = [] 			# for populating later
 			geom_coefs = [con.geom_coef for con in self.connlist] 	# all coefficients
-			gcU = np.ones((1,len(geom_coefs)))[0]/0.
+			gcU = np.ones((1,len(geom_coefs)))[0]*float('Inf')
 			NgcU = 0
 			for gc in geom_coefs:
 				new_gcU = True
@@ -921,7 +918,7 @@ class fgrid(object):				#Grid object.
 				con._geom_coef = areas[1]/(con.distance/2.)
 			elif N[2]>N[1] and N[2]>N[0]:	
 				con._geom_coef = areas[2]/(con.distance/2.)
-	def make(self,gridfilename,x,y,z,full_connectivity=False,octree=True):
+	def make(self,gridfilename,x,y,z,full_connectivity=False,octree=False):
 		""" Generates an orthogonal mesh for input node positions. 
 		
 		The mesh is constructed using the ``fgrid.``\ **fmake** object and an FEHM grid file is written for the mesh.
