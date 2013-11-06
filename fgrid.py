@@ -660,14 +660,14 @@ class fgrid(object):				#Grid object.
 			 (len(np.unique([nd.position[2] for nd in self.nodelist])) == 1)):
 			self._dimensions = 2
 		else: self._dimensions = 3
-	def write(self,filename=None,format='fehm', compression = False):
+	def write(self,filename=None,format='fehm', compression = True):
 		"""Write grid object to a grid file (FEHM, AVS STOR file formats supported). Stor file support only for orthogonal hexahedral grids.
 
 		:param filename: name of FEHM grid file to write to, including path specification, e.g. c:\\path\\file_out.inp
 		:type filename: str
 		:param format: FEHM grid file format ('fehm','avs','stor'). Defaults to 'fehm' unless filename is passed with extension '*.avs' or '*.stor'.
 		:type format: str
-		:param compression: Use maximum compression when generating stor files (default = False).
+		:param compression: Use maximum compression when generating stor files (default = True).
 		:type compression: bool
 
 		"""
@@ -687,29 +687,30 @@ class fgrid(object):				#Grid object.
 		
 		# ASSUME THAT IF FILENAME IS PASSED - THIS IS WHERE THE FILE WILL BE WRITTEN
 		if filename:
-			try:
-				os.makedirs(self._path.absolute_to_file)
-			except:
-				pass
-			outfile = open(self._path.full_path,'w')
+			try: os.makedirs(self._path.absolute_to_file)
+			except: pass
+			path = self._path.full_path
 		# IF FILE NAME IS NOT PASSED, GRID WILL BE WRITTEN TO WORK DIRECTORY IF IT EXISTS, OR CURRENT IF NOT
 		else:
 			if self._parent: 	# HAVE PARENT?
 				if self._parent.work_dir:	# HAVE WORKING DIRECTORY?
-					try:
-						os.makedirs(self._path.absolute_to_workdir)
-					except:
-						pass
-					outfile = open(self._path.absolute_to_workdir+slash+self._path.filename,'w')
+					try: os.makedirs(self._path.absolute_to_workdir)
+					except:	pass
+					path = self._path.absolute_to_workdir+slash+self._path.filename
 			else:
-				outfile = open(self._path.full_path,'w')
+				path = self._path.full_path
+		
+		outfile = open(path,'w')
 		
 		if format == 'fehm': self._write_fehm(outfile)
 		elif format == 'avs': self._write_avs(outfile)
 		elif format == 'stor': self._write_stor(outfile,compression)
 		else: print 'ERROR: Unrecognized format '+format+'.'; return
 		
-		if format == 'stor': self._path = temp_path
+		if format == 'stor': 
+			self._path = temp_path
+			self._parent.ctrl['stor_file_LDA'] = 1
+			self._parent.files.stor = path
 				
 	def _write_fehm(self,outfile):
 			
@@ -764,7 +765,7 @@ class fgrid(object):				#Grid object.
 					outfile.write(str(nd)+'   ')
 				outfile.write('\n')
 		outfile.close()
-	def _write_stor(self,outfile,compression=False):
+	def _write_stor(self,outfile,compression=True):
 		# calculate volumes and geometric coefficients
 		for conn in self.connlist: conn._geom_coef = None
 		for nd in self.nodelist: nd._vol = None
@@ -773,6 +774,7 @@ class fgrid(object):				#Grid object.
 		# calculate reduced coefficient list
 		if compression:
 			tol = 1.e-5
+			indices1 = [] 			# for populating later
 			geom_coefs = [con.geom_coef for con in self.connlist] 	# all coefficients
 			gcU = np.ones((1,len(geom_coefs)))[0]/0.
 			NgcU = 0
@@ -782,9 +784,9 @@ class fgrid(object):				#Grid object.
 				if all(dgcu>tol): 
 					gcU[NgcU] = gc
 					NgcU += 1
-			gcU = gcU[:NgcU]
-			print gcU
-				
+			gcU[NgcU] = 0.
+			gcU = gcU[:NgcU+1]
+			gcU.sort()
 			
 		# write file
 		outfile.write('fehmstor ascir8i4 PyFEHM Sparse Matrix Voronoi Coefficients\n')
@@ -804,7 +806,10 @@ class fgrid(object):				#Grid object.
 		# write matrix parameters
 		Nnds = len(self.nodelist)
 		Ncons = 2*len(self.connlist)+Nnds
-		outfile.write('\t%5i'%Ncons)
+		if compression:
+			outfile.write('\t%5i'%len(gcU))
+		else:
+			outfile.write('\t%5i'%Ncons)
 		outfile.write('\t%5i'%Nnds)
 		outfile.write('\t%5i'%(Nnds+Ncons+1))
 		outfile.write('\t%5i'%1)
@@ -846,6 +851,7 @@ class fgrid(object):				#Grid object.
 				stride +=1 	# increment the stride
 				# write geometric coefficients
 				gcStr +='  %13.12E'%con[1]
+				if compression: indices1.append(abs(gcU-con[1]).argmin()+1)
 				cnt +=1
 				if cnt ==5: 
 					gcStr+='\n'
@@ -864,7 +870,9 @@ class fgrid(object):				#Grid object.
 		if cnt != 0: outfile.write('\n')
 				
 		# indices into coefficient list
-		indices = range(1,Ncons+1)+list(np.zeros((1,Nnds+1))[0])
+		if not compression: indices1 = range(1,Ncons+1)
+		
+		indices = indices1+list(np.zeros((1,Nnds+1))[0])
 		cnt = 0
 		for i in indices:
 			outfile.write('  %6i'%i)
@@ -883,7 +891,17 @@ class fgrid(object):				#Grid object.
 		if cnt != 0: outfile.write('\n')
 				
 		# geometric area coefficient values
-		outfile.write(gcStr)
+		if compression:
+			cnt = 0
+			for i in gcU:
+				outfile.write('  %13.12E'%i)
+				cnt +=1
+				if cnt ==5: 
+					outfile.write('\n')
+					cnt = 0			
+			if cnt != 0: outfile.write('\n')
+		else:
+			outfile.write(gcStr)
 		outfile.close()
 	def _vorvol(self,nd):
 		# array of connection mid-point positions
