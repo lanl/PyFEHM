@@ -2524,7 +2524,10 @@ class files(object):						#FEHM file constructor.
 	def _set_hist(self,value):  self._hist = value
 	hist = property(_get_hist,_set_hist)	#: (*str*) Name of history file.
 	def _get_stor(self): return self._stor
-	def _set_stor(self,value):  self._stor = value; self._use_stor = True
+	def _set_stor(self,value):  
+		self._stor = value
+		self._use_stor = True
+		self._parent.ctrl['stor_file_LDA'] = 1
 	stor = property(_get_stor,_set_stor)	#: (*str*) Name of store file.
 	def _get_exe(self): return self._exe
 	def _set_exe(self,value):  self._exe = value

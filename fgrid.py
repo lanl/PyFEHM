@@ -681,6 +681,7 @@ class fgrid(object):				#Grid object.
 		if format == 'stor' and not self._full_connectivity:
 			print 'ERROR: STOR file cannot be written without full connectivity information. Read or create grid file with flag full_connectivity=True'; return
 
+		if format == 'stor': temp_path = copy(self._path)		# save path
 		if filename: self._path.filename=filename
 		if filename == None: self._path.filename='default_GRID.inp'
 		
@@ -705,8 +706,11 @@ class fgrid(object):				#Grid object.
 		
 		if format == 'fehm': self._write_fehm(outfile)
 		elif format == 'avs': self._write_avs(outfile)
-		elif format == 'stor': self._write_stor(outfile)
+		elif format == 'stor': self._write_stor(outfile,compression)
 		else: print 'ERROR: Unrecognized format '+format+'.'; return
+		
+		if format == 'stor': self._path = temp_path
+				
 	def _write_fehm(self,outfile):
 			
 		outfile.write('coor\n')
@@ -760,8 +764,29 @@ class fgrid(object):				#Grid object.
 					outfile.write(str(nd)+'   ')
 				outfile.write('\n')
 		outfile.close()
-	def _write_stor(self,outfile):
-		# write headers
+	def _write_stor(self,outfile,compression=False):
+		# calculate volumes and geometric coefficients
+		for conn in self.connlist: conn._geom_coef = None
+		for nd in self.nodelist: nd._vol = None
+		for nd in self.nodelist:
+			self._vorvol(nd) 		# calculate voronoi volume of node
+		# calculate reduced coefficient list
+		if compression:
+			tol = 1.e-5
+			geom_coefs = [con.geom_coef for con in self.connlist] 	# all coefficients
+			gcU = np.ones((1,len(geom_coefs)))[0]/0.
+			NgcU = 0
+			for gc in geom_coefs:
+				new_gcU = True
+				dgcu = abs((gc-gcU[:NgcU])/gc) 		# distances between geom_coef and existing bins
+				if all(dgcu>tol): 
+					gcU[NgcU] = gc
+					NgcU += 1
+			gcU = gcU[:NgcU]
+			print gcU
+		asdf		
+			
+		# write file
 		outfile.write('fehmstor ascir8i4 PyFEHM Sparse Matrix Voronoi Coefficients\n')
 		import time
 		lt = time.localtime()
@@ -777,39 +802,36 @@ class fgrid(object):				#Grid object.
 		outfile.write(mon+'/'+day+'/'+yr+'    '+hr+':'+min+':'+sec+'\n')
 		
 		# write matrix parameters
-		outfile.write('\t%5i'%len(self.connlist))
-		outfile.write('\t%5i'%len(self.nodelist))
-		outfile.write('\t%5i'%(len(self.nodelist)+len(self.connlist)+1))
+		Nnds = len(self.nodelist)
+		Ncons = 2*len(self.connlist)+Nnds
+		outfile.write('\t%5i'%Ncons)
+		outfile.write('\t%5i'%Nnds)
+		outfile.write('\t%5i'%(Nnds+Ncons+1))
 		outfile.write('\t%5i'%1)
 		outfile.write('\t%5i'%7)
 		outfile.write('\n')
 
 		# write Voronoi Volumes
-		# PyFEHM will recalculate these
-		for conn in self.connlist: conn._geom_coef = None
-		for nd in self.nodelist: nd._vol = None
 		cnt = 0
-		Ncons = 0
-		Nnds = len(self.nodelist)
 		for nd in self.nodelist:
-			Ncons += len(nd.connections)
-			self._vorvol(nd) 		# calculate voronoi volume of node
 			outfile.write('  %13.12E'%nd.vol)
 			cnt +=1
 			if cnt ==5: 
 				outfile.write('\n')
 				cnt = 0			
 		if cnt != 0: outfile.write('\n')
-		
+				
 		# write sparse matrix connectivity
-		sparse = np.zeros((1,Ncons+2*Nnds))[0]
+		sparse = np.zeros((1,Ncons+Nnds+1))[0]
 		gcStr = ''
 		cnt = 0
 		stride = Nnds+1
+		diagonals = []
 		for i, nd in enumerate(self.nodelist):
 			# populate sparse
 			# add the stride
 			sparse[i] = stride
+			diagonals.append(stride+1)
 			# add the connections
 			cons = []
 			for con in nd.connections:
@@ -817,9 +839,10 @@ class fgrid(object):				#Grid object.
 				else: cons.append([con.nodes[0].index,con.geom_coef])
 			cons.append([nd.index,0.])
 			cons.sort(key=lambda x: x[0])
-			for con in cons:
+			for j,con in enumerate(cons):
+				if con[0] == nd.index: diagonals[-1] += j
 				# add connection to sparse
-				sparse[stride-1] = con[0]
+				sparse[stride] = con[0]
 				stride +=1 	# increment the stride
 				# write geometric coefficients
 				gcStr +='  %13.12E'%con[1]
@@ -828,8 +851,9 @@ class fgrid(object):				#Grid object.
 					gcStr+='\n'
 					cnt = 0			
 		if cnt != 0: gcStr+='\n'
+		sparse[i+1] = stride
 		
-		# indices into coefficient list
+		# row entries
 		cnt = 0
 		for i in sparse:
 			outfile.write('  %6i'%i)
@@ -839,8 +863,28 @@ class fgrid(object):				#Grid object.
 				cnt = 0			
 		if cnt != 0: outfile.write('\n')
 				
+		# indices into coefficient list
+		indices = range(1,Ncons+1)+list(np.zeros((1,Nnds+1))[0])
+		cnt = 0
+		for i in indices:
+			outfile.write('  %6i'%i)
+			cnt +=1
+			if cnt ==5: 
+				outfile.write('\n')
+				cnt = 0			
+		if cnt != 0: outfile.write('\n')
+		cnt = 0
+		for i in diagonals:
+			outfile.write('  %6i'%i)
+			cnt +=1
+			if cnt ==5: 
+				outfile.write('\n')
+				cnt = 0			
+		if cnt != 0: outfile.write('\n')
+				
 		# geometric area coefficient values
 		outfile.write(gcStr)
+		outfile.close()
 	def _vorvol(self,nd):
 		# array of connection mid-point positions
 		pos = np.array([(con.nodes[0].position+con.nodes[1].position)/2. for con in nd.connections])
@@ -848,7 +892,7 @@ class fgrid(object):				#Grid object.
 		xm,ym,zm,xM,yM,zM = np.min(pos[:,0]),np.min(pos[:,1]),np.min(pos[:,2]),np.max(pos[:,0]),np.max(pos[:,1]),np.max(pos[:,2])
 		# calculate volume
 		nd._vol = np.prod([xM-xm,yM-ym,zM-zm])
-		areas = [(yM-ym)*(zM-zm),(xM-xm)*(zM-zm),(yM-ym)*(xM-xm)] 	# interface areas
+		areas = [-(yM-ym)*(zM-zm),-(xM-xm)*(zM-zm),-(yM-ym)*(xM-xm)] 	# interface areas
 		
 		for con in nd.connections:
 			if con.geom_coef != None: continue

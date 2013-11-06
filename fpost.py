@@ -1604,16 +1604,16 @@ class multi_pdf(object):
 		self._delete_files = delete_files
 		self._assign_files(files)
 	def _assign_files(self,files):
-		if files == []: self._files = ImmutableDict({})
+		if files == []: self._files = {}
 		if isinstance(files,list):
-			self._files = ImmutableDict(dict([(i+1,file) for i,file in enumerate(files)]))
+			self._files = dict([(i+1,file) for i,file in enumerate(files)])
 		elif isinstance(files,dict):
 			ks = files.keys()
 			for k in ks:
 				if not isinstance(k,int):print 'ERROR: Dictionary keys must be integers.'; return
-			self._files = ImmutableDict(files)
+			self._files = files
 		elif isinstance(files,str):
-			self._files = ImmutableDict(dict(((1,files),)))
+			self._files = dict(((1,files),))
 	def add(self,filename,pagenum=None):
 		'''Add a new page. If a page number is specified, the page will replace the current. 
 		Otherwise it will be appended to the end of the document.
@@ -1648,8 +1648,8 @@ class multi_pdf(object):
 			
 		if pagenum > self._pagemax: self.add(filename); return
 		ks = self._files.keys()
-		self._files = ImmutableDict(dict([(k,self._files[k]) for k in ks if k < pagenum]+
-		[(pagenum,filename)]+[(k+1,self._files[k]) for k in ks if k >= pagenum]))			
+		self._files = dict([(k,self._files[k]) for k in ks if k < pagenum]+
+		[(pagenum,filename)]+[(k+1,self._files[k]) for k in ks if k >= pagenum])
 	def make(self):
 		'''Construct the pdf.'''
 		cs = self.combineString + ' -dBATCH -dNOPAUSE -sDEVICE=pdfwrite -sOutputFile='+self.save

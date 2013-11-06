@@ -121,7 +121,7 @@ dat.dtn = 1
 dat.files.rsto='EGS_INCON.ini'
 dat.run('EGS_flow_INPUT.dat')
 
-dat.incon.read('EGS_INCON.ini')
+dat.incon.read('tutorial2\\EGS_INCON.ini')
 
 dat.incon.stressgrad(xgrad=0.6,ygrad=0.8,zgrad=2500*abs(Z1)*9.81/1e6,calculate_vertical=True,vertical_fraction=True)
 
