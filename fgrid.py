@@ -775,7 +775,6 @@ class fgrid(object):				#Grid object.
 			tol = 1.e-5
 			indices1 = [] 			# for populating later
 			geom_coefs = [con.geom_coef for con in self.connlist] 	# all coefficients
-			geom_coefs = list(flatten(geom_coefs))
 			gcU = np.ones((1,len(geom_coefs)))[0]*float('Inf')
 			NgcU = 0
 			for gc in geom_coefs:
@@ -840,8 +839,8 @@ class fgrid(object):				#Grid object.
 			# add the connections
 			cons = []
 			for con in nd.connections:
-				if con.nodes[0].index == nd.index: cons.append([con.nodes[1].index,con.geom_coef[0]])
-				else: cons.append([con.nodes[0].index,con.geom_coef[-1]])
+				if con.nodes[0].index == nd.index: cons.append([con.nodes[1].index,con.geom_coef])
+				else: cons.append([con.nodes[0].index,con.geom_coef])
 			cons.append([nd.index,0.])
 			cons.sort(key=lambda x: x[0])
 			for j,con in enumerate(cons):
@@ -918,13 +917,13 @@ class fgrid(object):				#Grid object.
 			N = abs(con.nodes[0].position - con.nodes[1].position)
 			if N[0]>N[1] and N[0]>N[2]:	
 				#con._geom_coef = [areas[0]/(con.distance/2.),]
-				con._geom_coef = [areas[0]/(con.distance),]
+				con._geom_coef = areas[0]/con.distance
 			elif N[1]>N[0] and N[1]>N[2]:	
 				#con._geom_coef = [areas[1]/(con.distance/2.),]
-				con._geom_coef = [areas[1]/(con.distance),]
+				con._geom_coef = areas[1]/con.distance
 			elif N[2]>N[1] and N[2]>N[0]:	
 				#con._geom_coef = [areas[2]/(con.distance/2.),]
-				con._geom_coef = [areas[2]/(con.distance),]
+				con._geom_coef = areas[2]/con.distance
 	def make(self,gridfilename,x,y,z,full_connectivity=False,octree=False):
 		""" Generates an orthogonal mesh for input node positions. 
 		
@@ -994,6 +993,11 @@ class fgrid(object):				#Grid object.
 		self.write(filename = avs, format = 'avs')
 		self._path.filename = fname_save
 		
+		cwd = os.getcwd()
+		if self._parent:
+			if self._parent.work_dir:
+				os.chdir(self._parent.work_dir)
+				
 		# create lagrit instruction file
 		fp = open('lagrit_instructions.lgi','w')
 		lns = []
@@ -1012,7 +1016,7 @@ class fgrid(object):				#Grid object.
 		lns.append('rmpoint / compress\n')
 		lns.append('\n')
 		lns.append('# if sort is needed to reorder the nodes\n')
-		lns.append('# otherwise keep same node odering and comment out\n')
+		lns.append('# otherwise keep same node ordering and comment out\n')
 		lns.append('#sort / cmotet / index / ascending / ikey / zic yic xic\n')
 		lns.append('#reorder / cmotet / ikey\n')
 		lns.append('#cmo / DELATT / cmotet / ikey\n')
@@ -1039,7 +1043,7 @@ class fgrid(object):				#Grid object.
 				os.remove(file)
 		os.remove('lagrit_instructions.lgi')
 		os.remove(avs)
-		
+				
 		# rename and move files, parse
 		if overwrite: 	# overwriting old grid file
 			shutil.move('lagrit_out.fehmn',self._path.full_path)
@@ -1054,12 +1058,22 @@ class fgrid(object):				#Grid object.
 		
 		temp_path = fpath()
 		temp_path.filename = stor
-		try: os.makedirs(temp_path.absolute_to_file)
+		
+		#path = temp_path.full_path
+		try: os.makedirs(self._path.absolute_to_file)
 		except: pass
+		if self._parent:
+			if self._parent.work_dir:
+				try: os.makedirs(self._path.absolute_to_workdir)
+				except:	pass
+				stor = self._path.absolute_to_workdir+slash+temp_path.filename
+		
 		shutil.move('lagrit_out.stor',stor)
 		if self._parent:
 			self._parent.files.stor = stor
 			self._parent.ctrl['stor_file_LDA'] = 1
+			
+		os.chdir(cwd)
 	def volumes(self,volumefilename):
 		""" Reads a lagrit generated file containing control volume information.
 		
