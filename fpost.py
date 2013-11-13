@@ -778,7 +778,8 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 		:type perm_contrasts: bool
 		
 		'''	
-		save = os_path(save)
+		if save:
+			save = os_path(save)
 		# at this stage, only structured grids are supported
 		if time==None: 
 			if np.min(self.times)<0: time = self.times[0]
@@ -860,13 +861,16 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 					ax.plot([t,t],[ylims[0],ylims[1]],mesh_lines,zorder=100)
 				for t in np.unique(self[self.times[0]]['z']):
 					ax.plot([xlims[0],xlims[1]],[t,t],mesh_lines,zorder=100)
-					
-		extension, save_fname, pdf = save_name(save=save,variable=variable,time=time)
-		plt.savefig(save_fname, dpi=100, facecolor='w', edgecolor='w',orientation='portrait', 
-		format=extension,transparent=True, bbox_inches=None, pad_inches=0.1)
-		if pdf: 
-			os.system('epstopdf ' + save_fname)
-			os.remove(save_fname)	
+		
+		if save:
+			extension, save_fname, pdf = save_name(save=save,variable=variable,time=time)
+			plt.savefig(save_fname, dpi=100, facecolor='w', edgecolor='w',orientation='portrait', 
+			format=extension,transparent=True, bbox_inches=None, pad_inches=0.1)
+			if pdf: 
+				os.system('epstopdf ' + save_fname)
+				os.remove(save_fname)	
+		else:
+			plt.show()
 	def profile(self, variable, profile, time=None, divisions=30, method='nearest'):
 		'''Return variable data along the specified line in 3-D space. If only two points are supplied,
 		the profile is assumed to be a straight line between them.

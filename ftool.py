@@ -310,7 +310,6 @@ def dict_key_check(dict,keys,dict_name):
 	'''Return False if dict contains only the supplied keys and no extras.
 	'''
 	returnFlag = False
-	
 	ws = 'Key error in '+dict_name+'.\n'
 	for k in dict.keys():
 		if k not in keys:

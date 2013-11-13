@@ -25,6 +25,8 @@ import numpy as np
 import os,math,platform,string,subprocess,shutil
 from subprocess import Popen
 
+from matplotlib import pyplot as plt
+
 from time import time
 from copy import deepcopy
 from glob import glob
@@ -660,7 +662,7 @@ class fgrid(object):				#Grid object.
 			 (len(np.unique([nd.position[2] for nd in self.nodelist])) == 1)):
 			self._dimensions = 2
 		else: self._dimensions = 3
-	def write(self,filename=None,format='fehm', compression = True):
+	def write(self,filename=None,format='fehm', compression = True, recalculate_coefficients=True):
 		"""Write grid object to a grid file (FEHM, AVS STOR file formats supported). Stor file support only for orthogonal hexahedral grids.
 
 		:param filename: name of FEHM grid file to write to, including path specification, e.g. c:\\path\\file_out.inp
@@ -701,7 +703,7 @@ class fgrid(object):				#Grid object.
 		
 		if format == 'fehm': self._write_fehm(outfile)
 		elif format == 'avs': self._write_avs(outfile)
-		elif format == 'stor': self._write_stor(outfile,compression)
+		elif format == 'stor': self._write_stor(outfile,compression,recalculate_coefficients)
 		else: print 'ERROR: Unrecognized format '+format+'.'; return
 		
 		if format == 'stor': 
@@ -761,17 +763,19 @@ class fgrid(object):				#Grid object.
 					outfile.write(str(nd)+'   ')
 				outfile.write('\n')
 		outfile.close()
-	def _write_stor(self,outfile,compression=True):
+	def _write_stor(self,outfile,compression,recalculate_coefficients):
 		# calculate volumes and geometric coefficients
-		for conn in self.connlist: conn._geom_coef = None
-		for nd in self.nodelist: nd._vol = None
-		for nd in self.nodelist:
-			self._vorvol(nd) 		# calculate voronoi volume of node
+		if recalculate_coefficients:
+			for conn in self.connlist: conn._geom_coef = None
+			for nd in self.nodelist: nd._vol = None
+			for nd in self.nodelist:
+				self._vorvol(nd) 		# calculate voronoi volume of node
 		# calculate reduced coefficient list
 		if compression:
 			tol = 1.e-5
 			indices1 = [] 			# for populating later
 			geom_coefs = [con.geom_coef for con in self.connlist] 	# all coefficients
+			geom_coefs = list(flatten(geom_coefs))
 			gcU = np.ones((1,len(geom_coefs)))[0]*float('Inf')
 			NgcU = 0
 			for gc in geom_coefs:
@@ -836,8 +840,8 @@ class fgrid(object):				#Grid object.
 			# add the connections
 			cons = []
 			for con in nd.connections:
-				if con.nodes[0].index == nd.index: cons.append([con.nodes[1].index,con.geom_coef])
-				else: cons.append([con.nodes[0].index,con.geom_coef])
+				if con.nodes[0].index == nd.index: cons.append([con.nodes[1].index,con.geom_coef[0]])
+				else: cons.append([con.nodes[0].index,con.geom_coef[-1]])
 			cons.append([nd.index,0.])
 			cons.sort(key=lambda x: x[0])
 			for j,con in enumerate(cons):
@@ -913,11 +917,14 @@ class fgrid(object):				#Grid object.
 			# establish direction of connection
 			N = abs(con.nodes[0].position - con.nodes[1].position)
 			if N[0]>N[1] and N[0]>N[2]:	
-				con._geom_coef = areas[0]/(con.distance/2.)
+				#con._geom_coef = [areas[0]/(con.distance/2.),]
+				con._geom_coef = [areas[0]/(con.distance),]
 			elif N[1]>N[0] and N[1]>N[2]:	
-				con._geom_coef = areas[1]/(con.distance/2.)
+				#con._geom_coef = [areas[1]/(con.distance/2.),]
+				con._geom_coef = [areas[1]/(con.distance),]
 			elif N[2]>N[1] and N[2]>N[0]:	
-				con._geom_coef = areas[2]/(con.distance/2.)
+				#con._geom_coef = [areas[2]/(con.distance/2.),]
+				con._geom_coef = [areas[2]/(con.distance),]
 	def make(self,gridfilename,x,y,z,full_connectivity=False,octree=False):
 		""" Generates an orthogonal mesh for input node positions. 
 		
