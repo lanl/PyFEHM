@@ -2420,7 +2420,7 @@ class files(object):						#FEHM file constructor.
 		self._outp = root+'.out'
 		self._check = root+'.chk'
 		self._hist = root+'.his'
-	def write(self):
+	def write(self, use_paths=False):
 		'''Write out *fehmn.files*.
 		'''		
 		
@@ -2430,7 +2430,10 @@ class files(object):						#FEHM file constructor.
 			outfile = open('fehmn.files','w')
 			
 		outfile.write('input: '+self.input+'\n')
-		outfile.write('grida: '+self.grid+'\n')
+		if use_paths:
+			outfile.write('grida: '+self._parent.grid._path.full_path+'\n')
+		else:
+			outfile.write('grida: '+self.grid+'\n')
 		if not self.root: self.root = self.input.split('.')[0]
 		
 		if not self.rsto: self.rsto = self.root+'.rsto' 			# default is to produce a restart file
