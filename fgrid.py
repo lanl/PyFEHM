@@ -230,7 +230,8 @@ class fnode(object):				#Node object.
 	def _get_zonelist(self): return [self.zone[k] for k in self.zone.keys()]
 	zonelist = property(_get_zonelist)	#: (*lst[fzone]*) List of zones of which the node is a member
 	def _get_vol(self): return self._vol
-	vol = property(_get_vol)				#: (*fl64*) Control volume associated with the node. This information only available if volumes() method called from grid attribute.
+	def _set_vol(self,value): self._vol = value
+	vol = property(_get_vol,_set_vol)	#: (*fl64*) Control volume associated with the node. This information only available if volumes() method called from grid attribute.
 	def _get_permeability(self): return self._permeability
 	permeability = property(_get_permeability) #: (*list*) permeability values at node.
 	def _get_conductivity(self): return self._conductivity
@@ -306,7 +307,8 @@ class fconn(object):				#Connection object.
 	def _get_nodes(self): return self._nodes
 	nodes = property(_get_nodes)#: (*lst[fnode]*) List of node objects (fnode()) that define the connection.
 	def _get_geom_coef(self): return self._geom_coef
-	geom_coef = property(_get_geom_coef)#: (*fl64*) Geometric coefficient associated with the connection (connected area divided by distance).
+	def _set_geom_coef(self,value): self._geom_coef = value
+	geom_coef = property(_get_geom_coef,_set_geom_coef)#: (*fl64*) Geometric coefficient associated with the connection (connected area divided by distance).
 class felem(object):				#Element object.
 	"""Finite element object, comprising a set of connected nodes.
 	
@@ -494,7 +496,7 @@ class fgrid(object):				#Grid object.
 			return 'no grid'
 		else:
 			return self.filename			#Print out details
-	def read(self,gridfilename,full_connectivity=False,octree=False): 
+	def read(self,gridfilename,storfilename=None,full_connectivity=False,octree=False): 
 		"""Read data from an FEHM or AVS grid file. If an AVS grid is specified, PyFEHM will write out the corresponding FEHM grid file.
 
 		:param gridfilename: name of grid file, including path specification.
@@ -516,11 +518,8 @@ class fgrid(object):				#Grid object.
 			a = int(ln2.split()[0]) 	# first number of second line is a 1, five numbers in header
 			if a  == 1 and len(ln1.strip().split())==5: isAvs = True
 		except ValueError: pass
-		if gridfilename.endswith('.stor'):
-			self.read_stor()
-			return
-		elif ln1.strip().split()[0].startswith('coor'):
-			self._read_fehm() 	# first line starts with 'coor'
+		if ln1.strip().split()[0].startswith('coor'):
+			self._read_fehm(storfilename=storfilename) 	# first line starts with 'coor'
 		elif isAvs:
 			self._read_avs()		
 			newgridfilename = self._path.full_path.split('.')[:-1]
@@ -535,7 +534,7 @@ class fgrid(object):				#Grid object.
 		if octree: self.add_nodetree()
 		else: self._pos_matrix = np.array([nd.position for nd in self.nodelist])
 		if self._parent: self._parent._add_boundary_zones()
-	def _read_fehm(self): 		#Read in fehm meshfile for node,element data .
+	def _read_fehm(self,storfilename=None): 		#Read in fehm meshfile for node,element data .
 		self._nodelist = []
 		self._connlist = []
 		self._elemlist = []
@@ -572,20 +571,21 @@ class fgrid(object):				#Grid object.
 					nds2 = [el[2],el[3],el[1]]
 				else:
 					print 'ERROR: unrecognized connectivity'; return
-				for nd1,nd2 in zip(nds1,nds2):
-					if nd1>nd2: ndi = nd2; nd2 = nd1; nd1 = ndi
-					nd1 = self.node[nd1]; nd2 = self.node[nd2]
-					new_conn = fconn(nodes = [nd1,nd2])
-					
-					nd1inds = []
-					for con in nd1.connections:
-						for nd in con.nodes: nd1inds.append(nd.index)
-					
-					if nd2.index in nd1inds: continue
-					
-					self.add_conn(new_conn)
-					nd1.connections.append(new_conn)
-					nd2.connections.append(new_conn)
+				if storfilename is None:
+					for nd1,nd2 in zip(nds1,nds2):
+						if nd1>nd2: ndi = nd2; nd2 = nd1; nd1 = ndi
+						nd1 = self.node[nd1]; nd2 = self.node[nd2]
+						new_conn = fconn(nodes = [nd1,nd2])
+						
+						nd1inds = []
+						for con in nd1.connections:
+						    for nd in con.nodes: nd1inds.append(nd.index)
+						
+						if nd2.index in nd1inds: continue
+						
+						self.add_conn(new_conn)
+						nd1.connections.append(new_conn)
+						nd2.connections.append(new_conn)
 				# associate element nodes with element
 				for nd in self.elemlist[-1].nodes: 
 					self._node[nd.index].elements.append(self.elemlist[-1])		
@@ -593,11 +593,69 @@ class fgrid(object):				#Grid object.
 				self._elemlist.append(el[1:])
 				self._elem[el[0]] = self.elemlist[-1]
 		infile.close()		
+		if not storfilename is None:
+			self._read_stor(storfilename)
 		if ((len(np.unique([nd.position[0] for nd in self.nodelist])) == 1) or
 			 (len(np.unique([nd.position[1] for nd in self.nodelist])) == 1) or
 			 (len(np.unique([nd.position[2] for nd in self.nodelist])) == 1)):
 			self._dimensions = 2
 		else: self._dimensions = 3
+	def _read_stor(self,filename):
+		# Define function to parse values in file one at a time
+		def valgen(fhandle):
+			for line in fhandle:
+				for v in line.split():
+					yield v
+		storfile = open(filename)
+		storfile.readline()
+		storfile.readline()
+		# Ncons: number of connections
+		# Nnds: number of equations (nodes)
+		# Nptrs: number of pointers
+		# Nac: format of area coefficients: 1-scalar, 3-vector, 4-vector followed by scalar
+		# NconMax: Max number of connections for a single node
+		Ncons, Nnds, Nptrs, Nac, NconMax = map(int,storfile.readline().split())
+		# Read in volumes
+		nextval = valgen(storfile)
+		for i in range(Nnds):
+			self.nodelist[i].vol = float(nextval.next())
+		sparse = np.zeros(Nnds+1)
+		# Read in sparse - sparse[i+1] - sparse[i] is the number of connections for node in nodelist[i] 
+		for i in range(Nnds+1):
+			sparse[i] = int(nextval.next())
+		# Calculate number of connections per node (nconns) using sparse
+		s2 = np.delete(sparse,0).astype(int)	
+		s1 = np.delete(sparse,-1).astype(int)	
+		nodeconns = s2 - s1
+		# Create connections betwween nodes
+		self._connlist = []
+		for i,nc in enumerate(nodeconns):
+			for j in range(nc):
+				ndid = int(nextval.next())
+				if ndid > self.nodelist[i].index: 
+					new_conn = fconn(nodes= [self.nodelist[i],self.nodelist[ndid-1]])
+					self.add_conn(new_conn)
+					self.nodelist[ndid-1].connections.append(new_conn)
+					self.nodelist[i].connections.append(new_conn)
+
+		# Collect pointers into coefficient array
+		ptrs = np.zeros(Ncons,dtype=np.int)
+		for i in range(Ncons):
+			ptrs[i] = int(nextval.next())-1 # Subtract one for python array indices
+		# Read past padded zeros
+		for i in range(Nnds+1):
+			dum = nextval.next()
+		# Read diagonal pointers, not needed here
+		for i in range(Nnds):
+			dum = nextval.next()
+		# Read in coefficients
+		coeffs = np.zeros(Ncons*Nac)
+		for i in range(len(coeffs)):
+			coeffs[i] = float(nextval.next())
+		storfile.close()
+		# Set coefficients in connections
+		for ptr,c in zip(ptrs,self.connlist):
+			c.geom_coef = coeffs[ptr]
 	def _read_avs(self): 		#Read in avs meshfile for node, element data.
 		self._nodelist = []
 		self._connlist = []
