@@ -627,6 +627,8 @@ class fgrid(object):				#Grid object.
 		nodeconns = s2 - s1
 		# Create connections betwween nodes
 		self._connlist = []
+		cindexlist = [] # Create index of connections since not all connections in stor file are created 
+		cindex = 0
 		for i,nc in enumerate(nodeconns):
 			for j in range(nc):
 				ndid = int(nextval.next())
@@ -635,24 +637,27 @@ class fgrid(object):				#Grid object.
 					self.add_conn(new_conn)
 					self.nodelist[ndid-1].connections.append(new_conn)
 					self.nodelist[i].connections.append(new_conn)
+					cindexlist.append(cindex)
+				cindex+=1
 		# Collect pointers into coefficient array
 		ptrs = np.zeros(Ncons,dtype=np.int)
 		for i in range(Ncons):
-			ptrs[i] = int(nextval.next())-1 # Subtract one for python array indices
+			ptrs[i] = int(nextval.next())
 		# Read past padded zeros
 		for i in range(Nnds+1):
 			dum = nextval.next()
 		# Read diagonal pointers, not needed here
+		dptrs = np.zeros(Nnds,dtype=np.int)
 		for i in range(Nnds):
-			dum = nextval.next()
+			dptrs[i] = nextval.next()
 		# Read in coefficients
 		coeffs = np.zeros(Ncons*Nac)
 		for i in range(len(coeffs)):
 			coeffs[i] = float(nextval.next())
 		storfile.close()
 		# Set coefficients in connections
-		for ptr,c in zip(ptrs,self.connlist):
-			c._geom_coef = coeffs[ptr]
+		for ptr,c in zip(ptrs[cindexlist],self.connlist):
+			c._geom_coef = coeffs[ptr-1]
 	def _read_avs(self): 		#Read in avs meshfile for node, element data.
 		self._nodelist = []
 		self._connlist = []
