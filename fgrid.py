@@ -613,6 +613,10 @@ class fgrid(object):				#Grid object.
 		# Nac: format of area coefficients: 1-scalar, 3-vector, 4-vector followed by scalar
 		# NconMax: Max number of connections for a single node
 		Ncons, Nnds, Nptrs, Nac, NconMax = map(int,storfile.readline().split())
+		if Nac != 1:
+			print "Error: Vector or vector/scalar coefficients are not currently supported - stor will not be read in"
+			storfile.close()
+			return
 		# Read in volumes
 		nextval = valgen(storfile)
 		for i in range(Nnds):
