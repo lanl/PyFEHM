@@ -230,8 +230,7 @@ class fnode(object):				#Node object.
 	def _get_zonelist(self): return [self.zone[k] for k in self.zone.keys()]
 	zonelist = property(_get_zonelist)	#: (*lst[fzone]*) List of zones of which the node is a member
 	def _get_vol(self): return self._vol
-	def _set_vol(self,value): self._vol = value
-	vol = property(_get_vol,_set_vol)	#: (*fl64*) Control volume associated with the node. This information only available if volumes() method called from grid attribute.
+	vol = property(_get_vol)	#: (*fl64*) Control volume associated with the node. This information only available if volumes() method called from grid attribute.
 	def _get_permeability(self): return self._permeability
 	permeability = property(_get_permeability) #: (*list*) permeability values at node.
 	def _get_conductivity(self): return self._conductivity
@@ -307,8 +306,7 @@ class fconn(object):				#Connection object.
 	def _get_nodes(self): return self._nodes
 	nodes = property(_get_nodes)#: (*lst[fnode]*) List of node objects (fnode()) that define the connection.
 	def _get_geom_coef(self): return self._geom_coef
-	def _set_geom_coef(self,value): self._geom_coef = value
-	geom_coef = property(_get_geom_coef,_set_geom_coef)#: (*fl64*) Geometric coefficient associated with the connection (connected area divided by distance).
+	geom_coef = property(_get_geom_coef)#: (*fl64*) Geometric coefficient associated with the connection (connected area divided by distance).
 class felem(object):				#Element object.
 	"""Finite element object, comprising a set of connected nodes.
 	
@@ -618,7 +616,7 @@ class fgrid(object):				#Grid object.
 		# Read in volumes
 		nextval = valgen(storfile)
 		for i in range(Nnds):
-			self.nodelist[i].vol = float(nextval.next())
+			self.nodelist[i]._vol = float(nextval.next())
 		sparse = np.zeros(Nnds+1)
 		# Read in sparse - sparse[i+1] - sparse[i] is the number of connections for node in nodelist[i] 
 		for i in range(Nnds+1):
@@ -637,7 +635,6 @@ class fgrid(object):				#Grid object.
 					self.add_conn(new_conn)
 					self.nodelist[ndid-1].connections.append(new_conn)
 					self.nodelist[i].connections.append(new_conn)
-
 		# Collect pointers into coefficient array
 		ptrs = np.zeros(Ncons,dtype=np.int)
 		for i in range(Ncons):
@@ -655,7 +652,7 @@ class fgrid(object):				#Grid object.
 		storfile.close()
 		# Set coefficients in connections
 		for ptr,c in zip(ptrs,self.connlist):
-			c.geom_coef = coeffs[ptr]
+			c._geom_coef = coeffs[ptr]
 	def _read_avs(self): 		#Read in avs meshfile for node, element data.
 		self._nodelist = []
 		self._connlist = []
