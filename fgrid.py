@@ -607,12 +607,13 @@ class fgrid(object):				#Grid object.
 		storfile = open(filename)
 		storfile.readline()
 		storfile.readline()
-		# Ncons: number of connections
+		# Ncons: number of written connections
 		# Nnds: number of equations (nodes)
 		# Nptrs: number of pointers
 		# Nac: format of area coefficients: 1-scalar, 3-vector, 4-vector followed by scalar
 		# NconMax: Max number of connections for a single node
 		Ncons, Nnds, Nptrs, Nac, NconMax = map(int,storfile.readline().split())
+		Ncoef = Nptrs - Nnds - 1 # Number of connections in mesh
 		if Nac != 1:
 			print "Error: Vector or vector/scalar coefficients are not currently supported - stor will not be read in"
 			storfile.close()
@@ -644,8 +645,8 @@ class fgrid(object):				#Grid object.
 					cindexlist.append(cindex)
 				cindex+=1
 		# Collect pointers into coefficient array
-		ptrs = np.zeros(Ncons,dtype=np.int)
-		for i in range(Ncons):
+		ptrs = np.zeros(Ncoef,dtype=np.int)
+		for i in range(Ncoef):
 			ptrs[i] = int(nextval.next())
 		# Read past padded zeros
 		for i in range(Nnds+1):
@@ -827,7 +828,7 @@ class fgrid(object):				#Grid object.
 					outfile.write(str(nd)+'   ')
 				outfile.write('\n')
 		outfile.close()
-	def _write_stor(self,outfile,compression,recalculate_coefficients):
+	def _write_stor(self,outfile,compression,recalculate_coefficients,compress_eps=None):
 		# calculate volumes and geometric coefficients
 		if recalculate_coefficients:
 			for conn in self.connlist: conn._geom_coef = None
@@ -839,6 +840,20 @@ class fgrid(object):				#Grid object.
 			tol = 1.e-5
 			indices1 = [] 			# for populating later
 			geom_coefs = [con.geom_coef for con in self.connlist] 	# all coefficients
+			if compress_eps:
+				# Make copy so that connections can be readded based on magnitude of geom_coef
+				#connlist = deepcopy(self.connlist)
+				# Remove connections from fgrid and fnodes
+				#self.connlist = []
+				#for nd in self.nodelist: nd.connections = []
+				mincoef = max(geom_coefs) / compress_eps # Determine minimum allowed coef
+				for con in self.connlist:
+					if con.geom_coef < mincoef:
+						self.connlist.remove(con)
+
+			else:
+				pass
+
 			gcU = np.ones((1,len(geom_coefs)))[0]*float('Inf')
 			NgcU = 0
 			for gc in geom_coefs:
