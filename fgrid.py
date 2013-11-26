@@ -591,7 +591,6 @@ class fgrid(object):				#Grid object.
 				self._elemlist.append(el[1:])
 				self._elem[el[0]] = self.elemlist[-1]
 		infile.close()		
-		print storfilename
 		if not storfilename is None:
 			self._read_stor(storfilename)
 		if ((len(np.unique([nd.position[0] for nd in self.nodelist])) == 1) or
