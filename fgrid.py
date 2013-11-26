@@ -494,7 +494,7 @@ class fgrid(object):				#Grid object.
 			return 'no grid'
 		else:
 			return self.filename			#Print out details
-	def read(self,gridfilename,storfilename=None,full_connectivity=False,octree=False): 
+	def read(self,gridfilename,full_connectivity=False,octree=False,storfilename=None): 
 		"""Read data from an FEHM or AVS grid file. If an AVS grid is specified, PyFEHM will write out the corresponding FEHM grid file.
 
 		:param gridfilename: name of grid file, including path specification.
@@ -591,6 +591,7 @@ class fgrid(object):				#Grid object.
 				self._elemlist.append(el[1:])
 				self._elem[el[0]] = self.elemlist[-1]
 		infile.close()		
+		print storfilename
 		if not storfilename is None:
 			self._read_stor(storfilename)
 		if ((len(np.unique([nd.position[0] for nd in self.nodelist])) == 1) or
