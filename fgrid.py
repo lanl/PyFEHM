@@ -728,7 +728,8 @@ class fgrid(object):				#Grid object.
 			 (len(np.unique([nd.position[2] for nd in self.nodelist])) == 1)):
 			self._dimensions = 2
 		else: self._dimensions = 3
-	def write(self,filename=None,format='fehm', compression = True, recalculate_coefficients=True, compress_eps=None):
+	def write(self,filename=None,format='fehm', compression = True, recalculate_coefficients=True, 
+           compress_eps=None,keepcons=[]):
 		"""Write grid object to a grid file (FEHM, AVS STOR file formats supported). Stor file support only for orthogonal hexahedral grids.
 
 		:param filename: name of FEHM grid file to write to, including path specification, e.g. c:\\path\\file_out.inp
@@ -739,6 +740,8 @@ class fgrid(object):				#Grid object.
 		:type compression: bool
 		:param compress_eps: Float used to determine geometric coefficients to remove (Coefficients less than max(geom_coef)*compress_eps will be removed)
 		:type compress_eps: fl64
+        :param keepcons: List of connections to keep in stor file no matter what
+        :type keepcons: lst(connection keys)
 
 		"""
 		
@@ -771,7 +774,7 @@ class fgrid(object):				#Grid object.
 		
 		if format == 'fehm': self._write_fehm(outfile)
 		elif format == 'avs': self._write_avs(outfile)
-		elif format == 'stor': self._write_stor(outfile,compression,recalculate_coefficients,compress_eps)
+		elif format == 'stor': self._write_stor(outfile,compression,recalculate_coefficients,compress_eps,keepcons)
 		else: print 'ERROR: Unrecognized format '+format+'.'; return
 		
 		if format == 'stor': 
@@ -832,7 +835,7 @@ class fgrid(object):				#Grid object.
 					outfile.write(str(nd)+'   ')
 				outfile.write('\n')
 		outfile.close()
-	def _write_stor(self,outfile,compression,recalculate_coefficients,compress_eps):
+	def _write_stor(self,outfile,compression,recalculate_coefficients,compress_eps,keepcons):
 		# calculate volumes and geometric coefficients
 		if recalculate_coefficients:
 			for conn in self.connlist: conn._geom_coef = None
@@ -848,14 +851,19 @@ class fgrid(object):				#Grid object.
 			# Remove connections with coefs below max(geom_ceofs)*compress_eps
 			if compress_eps:
 				connlist = self.connlist # Save temporary connlist
+				conndict = self.conn
+				self._conn = {}
 				self._connlist = []		 # Erase connlist
 				mincoef = np.min(geom_coefs) * compress_eps # Determine minimum allowed coef
 				print "Minimum coefficient value to keep:", -mincoef
 				# Collect connections to keep (less than because coef are given negative sign)
 				keepcoef = [c for c in connlist if c.geom_coef < mincoef]
 				for con in keepcoef:
-						nds = con.nodes
 						self.add_conn(con)
+				for kc in keepcons:
+					if not kc in self.conn: 
+						print 'Kept truncated connection:', kc
+						self.add_conn(conndict[kc])
 				geom_coefs = [con.geom_coef for con in self.connlist] 	# all coefficients
 				self._connlist = connlist # Copy temporary connlist back to self.connlist
 			print "Number of truncated connections:", len(geom_coefs)
