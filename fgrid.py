@@ -600,6 +600,7 @@ class fgrid(object):				#Grid object.
 		else: self._dimensions = 3
 	def _read_stor(self,filename):
 		# Define function to parse values in file one at a time
+		self._full_connectivity = True
 		def valgen(fhandle):
 			for line in fhandle:
 				for v in line.split():
@@ -727,7 +728,7 @@ class fgrid(object):				#Grid object.
 			 (len(np.unique([nd.position[2] for nd in self.nodelist])) == 1)):
 			self._dimensions = 2
 		else: self._dimensions = 3
-	def write(self,filename=None,format='fehm', compression = True, recalculate_coefficients=True):
+	def write(self,filename=None,format='fehm', compression = True, recalculate_coefficients=True, compress_eps=None):
 		"""Write grid object to a grid file (FEHM, AVS STOR file formats supported). Stor file support only for orthogonal hexahedral grids.
 
 		:param filename: name of FEHM grid file to write to, including path specification, e.g. c:\\path\\file_out.inp
@@ -736,6 +737,8 @@ class fgrid(object):				#Grid object.
 		:type format: str
 		:param compression: Use maximum compression when generating stor files (default = True).
 		:type compression: bool
+		:param compress_eps: Float used to determine geometric coefficients to remove (Coefficients less than max(geom_coef)*compress_eps will be removed)
+		:type compress_eps: fl64
 
 		"""
 		
@@ -768,13 +771,14 @@ class fgrid(object):				#Grid object.
 		
 		if format == 'fehm': self._write_fehm(outfile)
 		elif format == 'avs': self._write_avs(outfile)
-		elif format == 'stor': self._write_stor(outfile,compression,recalculate_coefficients)
+		elif format == 'stor': self._write_stor(outfile,compression,recalculate_coefficients,compress_eps)
 		else: print 'ERROR: Unrecognized format '+format+'.'; return
 		
 		if format == 'stor': 
-			self._path = old_path
-			self._parent.ctrl['stor_file_LDA'] = 1
-			self._parent.files.stor = path
+			if not self._parent is None:
+				self._path = old_path
+				self._parent.ctrl['stor_file_LDA'] = 1
+				self._parent.files.stor = path
 	def _write_fehm(self,outfile):
 			
 		outfile.write('coor\n')
@@ -828,7 +832,7 @@ class fgrid(object):				#Grid object.
 					outfile.write(str(nd)+'   ')
 				outfile.write('\n')
 		outfile.close()
-	def _write_stor(self,outfile,compression,recalculate_coefficients,compress_eps=None):
+	def _write_stor(self,outfile,compression,recalculate_coefficients,compress_eps):
 		# calculate volumes and geometric coefficients
 		if recalculate_coefficients:
 			for conn in self.connlist: conn._geom_coef = None
@@ -840,31 +844,36 @@ class fgrid(object):				#Grid object.
 			tol = 1.e-5
 			indices1 = [] 			# for populating later
 			geom_coefs = [con.geom_coef for con in self.connlist] 	# all coefficients
+			print "Number of untruncated connections:", len(geom_coefs)
+			# Remove connections with coefs below max(geom_ceofs)*compress_eps
 			if compress_eps:
-				# Make copy so that connections can be readded based on magnitude of geom_coef
-				#connlist = deepcopy(self.connlist)
-				# Remove connections from fgrid and fnodes
-				#self.connlist = []
-				#for nd in self.nodelist: nd.connections = []
-				mincoef = max(geom_coefs) / compress_eps # Determine minimum allowed coef
-				for con in self.connlist:
-					if con.geom_coef < mincoef:
-						self.connlist.remove(con)
-
-			else:
-				pass
-
+				connlist = self.connlist # Save temporary connlist
+				self._connlist = []		 # Erase connlist
+				mincoef = np.min(geom_coefs) * compress_eps # Determine minimum allowed coef
+				print "Minimum coefficient value to keep:", -mincoef
+				# Collect connections to keep (less than because coef are given negative sign)
+				keepcoef = [c for c in connlist if c.geom_coef < mincoef]
+				for con in keepcoef:
+						nds = con.nodes
+						self.add_conn(con)
+				geom_coefs = [con.geom_coef for con in self.connlist] 	# all coefficients
+				self._connlist = connlist # Copy temporary connlist back to self.connlist
+			print "Number of truncated connections:", len(geom_coefs)
 			gcU = np.ones((1,len(geom_coefs)))[0]*float('Inf')
 			NgcU = 0
 			for gc in geom_coefs:
 				new_gcU = True
-				dgcu = abs((gc-gcU[:NgcU])/gc) 		# distances between geom_coef and existing bins
+				if gc == 0:
+					dgcu = abs(gc-gcU[:NgcU]) 		# distances between geom_coef and existing bins
+				else:
+					dgcu = abs((gc-gcU[:NgcU])/gc) 		# distances between geom_coef and existing bins
 				if all(dgcu>tol): 
 					gcU[NgcU] = gc
 					NgcU += 1
 			gcU[NgcU] = 0.
 			gcU = gcU[:NgcU+1]
 			gcU.sort()
+			print "Number of compressed connections:", len(gcU)
 			
 		# write file
 		outfile.write('fehmstor ascir8i4 PyFEHM Sparse Matrix Voronoi Coefficients\n')
