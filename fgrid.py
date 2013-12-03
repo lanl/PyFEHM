@@ -299,7 +299,7 @@ class fconn(object):				#Connection object.
 		pos1 = self.nodes[0].position; pos2 = self.nodes[1].position
 		if pos1 == None and pos2 == None: self._distance = None
 		else: self._distance = np.sqrt((pos1[0]-pos2[0])**2+(pos1[1]-pos2[1])**2+(pos1[2]-pos2[2])**2)
-		self._geom_coef = None
+		self._geom_coef = 0.
 	def __repr__(self):	return 'n'+str(self.nodes[0].index)+':n'+str(self.nodes[1].index)	
 	def _get_distance(self): return self._distance
 	distance = property(_get_distance)	#: (*fl64*) Distance between the two connected nodes.
@@ -487,25 +487,34 @@ class fgrid(object):				#Grid object.
 		self._dimensions=3
 		self._parent = None
 		self._full_connectivity = full_connectivity
-		self._path = fpath(parent=self)		
+		self._path = fpath(parent=self)	
+		self._stor = fpath(parent=self)		
 		self._pos_matrix = None
 	def __repr__(self): 
 		if self.filename == None:
 			return 'no grid'
 		else:
 			return self.filename			#Print out details
-	def read(self,gridfilename,full_connectivity=False,octree=False,storfilename=None): 
+	def read(self,gridfilename,full_connectivity=True,octree=False,storfilename=None): 
 		"""Read data from an FEHM or AVS grid file. If an AVS grid is specified, PyFEHM will write out the corresponding FEHM grid file.
 
 		:param gridfilename: name of grid file, including path specification.
 		:type gridfilename: str
 		:param full_connectivity: read element and connection data and construct corresponding objects. Defaults to False. Use if access to connectivity information will be useful.
 		:type full_connectivity: bool
+		:param octree: flag to use octree search algorithm for finding node locations (default = False).
+		:type octree: bool
+		:param storfilename: name of optional stor file, including path specification.
+		:type storfilename: bool
 		"""
 		self._full_connectivity = full_connectivity
 		self._path.filename = gridfilename 
 		if not os.path.isfile(gridfilename):
 			print 'ERROR: file at '+self._path.full_path+' not found.'; return
+		if storfilename:
+			self._stor.filename = storfilename 
+			if not os.path.isfile(storfilename):
+				print 'ERROR: file at '+self._stor.full_path+' not found.'; return
 		# assess format of file	from first two lines
 		infile = open(self._path.full_path)
 		ln1 = infile.readline()
@@ -633,6 +642,7 @@ class fgrid(object):				#Grid object.
 		nodeconns = s2 - s1
 		# Create connections betwween nodes
 		self._connlist = []
+		self._conn = {}
 		cindexlist = [] # Create index of connections since not all connections in stor file are created 
 		cindex = 0
 		for i,nc in enumerate(nodeconns):
@@ -728,16 +738,15 @@ class fgrid(object):				#Grid object.
 			 (len(np.unique([nd.position[2] for nd in self.nodelist])) == 1)):
 			self._dimensions = 2
 		else: self._dimensions = 3
-	def write(self,filename=None,format='fehm', compression = True, recalculate_coefficients=True, 
-           compress_eps=None,keepcons=[]):
+	def write(self,filename=None,format='fehm', remove_duplicates = True, recalculate_coefficients=True):
 		"""Write grid object to a grid file (FEHM, AVS STOR file formats supported). Stor file support only for orthogonal hexahedral grids.
 
 		:param filename: name of FEHM grid file to write to, including path specification, e.g. c:\\path\\file_out.inp
 		:type filename: str
 		:param format: FEHM grid file format ('fehm','avs','stor'). Defaults to 'fehm' unless filename is passed with extension '*.avs' or '*.stor'.
 		:type format: str
-		:param compression: Use maximum compression when generating stor files (default = True).
-		:type compression: bool
+		:param remove_duplicates: Remove duplicate entries in the stor file. Improves simulation run time, particularly for structured grids.
+		:type remove_duplicates: bool
 		:param compress_eps: Float used to determine geometric coefficients to remove (Coefficients less than max(geom_coef)*compress_eps will be removed)
 		:type compress_eps: fl64
         :param keepcons: List of connections to keep in stor file no matter what
@@ -774,7 +783,7 @@ class fgrid(object):				#Grid object.
 		
 		if format == 'fehm': self._write_fehm(outfile)
 		elif format == 'avs': self._write_avs(outfile)
-		elif format == 'stor': self._write_stor(outfile,compression,recalculate_coefficients,compress_eps,keepcons)
+		elif format == 'stor': self._write_stor(outfile,remove_duplicates,recalculate_coefficients)
 		else: print 'ERROR: Unrecognized format '+format+'.'; return
 		
 		if format == 'stor': 
@@ -835,38 +844,18 @@ class fgrid(object):				#Grid object.
 					outfile.write(str(nd)+'   ')
 				outfile.write('\n')
 		outfile.close()
-	def _write_stor(self,outfile,compression,recalculate_coefficients,compress_eps,keepcons):
+	def _write_stor(self,outfile,remove_duplicates,recalculate_coefficients):
 		# calculate volumes and geometric coefficients
 		if recalculate_coefficients:
 			for conn in self.connlist: conn._geom_coef = None
 			for nd in self.nodelist: nd._vol = None
 			for nd in self.nodelist:
 				self._vorvol(nd) 		# calculate voronoi volume of node
-		# calculate reduced coefficient list
-		if compression:
+		
+		if remove_duplicates:
 			tol = 1.e-5
 			indices1 = [] 			# for populating later
 			geom_coefs = [con.geom_coef for con in self.connlist] 	# all coefficients
-			print "Number of untruncated connections:", len(geom_coefs)
-			# Remove connections with coefs below max(geom_ceofs)*compress_eps
-			if compress_eps:
-				connlist = self.connlist # Save temporary connlist
-				conndict = self.conn
-				self._conn = {}
-				self._connlist = []		 # Erase connlist
-				mincoef = np.min(geom_coefs) * compress_eps # Determine minimum allowed coef
-				print "Minimum coefficient value to keep:", -mincoef
-				# Collect connections to keep (less than because coef are given negative sign)
-				keepcoef = [c for c in connlist if c.geom_coef < mincoef]
-				for con in keepcoef:
-						self.add_conn(con)
-				for kc in keepcons:
-					if not kc in self.conn: 
-						print 'Kept truncated connection:', kc
-						self.add_conn(conndict[kc])
-				geom_coefs = [con.geom_coef for con in self.connlist] 	# all coefficients
-				self._connlist = connlist # Copy temporary connlist back to self.connlist
-			print "Number of truncated connections:", len(geom_coefs)
 			gcU = np.ones((1,len(geom_coefs)))[0]*float('Inf')
 			NgcU = 0
 			for gc in geom_coefs:
@@ -901,12 +890,15 @@ class fgrid(object):				#Grid object.
 		# write matrix parameters
 		Nnds = len(self.nodelist)
 		Ncons = 2*len(self.connlist)+Nnds
-		if compression:
+		if remove_duplicates:
 			outfile.write('\t%5i'%len(gcU))
 		else:
 			outfile.write('\t%5i'%Ncons)
 		outfile.write('\t%5i'%Nnds)
-		outfile.write('\t%5i'%(Nnds+Ncons+1))
+		if remove_duplicates:
+			outfile.write('\t%5i'%(len(gcU)+Nnds +1))
+		else:
+			outfile.write('\t%5i'%(Ncons+Nnds+1))
 		outfile.write('\t%5i'%1)
 		outfile.write('\t%5i'%7)
 		outfile.write('\n')
@@ -937,6 +929,7 @@ class fgrid(object):				#Grid object.
 			for con in nd.connections:
 				if con.nodes[0].index == nd.index: cons.append([con.nodes[1].index,con.geom_coef])
 				else: cons.append([con.nodes[0].index,con.geom_coef])
+				if cons[-1][1] == None: cons[-1][1] = 0.
 			cons.append([nd.index,0.])
 			cons.sort(key=lambda x: x[0])
 			for j,con in enumerate(cons):
@@ -946,7 +939,7 @@ class fgrid(object):				#Grid object.
 				stride +=1 	# increment the stride
 				# write geometric coefficients
 				gcStr +='  %13.12E'%con[1]
-				if compression: indices1.append(abs(gcU-con[1]).argmin()+1)
+				if remove_duplicates: indices1.append(abs(gcU-con[1]).argmin()+1)
 				cnt +=1
 				if cnt ==5: 
 					gcStr+='\n'
@@ -965,7 +958,7 @@ class fgrid(object):				#Grid object.
 		if cnt != 0: outfile.write('\n')
 				
 		# indices into coefficient list
-		if not compression: indices1 = range(1,Ncons+1)
+		if not remove_duplicates: indices1 = range(1,Ncons+1)
 		
 		indices = indices1+list(np.zeros((1,Nnds+1))[0])
 		cnt = 0
@@ -986,7 +979,7 @@ class fgrid(object):				#Grid object.
 		if cnt != 0: outfile.write('\n')
 				
 		# geometric area coefficient values
-		if compression:
+		if remove_duplicates:
 			cnt = 0
 			for i in gcU:
 				outfile.write('  %13.12E'%i)
@@ -1020,6 +1013,37 @@ class fgrid(object):				#Grid object.
 			elif N[2]>N[1] and N[2]>N[0]:	
 				#con._geom_coef = [areas[2]/(con.distance/2.),]
 				con._geom_coef = areas[2]/con.distance
+	def remove_zeros(self, tolerance = 1.e-8, keepcons = []):
+		""" Removes node connections with geometric coefficients smaller than a supplied tolerance.
+		
+		:param tolerance: Relative tolerance below which connections will be removed (default = 1.e-8).
+		:type tolerance: fl64
+		:param keepcons: List of connections to keep in stor file ignoring tolerance.
+		:type keepcons: lst(connection keys)
+		"""
+		
+		connlist = self.connlist # Save temporary connlist
+		conndict = self.conn
+		geom_coefs = [con.geom_coef for con in self.connlist] 	# all coefficients
+		self._conn = {}
+		self._connlist = []		 # Erase connlist
+		mincoef = np.min(geom_coefs) * tolerance # Determine minimum allowed coef
+		print "Minimum coefficient value to keep:", -mincoef
+		print "Number of connections (incl. zeros):", len(geom_coefs)
+		# Collect connections to keep (less than because coef are given negative sign)
+		keepcoef = [c for c in connlist if (c.geom_coef < mincoef or (c.nodes[0].index,c.nodes[1].index) in keepcons)]
+		for con in keepcoef:
+				self.add_conn(con)
+#		for kc in keepcons:
+#			if not kc in self.conn: 
+#				print 'Kept truncated connection:', kc
+#				self.add_conn(conndict[kc])
+		for nd in self.nodelist: nd._connections = [] 		# reassociate connections with nodes
+		for con in self.connlist:
+			con.nodes[0].connections.append(con)
+			con.nodes[1].connections.append(con)
+		print "Number of connections (zeros removed):", len(self.connlist)
+		
 	def make(self,gridfilename,x,y,z,full_connectivity=False,octree=False):
 		""" Generates an orthogonal mesh for input node positions. 
 		
@@ -1559,6 +1583,8 @@ class fgrid(object):				#Grid object.
 	number_nodes = property(get_node_number)#: Number of nodes in grid.
 	def get_element_number(self): return len(self.elemlist)
 	number_elems = property(get_element_number)#: Number of elements in grid.
+	def _get_stor(self): return self._stor.full_path
+	stor = property(_get_stor) #: (*str*) Path to stor file.
 	def _get_octree(self): return self._octree
 	def _set_octree(self,value): self._octree = value
 	octree = property(_get_octree, _set_octree) #: (*octree*) Octree object associated with the grid.
