@@ -749,8 +749,8 @@ class fgrid(object):				#Grid object.
 		:type remove_duplicates: bool
 		:param compress_eps: Float used to determine geometric coefficients to remove (Coefficients less than max(geom_coef)*compress_eps will be removed)
 		:type compress_eps: fl64
-        :param keepcons: List of connections to keep in stor file no matter what
-        :type keepcons: lst(connection keys)
+		:param keepcons: List of connections to keep in stor file no matter what
+		:type keepcons: lst(connection keys)
 
 		"""
 		
@@ -1040,7 +1040,6 @@ class fgrid(object):				#Grid object.
 			con.nodes[0].connections.append(con)
 			con.nodes[1].connections.append(con)
 		print "Number of connections (zeros removed):", len(self.connlist)
-		
 	def make(self,gridfilename,x,y,z,full_connectivity=False,octree=False):
 		""" Generates an orthogonal mesh for input node positions. 
 		
@@ -1249,7 +1248,8 @@ class fgrid(object):				#Grid object.
 			idx = np.abs(np.sum((self._pos_matrix - pos)**2,axis=1)).argmin()
 			return self.nodelist[idx]
 	def plot(self,save='',angle=[45,45],color='k',connections=False,equal_axes=True,
-		xlabel='x / m',ylabel='y / m',zlabel='z / m',title='',font_size='small',cutaway=[]): 		#generates a 3-D plot of the zone.
+		xlabel='x / m',ylabel='y / m',zlabel='z / m',title='',font_size='small',cutaway=[],
+		zones = []): 		#generates a 3-D plot of the zone.
 		"""Generates and saves a 3-D plot of the grid.
 		
 		:param save: Name of saved zone image.
@@ -1277,6 +1277,9 @@ class fgrid(object):				#Grid object.
 		
 		:param cutaway: Coordinate from which cutaway begins. Alternatively, specifying 'middle','centre' with choose the centre of the grid as the cutaway point.
 		:type cutaway: [fl64,fl64,fl64], str
+		
+		:param zones: List of zone indices or names. If these are defined then nodes contained in those zones are highlighted in the output plot. Maximum of six zones.
+		:type zones: int, str
 		
 		"""
 		if not save: save = self.filename.split('.')[0]+'.png'
@@ -1436,6 +1439,15 @@ class fgrid(object):				#Grid object.
 				ax.plot([p10[0],p10[0]],[p7[1],p11[1]],[z,z],color=color,linewidth=0.5)						
 				ax.plot([p2[0],p8[0]],[p4[1],p4[1]],[z,z],color=color,linewidth=0.5)				
 				ax.plot([p7[0],p8[0]],[p7[1],p7[1]],[z,z],color=color,linewidth=0.5)				
+		
+		if zones and self._parent:
+			colors = ['r','g','b','k','m','c','y']
+			colors.remove(color)
+			if isinstance(zones,(int,str)): zones = [zones] 		#make an iterable
+			for zn,col in zip(zones,colors): 	# iterate through zones
+				if zn in self._parent.zone.keys():
+					for nd in self._parent.zone[zn].nodelist:
+						ax.plot([nd.position[0]],[nd.position[1]],[nd.position[2]],col+'.',ms=3)
 		
 		extension, save_fname, pdf = save_name(save,variable='grid',time=1)
 		if self._parent:
