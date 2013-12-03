@@ -3117,7 +3117,7 @@ class fdata(object):						#FEHM data file.
 		nums = line.split()
 		self.carb.iprtype = int(nums[0])
 		line=infile.readline().strip()
-		while not (line.startswith('endcarb') or line.startswith('end carb')):
+		while not (line.startswith('endcarb') or line.startswith('end carb') or line.startswith('co2end')):
 			if line.startswith('brine'):
 				self.carb.brine = 1
 			elif line.startswith('co2frac'):
@@ -5142,7 +5142,7 @@ class fdata(object):						#FEHM data file.
 			line=infile.readline().strip()
 			if not os.path.isfile(line):
 				# check if in subdirectory with input file
-				fname = self._filename.split(slash)
+				fname = self._path.split(slash)
 				if len(fname)>0:
 					fn0 = ''
 					for fn in fname[:-1]: fn0 += fn

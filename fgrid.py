@@ -895,10 +895,7 @@ class fgrid(object):				#Grid object.
 		else:
 			outfile.write('\t%5i'%Ncons)
 		outfile.write('\t%5i'%Nnds)
-		if remove_duplicates:
-			outfile.write('\t%5i'%(len(gcU)+Nnds +1))
-		else:
-			outfile.write('\t%5i'%(Ncons+Nnds+1))
+		outfile.write('\t%5i'%(Ncons+Nnds+1))
 		outfile.write('\t%5i'%1)
 		outfile.write('\t%5i'%7)
 		outfile.write('\n')
