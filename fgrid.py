@@ -25,8 +25,6 @@ import numpy as np
 import os,math,platform,string,subprocess,shutil
 from subprocess import Popen
 
-from matplotlib import pyplot as plt
-
 from time import time
 from copy import deepcopy
 from glob import glob
