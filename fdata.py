@@ -1272,6 +1272,8 @@ class fincon(object): 						#FEHM restart object.
 		
 		if if_new and not os.path.isfile(self._path.full_path): return False
 		
+		# check if file exists, if not found, check in work directory
+		
 		infile = open(self._path.full_path,'r')	
 		
 		self._parent.files.incon = inconfilename
@@ -1463,21 +1465,40 @@ class fincon(object): 						#FEHM restart object.
 				for nd,szi in zip(zs[k],sz):
 					self._strs_zz[nd.index-1] = szi			
 			if vertical_fraction:
-				self._strs_xx = list(xgrad*np.array(self.strs_zz))
-				self._strs_yy = list(ygrad*np.array(self.strs_zz))
-				self._strs_xy = list(xygrad*np.array(self.strs_zz))
-				self._strs_xz = list(xzgrad*np.array(self.strs_zz))
-				self._strs_yz = list(yzgrad*np.array(self.strs_zz))
+				if isinstance(xgrad,(list,tuple)) and len(xgrad) == 2:
+					self._strs_xx = list(xgrad[0]*np.array(self.strs_zz)+xgrad[1])
+				else: self._strs_xx = list(xgrad*np.array(self.strs_zz))
+				
+				if isinstance(ygrad,(list,tuple)) and len(ygrad) == 2:
+					self._strs_yy = list(ygrad[0]*np.array(self.strs_zz)+ygrad[1])
+				else: self._strs_yy = list(ygrad*np.array(self.strs_zz))
+				
+				if isinstance(xygrad,(list,tuple)) and len(xygrad) == 2:
+					self._strs_xy = list(xygrad[0]*np.array(self.strs_zz)+xygrad[1])
+				else: self._strs_xy = list(xygrad*np.array(self.strs_zz))
+				
+				if isinstance(xzgrad,(list,tuple)) and len(xzgrad) == 2:
+					self._strs_xz = list(xzgrad[0]*np.array(self.strs_zz)+xzgrad[1])
+				else: self._strs_xz = list(xzgrad*np.array(self.strs_zz))
+				
+				if isinstance(yzgrad,(list,tuple)) and len(yzgrad) == 2:
+					self._strs_yz = list(yzgrad[0]*np.array(self.strs_zz)+yzgrad[1])
+				else: self._strs_yz = list(yzgrad*np.array(self.strs_zz))
+				
+				#self._strs_yy = list(ygrad*np.array(self.strs_zz))
+				#self._strs_xy = list(xygrad*np.array(self.strs_zz))
+				#self._strs_xz = list(xzgrad*np.array(self.strs_zz))
+				#self._strs_yz = list(yzgrad*np.array(self.strs_zz))
 			else:
-				if isinstance(xgrad,tuple) or isinstance(xgrad,list): dx = abs(xgrad[0]); x0 = xgrad[1]
+				if isinstance(xgrad,(tuple,list)): dx = abs(xgrad[0]); x0 = xgrad[1]
 				else: dx = abs(xgrad); x0 = 0
-				if isinstance(ygrad,tuple) or isinstance(ygrad,list): dy = abs(ygrad[0]); y0 = ygrad[1]
+				if isinstance(ygrad,(tuple,list)): dy = abs(ygrad[0]); y0 = ygrad[1]
 				else: dy = abs(ygrad); y0 = 0
-				if isinstance(xygrad,tuple) or isinstance(xygrad,list): dxy = abs(xygrad[0]); xy0 = xygrad[1]
+				if isinstance(xygrad,(tuple,list)): dxy = abs(xygrad[0]); xy0 = xygrad[1]
 				else: dxy = abs(xygrad); xy0 = 0
-				if isinstance(xzgrad,tuple) or isinstance(xzgrad,list): dxz = abs(xzgrad[0]); xz0 = xzgrad[1]
+				if isinstance(xzgrad,(tuple,list)): dxz = abs(xzgrad[0]); xz0 = xzgrad[1]
 				else: dxz = abs(xzgrad); xz0 = 0
-				if isinstance(yzgrad,tuple) or isinstance(yzgrad,list): dyz = abs(yzgrad[0]); yz0 = yzgrad[1]
+				if isinstance(yzgrad,(tuple,list)): dyz = abs(yzgrad[0]); yz0 = yzgrad[1]
 				else: dyz = abs(yzgrad); yz0 = 0
 				
 				z = np.array([nd.position[2] for nd in self._parent.grid.nodelist])
@@ -1487,17 +1508,17 @@ class fincon(object): 						#FEHM restart object.
 				self._strs_xz = -dxz*(z-xz0)
 				self._strs_yz = -dyz*(z-yz0)
 		else:
-			if isinstance(xgrad,tuple) or isinstance(xgrad,list): dx = abs(xgrad[0]); x0 = xgrad[1]
+			if isinstance(xgrad,(tuple,list)): dx = abs(xgrad[0]); x0 = xgrad[1]
 			else: dx = abs(xgrad); x0 = 0
-			if isinstance(ygrad,tuple) or isinstance(ygrad,list): dy = abs(ygrad[0]); y0 = ygrad[1]
+			if isinstance(ygrad,(tuple,list)): dy = abs(ygrad[0]); y0 = ygrad[1]
 			else: dy = abs(ygrad); y0 = 0
-			if isinstance(zgrad,tuple) or isinstance(zgrad,list): dz = abs(zgrad[0]); z0 = zgrad[1]
+			if isinstance(zgrad,(tuple,list)): dz = abs(zgrad[0]); z0 = zgrad[1]
 			else: dz = abs(zgrad); z0 = 0
-			if isinstance(xygrad,tuple) or isinstance(xygrad,list): dxy = abs(xygrad[0]); xy0 = xygrad[1]
+			if isinstance(xygrad,(tuple,list)): dxy = abs(xygrad[0]); xy0 = xygrad[1]
 			else: dxy = abs(xygrad); xy0 = 0
-			if isinstance(xzgrad,tuple) or isinstance(xzgrad,list): dxz = abs(xzgrad[0]); xz0 = xzgrad[1]
+			if isinstance(xzgrad,(tuple,list)): dxz = abs(xzgrad[0]); xz0 = xzgrad[1]
 			else: dxz = abs(xzgrad); xz0 = 0
-			if isinstance(yzgrad,tuple) or isinstance(yzgrad,list): dyz = abs(yzgrad[0]); yz0 = yzgrad[1]
+			if isinstance(yzgrad,(tuple,list)): dyz = abs(yzgrad[0]); yz0 = yzgrad[1]
 			else: dyz = abs(yzgrad); yz0 = 0
 			
 			z = np.array([nd.position[2] for nd in self._parent.grid.nodelist])
@@ -4365,10 +4386,10 @@ class fdata(object):						#FEHM data file.
 		# 1. Copy everything to working directory 
 		if not use_paths:
 			self.grid.write(wd+self.grid._path.filename)	# SOMETIMES write grid file
-			self.files.grid = self.grid._path.filename
+			self.files.grid = wd+self.grid._path.filename
 			if self.files._use_incon:
 				self.incon.write(wd+self.incon._path.filename)	# SOMETIMES write incon file
-				self.files.incon = self.incon._path.filename
+				self.files.incon = wd+self.incon._path.filename
 			if self.files._use_stor:						# SOMETIMES copy stor file
 				temp_path = fpath()
 				temp_path.filename = self.files.stor
@@ -4382,6 +4403,8 @@ class fdata(object):						#FEHM data file.
 		else:	
 			self.files.grid = self.grid._path.full_path
 			if self.files._use_incon:
+				if self.incon._writeOut:
+					self.incon.write(self.incon._path.full_path)	# SOMETIMES write incon file
 				self.files.incon = self.incon._path.full_path
 						
 		for file in files: 												# extra files to be written
@@ -4663,7 +4686,7 @@ class fdata(object):						#FEHM data file.
 			ind = first_zone
 			x0,x1 = self.grid.xmin,self.grid.xmax
 			y0,y1 = self.grid.ymin,self.grid.ymax
-			T = np.interp(abs(z),zt,tt)
+			T = np.interp(np.sort(z),np.sort(zt),tt[np.argsort(zt)])
 			if hydrostatic != 0:				
 				P = fluid_column(z,Tgrad = filename, Tsurf = 25., Psurf = hydrostatic)[0][:,0]
 			else:
@@ -5409,8 +5432,8 @@ class fdata(object):						#FEHM data file.
 				outfile.write('file\n')
 				outfile.write(file_nm+'\n')	
 				# if filename does not exist, write file
-				if not os.path.isfile(self.work_dir+file_nm) or self._writeSubFiles:
-					macrofile = open(self.work_dir+file_nm,'w')
+				if not os.path.isfile(self.work_dir+slash+file_nm) or self._writeSubFiles:
+					macrofile = open(self.work_dir+slash+file_nm,'w')
 					macros = [macro for macro in self._allMacro[macroName] if macro.file==file_nm]
 					for macro in macros: macro.file = -1
 					self._write_macro(macrofile,macroName)

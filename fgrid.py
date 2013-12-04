@@ -1447,7 +1447,7 @@ class fgrid(object):				#Grid object.
 			for zn,col in zip(zones,colors): 	# iterate through zones
 				if zn in self._parent.zone.keys():
 					for nd in self._parent.zone[zn].nodelist:
-						ax.plot([nd.position[0]],[nd.position[1]],[nd.position[2]],col+'.',ms=3)
+						ax.plot([nd.position[0]],[nd.position[1]],[nd.position[2]],col+'.',ms=3,alpha=0.5)
 		
 		extension, save_fname, pdf = save_name(save,variable='grid',time=1)
 		if self._parent:
