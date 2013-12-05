@@ -801,6 +801,14 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 		if delta:
 			X, Y, Z, valsIi = self.slice(variable=variable, time=time0, slice=slice, divisions=divisions, method=method)
 			valsI = valsI - valsIi
+		if isinstance(slice[0],list):
+			# check if horizontal or vertical slice
+			dx,dy,dz = abs(slice[0][0]-slice[1][0]),abs(slice[0][1]-slice[1][1]),abs(slice[0][2]-slice[1][2])
+			if not(100*dz<dx and 100*dz<dy): 	
+				if dx < dy:
+					X = Y
+				Y = Z
+					
 		plt.clf()
 		plt.figure(figsize=[8,8])
 		ax = plt.axes([0.15,0.15,0.75,0.75])
