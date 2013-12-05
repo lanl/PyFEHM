@@ -1302,7 +1302,7 @@ class fgrid(object):				#Grid object.
 			else: face5 = False; face6 = True
 		# plot bounding box
 		plt.clf()
-		fig = plt.figure(figsize=[10.5,8.275])
+		fig = plt.figure(figsize=[8.275,11.7])
 		ax = plt.axes(projection='3d')
 		ax.set_aspect('equal', 'datalim')
 		
