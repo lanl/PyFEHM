@@ -274,6 +274,15 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 		self._keyrows={}
 		self.column_name=[]
 		self.num_columns=0
+		self._x = []
+		self._y = []
+		self._z = []
+		self._xmin = None
+		self._ymin = None
+		self._zmin = None
+		self._xmax = None
+		self._ymax = None
+		self._zmax = None
 		self._latest = latest
 		self._first = first
 		self._nearest = nearest
@@ -353,6 +362,16 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 				else: self._read_data_avsx(header)
 			self._file.close()
 			configured = True
+		# assemble grid information
+		if 'x' in self.variables:
+			self._x = np.unique(self[self.times[0]]['x'])
+			self._xmin,self._xmax = np.min(self.x), np.max(self.x)
+		if 'y' in self.variables:
+			self._y = np.unique(self[self.times[0]]['y'])
+			self._ymin,self._ymax = np.min(self.y), np.max(self.y)
+		if 'z' in self.variables:
+			self._z = np.unique(self[self.times[0]]['z'])
+			self._zmin,self._zmax = np.min(self.z), np.max(self.z)
 		if dflt.parental_cont:
 			print ''
 			print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
@@ -1211,6 +1230,33 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 	filename = property(_get_filename)  #: (*str*) Name of FEHM contour output file. Wildcards can be used to define multiple input files.
 	def _get_times(self): return np.sort(self._times)
 	times = property(_get_times)	#: (*lst[fl64]*) List of times (in seconds) for which output data are available.
+	def _get_x(self): return self._x
+	def _set_x(self,value): self._x = value
+	x = property(_get_x, _set_x) #: (*lst[fl64]*) Unique list of nodal x-coordinates for grid.
+	def _get_y(self): return self._y
+	def _set_y(self,value): self._y = value
+	y = property(_get_y, _set_y) #: (*lst[fl64]*) Unique list of nodal y-coordinates for grid.
+	def _get_z(self): return self._z
+	def _set_z(self,value): self._z = value
+	z = property(_get_z, _set_z) #: (*lst[fl64]*) Unique list of nodal z-coordinates for grid.
+	def _get_xmin(self): return self._xmin
+	def _set_xmin(self,value): self._xmin = value
+	xmin = property(_get_xmin, _set_xmin) #: (*fl64*) Minimum nodal x-coordinate for grid.
+	def _get_xmax(self): return self._xmax
+	def _set_xmax(self,value): self._xmax = value
+	xmax = property(_get_xmax, _set_xmax) #: (*fl64*) Maximum nodal x-coordinate for grid.
+	def _get_ymin(self): return self._ymin
+	def _set_ymin(self,value): self._ymin = value
+	ymin = property(_get_ymin, _set_ymin) #: (*fl64*) Minimum nodal y-coordinate for grid.
+	def _get_ymax(self): return self._ymax
+	def _set_ymax(self,value): self._ymax = value
+	ymax = property(_get_ymax, _set_ymax) #: (*fl64*) Maximum nodal y-coordinate for grid.
+	def _get_zmin(self): return self._zmin
+	def _set_zmin(self,value): self._zmin = value
+	zmin = property(_get_zmin, _set_zmin) #: (*fl64*) Minimum nodal z-coordinate for grid.
+	def _get_zmax(self): return self._zmax
+	def _set_zmax(self,value): self._zmax = value
+	zmax = property(_get_zmax, _set_zmax) #: (*fl64*) Maximum nodal z-coordinate for grid.
 	def _get_information(self):
 		print 'FEHM contour output - format '+self._format
 		print '    call format: fcontour[time][variable][node_index-1]'
