@@ -216,6 +216,12 @@ rlpm_cap1 = dict((('vg_cap','vg_cap'),('brooks-corey_cap','brooks-corey'),('line
 rlpm_cap2 = dict((('vg_cap','vg_cap'),('brooks-corey','brooks-corey_cap'),('linear_for','linear_cap')))
 rlpm_phases = ['water','air','co2_liquid','co2_gas','vapor']
 
+buildWarnings = []
+
+def _buildWarnings(s):
+	global buildWarnings
+	buildWarnings.append(s)
+	print s
 def _title_string(s,n): 						#prepends headers to sections of FEHM input file
 	if not n: return
 	ws = '# '
@@ -714,7 +720,7 @@ class fzone(object):						#FEHM zone object.
 	def _set_permeability(self,value): 
 		self._permeability = value
 		# set commands
-		if not self._parent: print 'Zone not associated with input file, no macro changes made.'; return
+		if not self._parent: _buildWarnings('Zone not associated with input file, no macro changes made.'); return
 		if isinstance(value,(int,float)): kx = value; ky = value; kz = value
 		elif isinstance(value,(list,tuple,np.ndarray)) and len(value)==3: kx,ky,kz = value
 		if self.index in self._parent.perm.keys():
@@ -722,7 +728,6 @@ class fzone(object):						#FEHM zone object.
 				self._parent.perm[self.index].param['kx']=kx
 				self._parent.perm[self.index].param['ky']=ky
 				self._parent.perm[self.index].param['kz']=kz
-			#self._parent._associate_macro(self._parent.perm[self.index])
 		else:
 			self._parent.add(fmacro('perm',zone=self.index,param=(('kx',kx),('ky',ky),('kz',kz))))
 		if self._parent:
@@ -734,7 +739,7 @@ class fzone(object):						#FEHM zone object.
 	def _set_conductivity(self,value): 
 		self._conductivity = value
 		# set commands
-		if not self._parent: print 'Zone not associated with input file, no macro changes made.'; return
+		if not self._parent: _buildWarnings('Zone not associated with input file, no macro changes made.'); return
 		if isinstance(value,(int,float)): kx = value; ky = value; kz = value
 		elif isinstance(value,(list,tuple,np.ndarray)) and len(value)==3: kx,ky,kz = value
 		if self.index in self._parent.cond.keys():
@@ -742,7 +747,6 @@ class fzone(object):						#FEHM zone object.
 				self._parent.cond[self.index].param['cond_x']=kx
 				self._parent.cond[self.index].param['cond_y']=ky
 				self._parent.cond[self.index].param['cond_z']=kz
-			#self._parent._associate_macro(self._parent.cond[self.index])
 		else:
 			self._parent.add(fmacro('cond',zone=self.index,param=(('cond_x',kx),('cond_y',ky),('cond_z',kz))))
 		if self._parent:
@@ -758,10 +762,9 @@ class fzone(object):						#FEHM zone object.
 		if self.index in self._parent.rock.keys():
 			if self._updateFlag:
 				self._parent.rock[self.index].param['density']=value
-			#self._parent._associate_macro(self._parent.rock[self.index])
 		else:
 			self._parent.add(fmacro('rock',zone=self.index,param=(('density',value),('specific_heat',dflt.specific_heat),('porosity',dflt.porosity))))
-			print 'WARNING: Assigning default specific heat and porosity...'
+			_buildWarnings('WARNING: Assigning default specific heat (%6.1f'%dflt.specific_heat+' kJ/kg/K) and porosity (%4.3f'%dflt.porosity+') to zone '+str(self.index)+'.')
 			self.specific_heat = dflt.specific_heat
 			self.porosity = dflt.porosity
 		if self._parent:
@@ -777,10 +780,9 @@ class fzone(object):						#FEHM zone object.
 		if self.index in self._parent.rock.keys():
 			if self._updateFlag:
 				self._parent.rock[self.index].param['specific_heat']=value			
-			#self._parent._associate_macro(self._parent.rock[self.index])
 		else:
 			self._parent.add(fmacro('rock',zone=self.index,param=(('density',dflt.density),('specific_heat',value),('porosity',dflt.porosity))))
-			print 'WARNING: Assigning default density and porosity...'
+			_buildWarnings('WARNING: Assigning default density (%6.1f'%dflt.density+' kg/m^3) and porosity (%4.3f'%dflt.porosity+') to zone '+str(self.index)+'.')
 			self.density = dflt.density
 			self.porosity = dflt.porosity
 		if self._parent:
@@ -796,10 +798,9 @@ class fzone(object):						#FEHM zone object.
 		if self.index in self._parent.rock.keys():
 			if self._updateFlag:
 				self._parent.rock[self.index].param['porosity']=value
-			#self._parent._associate_macro(self._parent.rock[self.index])
 		else:
 			self._parent.add(fmacro('rock',zone=self.index,param=(('density',dflt.density),('specific_heat',dflt.specific_heat),('porosity',value))))
-			print 'WARNING: Assigning default density and specific heat...'
+			_buildWarnings('WARNING: Assigning default density (%6.1f'%dflt.density+' kg/m^3) and specific heat (%6.1f'%dflt.specific_heat+' kJ/kg/K) to zone '+str(self.index)+'.')
 			self.specific_heat = dflt.specific_heat
 			self.density = dflt.density
 		if self._parent:
@@ -815,10 +816,9 @@ class fzone(object):						#FEHM zone object.
 		if self.index in self._parent.elastic.keys():
 			if self._updateFlag:
 				self._parent.elastic[self.index].param['youngs_modulus']=value
-			#self._parent._associate_macro(self._parent.elastic[self.index])
 		else:
 			self._parent.add(fmacro('elastic',zone=self.index,param=(('youngs_modulus',value),('poissons_ratio',dflt.poissons_ratio))))
-			print 'WARNING: Assigning default Poissons ratio...'
+			_buildWarnings('WARNING: Assigning default Poissons ratio (%4.3f'%dflt.poissons_ratio+') to zone '+str(self.index)+'.')
 			self.poissons_ratio = dflt.poissons_ratio
 		if self._parent:
 			for nd in self.nodelist:
@@ -833,10 +833,9 @@ class fzone(object):						#FEHM zone object.
 		if self.index in self._parent.elastic.keys():
 			if self._updateFlag:
 				self._parent.elastic[self.index].param['poissons_ratio']=value
-			#self._parent._associate_macro(self._parent.elastic[self.index])
 		else:
 			self._parent.add(fmacro('elastic',zone=self.index,param=(('youngs_modulus',dflt.youngs_modulus),('poissons_ratio',value))))
-			print 'WARNING: Assigning default Youngs modulus...'
+			_buildWarnings('WARNING: Assigning default Youngs modulus (%5.1f'%dflt.youngs_modulus+' MPa) to zone '+str(self.index)+'.')
 			self.youngs_modulus = dflt.youngs_modulus
 		if self._parent:
 			for nd in self.nodelist:
@@ -851,10 +850,9 @@ class fzone(object):						#FEHM zone object.
 		if self.index in self._parent.biot.keys():
 			if self._updateFlag:
 				self._parent.biot[self.index].param['thermal_expansion']=value
-			#self._parent._associate_macro(self._parent.biot[self.index])
 		else:
 			self._parent.add(fmacro('biot',zone=self.index,param=(('thermal_expansion',value),('pressure_coupling',dflt.pressure_coupling))))
-			print 'WARNING: Assigning default pressure coupling...'
+			_buildWarnings('WARNING: Assigning default pressure coupling (%4.3f'%dflt.pressure_coupling+') to zone '+str(self.index)+'.')
 			self.pressure_coupling = dflt.pressure_coupling
 		if self._parent:
 			for nd in self.nodelist:
@@ -865,14 +863,13 @@ class fzone(object):						#FEHM zone object.
 	def _set_pressure_coupling(self,value): 
 		self._pressure_coupling = value
 		# set commands
-		if not self._parent: print 'Zone not associated with input file, no macro changes made.'; return
+		if not self._parent: _buildWarnings('Zone not associated with input file, no macro changes made.'); return
 		if self.index in self._parent.biot.keys():
 			if self._updateFlag:
 				self._parent.biot[self.index].param['pressure_coupling']=value
-			#self._parent._associate_macro(self._parent.biot[self.index])
 		else:
 			self._parent.add(fmacro('biot',zone=self.index,param=(('thermal_expansion',dflt.thermal_expansion),('pressure_coupling',value))))
-			print 'WARNING: Assigning default thermal expansion...'
+			_buildWarnings('WARNING: Assigning default thermal expansion (%4.3e'%dflt.thermal_expansion+' K^-1) to zone '+str(self.index)+'.')
 			self.thermal_expansion = dflt.thermal_expansion
 		if self._parent:
 			for nd in self.nodelist:
@@ -887,10 +884,9 @@ class fzone(object):						#FEHM zone object.
 		if self.index in self._parent.pres.keys():
 			if self._updateFlag:
 				self._parent.pres[self.index].param['pressure']=value
-			#self._parent._associate_macro(self._parent.pres[self.index])
 		else:
 			self._parent.add(fmacro('pres',zone=self.index,param=(('pressure',value),('temperature',dflt.Ti),('saturation',1))))
-			print 'WARNING: Assigning default initial temperature (fully saturated liquid)...'
+			_buildWarnings('WARNING: Assigning default initial temperature (%4.1f'%dflt.Ti+' degC, fully saturated liquid) to zone '+str(self.index)+'.')
 			self.Ti = dflt.Ti
 		if self.Ti > tsat(self.Pi)[0]: 
 			self._parent.pres[self.index].param['saturation']=3
@@ -911,10 +907,9 @@ class fzone(object):						#FEHM zone object.
 		if self.index in self._parent.pres.keys():
 			if self._updateFlag:
 				self._parent.pres[self.index].param['temperature']=value
-			#self._parent._associate_macro(self._parent.pres[self.index])
 		else:
 			self._parent.add(fmacro('pres',zone=self.index,param=(('pressure',dflt.Pi),('temperature',value),('saturation',1))))
-			print 'WARNING: Assigning default initial pressure (fully saturated liquid)...'
+			_buildWarnings('WARNING: Assigning default initial pressure (%4.1f'%dflt.Pi+' MPa, fully saturated liquid) to zone '+str(self.index)+'.')
 			self._Pi = dflt.Pi
 		if self._Ti > tsat(self._Pi)[0]: 
 			self._parent.pres[self.index].param['saturation']=3
@@ -936,10 +931,9 @@ class fzone(object):						#FEHM zone object.
 			if self._updateFlag:
 				self._parent.pres[self.index].param['temperature']=value
 				self._parent.pres[self.index].param['saturation']=2
-			#self._parent._associate_macro(self._parent.pres[self.index])
 		else:
-			self._parent.add(fmacro('pres',zone=self.index,param=(('pressure',dflt.pressure),('temperature',value),('saturation',2))))
-			print 'WARNING: Assigning default initial pressure (two phase)...'
+			self._parent.add(fmacro('pres',zone=self.index,param=(('pressure',dflt.Pi),('temperature',value),('saturation',2))))
+			_buildWarnings('WARNING: Assigning default initial pressure (%4.1f'%dflt.Pi+' MPa, two phase) to zone '+str(self.index)+'.')
 		self._Ti = tsat(self._parent.pres[self.index].param['pressure'])[0]
 		if self._parent:
 			for nd in self.nodelist:
@@ -948,8 +942,8 @@ class fzone(object):						#FEHM zone object.
 	Si = property(_get_Si, _set_Si) #: (*fl64*) Initial saturation in zone.
 	def _check(self):
 		# if file called for but non-existant on disk, print warning
-		if self.type == None: print 'WARNING: Zone '+str(self.index)+' type not assigned.'
-		if self.points == None: print 'WARNING: Zone '+str(self.index)+' points array is empty.'
+		if self.type == None: _buildWarnings('WARNING: Zone '+str(self.index)+' type not assigned.')
+		if self.points == None: _buildWarnings('WARNING: Zone '+str(self.index)+' points array is empty.')
 class fmacro(object): 						#FEHM macro object
 	"""FEHM macro object.
 	
@@ -1026,7 +1020,7 @@ class fmacro(object): 						#FEHM macro object
 	def _get_subtype(self): return self._subtype
 	def _set_subtype(self,value):
 		self._subtype = value
-		if self.type != 'stressboun': print 'WARNING: subtype ignored for non-stressboun macros'
+		if self.type != 'stressboun': _buildWarnings('WARNING: subtype ignored for non-stressboun macros')
 	subtype = property(_get_subtype,_set_subtype)	#: (*str*) Macro subtype, required for **STRESSBOUN** macro.
 	def _get_file(self): return self._file
 	def _set_file(self,value): self._file = value
@@ -1034,10 +1028,10 @@ class fmacro(object): 						#FEHM macro object
 	def _check(self):
 		# if not zone assigned, apply default background
 		if self._zone == None: 
-			prntStr = 'WARNING: Macro '+str(self.type)+' has no zone assigned.'
+			_buildWarnings('WARNING: Macro '+str(self.type)+' has no zone assigned.')
 		# if parameter value not assigned, print warning
 		for key in self.param.keys():
-			if self.param[key] == None: print 'WARNING: Macro '+str(self.type)+':'+str(self.zone.index)+' '+key+' not assigned.'
+			if self.param[key] == None: _buildWarnings('WARNING: Macro '+str(self.type)+':'+str(self.zone.index)+' '+key+' not assigned.')
 	def _get_info(self):
 		prntStr = self.type + ': ' + macro_descriptor[self.type] +'\n'
 		# print zone info
@@ -2205,9 +2199,9 @@ class fboun(object):						#FEHM boundary condition object.
 		# check length of variable vectors correspond to length of time vectors
 		for var in self._variable:
 			if len(var)-1<len(self.times):
-				prntStr = 'WARNING: Variable vector ('+var[0]+') specified in BOUN macro shorter than time vector.'
+				_buildWarnings('WARNING: Variable vector ('+var[0]+') specified in BOUN macro shorter than time vector.')
 			if len(var)-1>len(self.times):
-				prntStr = 'WARNING: Variable vector ('+var[0]+') specified in BOUN macro longer than time vector.'
+				_buildWarnings('WARNING: Variable vector ('+var[0]+') specified in BOUN macro longer than time vector.')
 class frlpm(object): 						#FEHM relative permeability object (different to rlp macro).
 	'''Relative permeability model.
 	
@@ -2315,13 +2309,13 @@ class _relperm(object): 						# private class for relative permeability model
 				self._param[key[0]] = par
 	def _get_phase(self): return self._phase
 	def _set_phase(self,value): 
-		if value not in rlpm_phases: print 'WARNING: '+str(value)+' not an available phase.';return
+		if value not in rlpm_phases: _buildWarnings('WARNING: '+str(value)+' not an available phase.');return
 		self._phase = value
 	phase = property(_get_phase, _set_phase) #: (**)
 	def _get_type(self): return self._type
 	def _set_type(self,value): 
 		if value == self._type: return
-		if value not in rlpm_dicts.keys(): print 'WARNING: '+str(value)+' not an available model.';return
+		if value not in rlpm_dicts.keys(): _buildWarnings('WARNING: '+str(value)+' not an available model.');return
 		self._type = value
 		self._param = rlpm_dicts[value]
 	type = property(_get_type, _set_type) #: (**)
@@ -2480,7 +2474,7 @@ class files(object):						#FEHM file constructor.
 			if not os.path.isfile(co2_path.full_path):
 				co2_path.filename = dflt.co2_interp_path_2
 			if not os.path.isfile(co2_path.full_path):
-				print 'WARNING: Cant find co2_interp.txt'
+				_buildWarnings('WARNING: Cant find co2_interp.txt')
 				self._use_co2in = False
 		elif self.co2in:
 			co2_path = fpath()
@@ -2502,7 +2496,7 @@ class files(object):						#FEHM file constructor.
 
 		# Set secret flag to use co2_inj.txt file to specify time to stop injection
 		if self.co2_inj_time:
-			if self._parent.carb.iprtype == 1: print "WARNING: CO2 injection flag requested but no carb macro specified, CO2 injection flag will be ignored." 
+			if self._parent.carb.iprtype == 1: _buildWarnings('WARNING: CO2 injection flag requested but no carb macro specified, CO2 injection flag will be ignored.') 
 			else:
 				outfile.write('999\n')
 
@@ -3364,13 +3358,12 @@ class fdata(object):						#FEHM data file.
 					self.hist.zoneflux.append(self.zone[int(num)])
 				else:
 					self.hist.zoneflux.append(int(num))
-					print 'WARNING: zone ' +num+' in FLXZ not defined.'
+					_buildWarnings('WARNING: zone ' +num+' in FLXZ not defined.')
 				newind += 1
 			if newind == node_num: more = False
 	def _write_hist(self,outfile):								#Writes HIST macro.
-		if not self.hist.nodelist and not self.hist.zonelist and not self.hist.zoneflux: print 'WARNING: no zones or nodes specified for history output'; return
-#		if self.hist.nodelist and self.hist.zonelist: print 'WARNING: not set up to print both hist nodes and hist zones'; return
-		if not self.hist.variables: print 'WARNING: no variables requested in hist'
+		if not self.hist.nodelist and not self.hist.zonelist and not self.hist.zoneflux: _buildWarnings('WARNING: no zones or nodes specified for history output'); return
+		if not self.hist.variables: _buildWarnings('WARNING: no variables requested in hist')
 		ws = _title_string('HISTORY OUTPUT REQUESTS',72)
 		outfile.write(ws)
 		
@@ -3739,7 +3732,7 @@ class fdata(object):						#FEHM data file.
 				elif isinstance(zn,(int,str)): 
 					if zn in self.zone.keys():
 						zns2.append(self.zone[zn])
-					else: 'WARNING: no zone '+str(zn)+ ' found'
+					else: _buildWarnings('WARNING: no zone '+str(zn)+ ' found')
 			self._write_zonn_one(outfile,list(set(zns2)))
 		outfile.write('ngas\n')
 		outfile.write(str(int(self.ngas.dof))+'\n')
@@ -4067,7 +4060,7 @@ class fdata(object):						#FEHM data file.
 		# assign new parameters
 		DIT1 = at_time
 		if new_dti and new_dtx:
-			print 'WARNING: you cannot specify BOTH a new time step size and time step multiplier. Ignoring the new multiplier...'
+			_buildWarnings('WARNING: you cannot specify BOTH a new time step size and time step multiplier. Ignoring the new multiplier...')
 			new_dtx = None
 		if new_dti: DIT2 = new_dti
 		elif new_dtx: DIT2 = -new_dtx
@@ -4131,7 +4124,7 @@ class fdata(object):						#FEHM data file.
 			return
 		# if both rect and nodelist are specified, proceed with rect, print warning
 		if rect and nodelist:
-			print 'WARNING: only one of rect or nodelist should be specified, proceeding with rect values'
+			_buildWarnings('WARNING: only one of rect or nodelist should be specified, proceeding with rect values')
 		if nodelist:
 			if isinstance(nodelist,fnode) or isinstance(nodelist,int): nodelist = [nodelist]
 			nds = []
@@ -4201,15 +4194,15 @@ class fdata(object):						#FEHM data file.
 		# add rock property macros
 		if density or specific_heat or porosity:
 			if not density:
-				print 'WARNING: No density specified, assigning default '+str(dflt.density)
+				_buildWarnings('WARNING: No density specified, assigning default '+str(dflt.density))
 				density = dflt.density
 			
 			if not specific_heat:
-				print 'WARNING: No specific heat specified, assigning default '+str(dflt.specific_heat)
+				_buildWarnings('WARNING: No specific heat specified, assigning default '+str(dflt.specific_heat))
 				specific_heat = dflt.specific_heat
 			
 			if not porosity:
-				print 'WARNING: No porosity specified, assigning default '+str(dflt.porosity)
+				_buildWarnings('WARNING: No porosity specified, assigning default '+str(dflt.porosity))
 				porosity = dflt.porosity
 						
 			# assign
@@ -4226,11 +4219,11 @@ class fdata(object):						#FEHM data file.
 		# add elastic property macros
 		if youngs_modulus or poissons_ratio:
 			if not youngs_modulus:
-				print 'WARNING: No Youngs modulus specified, assigning default '+str(dflt.youngs_modulus)
+				_buildWarnings('WARNING: No Youngs modulus specified, assigning default '+str(dflt.youngs_modulus))
 				youngs_modulus = dflt.youngs_modulus
 			
 			if not poissons_ratio:
-				print 'WARNING: No Poissons ratio specified, assigning default '+str(dflt.poissons_ratio)
+				_buildWarnings('WARNING: No Poissons ratio specified, assigning default '+str(dflt.poissons_ratio))
 				poissons_ratio = dflt.poissons_ratio
 			
 			# assign
@@ -4245,11 +4238,11 @@ class fdata(object):						#FEHM data file.
 		# add stress coupling property macros
 		if thermal_expansion or pressure_coupling:
 			if not thermal_expansion:
-				print 'WARNING: No coefficient of thermal expansion specified, assigning default '+str(dflt.thermal_expansion)
+				_buildWarnings('WARNING: No coefficient of thermal expansion specified, assigning default '+str(dflt.thermal_expansion))
 				thermal_expansion = dflt.thermal_expansion
 			
 			if not pressure_coupling:
-				print 'WARNING: No pressure coupling term specified, assigning default '+str(dflt.pressure_coupling)
+				_buildWarnings('WARNING: No pressure coupling term specified, assigning default '+str(dflt.pressure_coupling))
 				pressure_coupling = dflt.pressure_coupling
 			
 			# assign
@@ -4269,7 +4262,7 @@ class fdata(object):						#FEHM data file.
 				ti = Ti
 				
 			elif not Si and Pi and not Ti:
-				print 'WARNING: No initial temperature specified, assigning default '+str(dflt.Ti)
+				_buildWarnings('WARNING: No initial temperature specified, assigning default '+str(dflt.Ti))
 				Ti = dflt.Ti
 				if Ti < tsat(Pi)[0]: Si = 1.; si = 1
 				else: Si = 0.; si = 3
@@ -4277,7 +4270,7 @@ class fdata(object):						#FEHM data file.
 			
 			elif not Si and Ti and not Pi:
 				Pi = dflt.Pi
-				print 'WARNING: No initial pressure specified, assigning default '+str(dflt.Pi)
+				_buildWarnings('WARNING: No initial pressure specified, assigning default '+str(dflt.Pi))
 				if Ti < tsat(Pi)[0]: Si = 1.; si = 1
 				else: Si = 0.; si = 3
 				ti = Ti
@@ -4291,7 +4284,7 @@ class fdata(object):						#FEHM data file.
 			
 			elif Si and Pi:
 				if Ti:
-					print 'WARNING: Ignoring Ti, using Pi to calculate saturation temperature.'
+					_buildWarnings('WARNING: Ignoring Ti, using Pi to calculate saturation temperature.')
 				Ti = tsat(Pi)[0]
 				
 				ti = Si
@@ -4301,8 +4294,8 @@ class fdata(object):						#FEHM data file.
 				Pi = dflt.Pi
 				Ti = tsat(Pi)[0]
 				
-				print 'WARNING: No initial pressure specified, assigning default '+str(dflt.Pi)
-				print 'NOTE: For supplied saturation '+str(Si)+' and default pressure '+str(Pi)+', saturation temperature of '+str(Ti)+' will be used.'
+				_buildWarnings('WARNING: No initial pressure specified, assigning default '+str(dflt.Pi))
+				_buildWarnings('NOTE: For supplied saturation '+str(Si)+' and default pressure '+str(Pi)+', saturation temperature of '+str(Ti)+' will be used.')
 				
 				ti = Si
 				si = 2
@@ -4549,11 +4542,12 @@ class fdata(object):						#FEHM data file.
 						prntStr = ' ****   '
 		print ' ****---------------------------------------------------------****'
 		print ''
-	def _write_prep(self):									#Determine if data object fit for writing
+	def _write_prep(self):						#Determine if data object fit for writing
+		global buildWarnings
 		# WARNING: if cont output specifies pressure, but not state, then no pressure data will be written
 		hasPres = False
 		hasState = False
-		warnings = []
+		checkWarnings = []
 		for var in list(flatten(self.cont.variables)):
 			if var.startswith('p') and not var.startswith('po') and not var.startswith('pe'): hasPres = True
 			if var.startswith('l') or var.startswith('va'): hasState=True
@@ -4562,7 +4556,7 @@ class fdata(object):						#FEHM data file.
 		if self.permmodellist:
 			for pm in self.permmodellist:
 				if pm.index in [22,24,25] and self.strs.excess_she['PAR1']==None:
-					warnings.append('Perm model specified without accompanying excess_she macro - assigning defaults.')
+					checkWarnings.append('Perm model specified without accompanying excess_she macro - assigning defaults.')
 					self.strs.excess_she['PAR1']=0.9
 					self.strs.excess_she['PAR2']=10.
 					self.strs.excess_she['PAR3']=1.
@@ -4577,37 +4571,37 @@ class fdata(object):						#FEHM data file.
 			for macro in self._allMacro[key]: macro._check()
 		# WARNING: conductivity not specified, FEHM simulation wont run - add default
 		if not self.cond.has_key(0): 
-			warnings.append('No global conductivity set. Setting default '+str(dflt.conductivity))
+			checkWarnings.append('No global conductivity set. Setting default '+str(dflt.conductivity))
 			self.add(fmacro('cond',param=(('cond_x',dflt.conductivity),('cond_y',dflt.conductivity),('cond_z',dflt.conductivity))))
 		# WARNING: rock properties not specified, FEHM will run weirdly - add default
 		if not self.rock.has_key(0): 
-			warnings.append('No global rock properties set. Setting default density = '+str(dflt.density)+', specific heat = '+str(dflt.specific_heat)+', porosity='+str(dflt.porosity))
+			checkWarnings.append('No global rock properties set. Setting default density = '+str(dflt.density)+', specific heat = '+str(dflt.specific_heat)+', porosity='+str(dflt.porosity))
 			self.add(fmacro('rock',param=(('density',dflt.density),('specific_heat',dflt.specific_heat),('porosity',dflt.porosity))))
 		# WARNING: specifying zero pressure in co2pres has caused segfaults in the past
 		if self.co2preslist:
 			for m in self.co2preslist:
 				if m.param['pressure'] == 0:
-					print warnings.append('Zero pressure  in CO2PRES can cause instability.')
+					print checkWarnings.append('Zero pressure  in CO2PRES can cause instability.')
 					break
 		# WARNING: if stress gradients have been specified and bodyforce applied
 		if self.incon._stressgradCalled and self.strs.bodyforce:
-			warnings.append('When specifying stress gradients, bodyforce should be turned off.')
+			checkWarnings.append('When specifying stress gradients, bodyforce should be turned off.')
 		if (len(self.incon._strs_xx) != 0) and self.strs.bodyforce:
-			warnings.append('Bodyforce should be turned off when doing stress restarts.')
+			checkWarnings.append('Bodyforce should be turned off when doing stress restarts.')
 		# WARNING: if stress solution requested and second parameter in sol not -1
 		if self.strs.param['ISTRS'] == 1:
 			if self.sol['element_integration_INTG'] == 1:
-				warnings.append('Gaussian integration scheme can cause spatial osciallations in pressure solution - try sol[\'element_integration_INTG\'] = 1 if this occurs.')
+				checkWarnings.append('Gaussian integration scheme can cause spatial osciallations in pressure solution - try sol[\'element_integration_INTG\'] = 1 if this occurs.')
 		# WARNING: instability if using zoneflux and surf output
 		if self.hist.zoneflux and self.hist.format != 'tec':
-			warnings.append('Use of history output format \''+self.hist.format+'\' may not be compatible with zoneflux output (fehm macro: flxz). Use \'tec\' if problems experienced.')
+			checkWarnings.append('Use of history output format \''+self.hist.format+'\' may not be compatible with zoneflux output (fehm macro: flxz). Use \'tec\' if problems experienced.')
 		# WARNING: if a co2 relperm is specified without the carb macro, there will be issues
 		co2_rlpm_flag = False
 		for rlpm in self.rlpmlist:
 			for phase in rlpm.phases:
 				if phase.startswith('co2'): co2_rlpm_flag = True
 		if self.carb.iprtype == 1 and co2_rlpm_flag:
-			warnings.append('Specification of co2 relperm relationship without invoking the CARB module may cause crashes.')
+			checkWarnings.append('Specification of co2 relperm relationship without invoking the CARB module may cause crashes.')
 		# ERROR: check to see no new dictionary keys have been defined
 		ctrlFlag = dict_key_check(self.ctrl,dflt.ctrl.keys(),'ctrl')
 		iterFlag = dict_key_check(self.iter,dflt.iter.keys(),'iter')
@@ -4616,20 +4610,25 @@ class fdata(object):						#FEHM data file.
 		if ctrlFlag or iterFlag or timeFlag or solFlag:
 			return True
 		# print warnings
-		if warnings:
+		if checkWarnings or buildWarnings:
+			
+			s = ''
+			for warning in buildWarnings:
+				s += warning +'\n'
+			s+='\n\n'
+		
 			L = 62
-			print ''
-			print ' !!!!---------------------------------------------------------!!!!'
-			print ' !!!! Possible errors detected in input file.                 !!!!'
-			print ' !!!!---------------------------------------------------------!!!!'
-			for warning in warnings:
+			s+= ' !!!!---------------------------------------------------------!!!!\n'
+			s+= ' !!!! Possible errors detected in input file.                 !!!!\n'
+			s+= ' !!!!---------------------------------------------------------!!!!\n'
+			for warning in checkWarnings:
 				stri = ' !!!! -'
 				keepGoing = True
 				warning = warning.split()
 				while keepGoing:
 					if not warning: 
 						for i in range(L-len(stri)): stri += ' '
-						print stri+'!!!!'
+						s+= stri+'!!!!\n'
 						stri = ' !!!! '
 						break
 					if len(stri)<(L-len(warning[0])): 
@@ -4637,10 +4636,19 @@ class fdata(object):						#FEHM data file.
 						warning = warning[1:]
 					else:
 						for i in range(L-len(stri)): stri += ' '
-						print stri+'!!!!'
+						s+= stri+'!!!!\n'
 						stri = ' !!!!   '
-			print ' !!!!---------------------------------------------------------!!!!'
+			s+= ' !!!!---------------------------------------------------------!!!!\n'
+			if self.work_dir: fp = open(self.work_dir+slash+'pyfehm.err','w')
+			else: fp = open('pyfehm.err','w')
+			fp.write(s)
+			fp.close()
 			print ''
+			print s
+			print ''
+			checkWarnings = []
+			buildWarnings = []
+			
 		return False
 	def temperature_gradient(self,filename,offset=0.,first_zone = 100,auxiliary_file=None,hydrostatic = 0):
 		'''Assign initial temperature distribution to model based on supplied temperature profile.
@@ -4680,7 +4688,7 @@ class fdata(object):						#FEHM data file.
 			p0 = self.pres[0].param['pressure']
 		else:
 			p0 = 1.
-			print 'WARNING: no pressure information, assigning default of 1 MPa. These pressures will be overwritten if GRAD macro used.'
+			_buildWarnings('WARNING: no pressure information, assigning default of 1 MPa. These pressures will be overwritten if GRAD macro used.')
 		# assign zones or nodes
 		if zoneFlag:
 			ind = first_zone
@@ -4766,7 +4774,7 @@ class fdata(object):						#FEHM data file.
 				if zind in self.zone.keys():
 					zn_old = self.zone[zind]
 					if zn_old.type != new_zone.type:
-						print 'WARNING: zone '+str(zind)+' was defined earlier in the input file. PyFEHM assumes unique zone definitions. This zone will be ignored.'
+						_buildWarnings('WARNING: zone '+str(zind)+' was defined earlier in the input file. PyFEHM assumes unique zone definitions. This zone will be ignored.')
 					elif new_zone.type == 'rect':
 						x0n,x1n = np.min(new_zone.points[0]), np.max(new_zone.points[0])
 						y0n,y1n = np.min(new_zone.points[1]), np.max(new_zone.points[1])
@@ -4776,7 +4784,7 @@ class fdata(object):						#FEHM data file.
 						z0o,z1o = np.min(zn_old.points[2]), np.max(zn_old.points[2])
 						
 						if (x0n != x0o) or (x1n != x1o) or (y0n != y0o) or (y1n != y1o) or (z0n != z0o) or (z1n != z1o):
-							print 'WARNING: zone '+str(zind)+' was defined earlier in the input file. PyFEHM assumes unique zone definitions. This zone will be ignored.'
+							_buildWarnings('WARNING: zone '+str(zind)+' was defined earlier in the input file. PyFEHM assumes unique zone definitions. This zone will be ignored.')
 					else:
 						nds_old = zn_old.nodelist
 						nds_new = new_zone.nodelist
@@ -4790,7 +4798,7 @@ class fdata(object):						#FEHM data file.
 								different_zone = True
 								break
 						if different_zone:
-							print 'WARNING: zone '+str(zind)+' was defined earlier in the input file. PyFEHM assumes unique zone definitions. This zone will be ignored.'
+							_buildWarnings('WARNING: zone '+str(zind)+' was defined earlier in the input file. PyFEHM assumes unique zone definitions. This zone will be ignored.')
 				
 				if not zind in self.zone.keys(): self._add_zone(new_zone,overwrite=True)		
 				line=infile.readline(); block.append(line+'\n')
@@ -4895,14 +4903,14 @@ class fdata(object):						#FEHM data file.
 		if isinstance(zone,fzone):
 			if zone.index in self.zone.keys():
 				if not overwrite:
-					print 'WARNING: A zone with index '+str(zone.index)+' already exists. Zone will not be defined, use overwrite = True in add() to overwrite the old zone.'
+					_buildWarnings('WARNING: A zone with index '+str(zone.index)+' already exists. Zone will not be defined, use overwrite = True in add() to overwrite the old zone.')
 					return
 				else:
 					self.delete(self.zone[zone.index])
 		
 			if zone.name in self.zone.keys():
 				if not overwrite:
-					print 'WARNING: A zone with name \''+str(zone.name)+'\' already exists. Zone will not be defined, use overwrite = True in add() to overwrite the old zone.'
+					_buildWarnings('WARNING: A zone with name \''+str(zone.name)+'\' already exists. Zone will not be defined, use overwrite = True in add() to overwrite the old zone.')
 					return
 				else:
 					self.delete(self.zone[zone.name])
@@ -5204,7 +5212,7 @@ class fdata(object):						#FEHM data file.
 			keys = dict(keys)
 			if zn.index in keys.keys():
 				if not overwrite:
-					print 'WARNING: A '+macro.type+' macro for zone '+str(zn.index)+' already exists. Macro will not be defined, use overwrite = True in add() to overwrite the old macro.'
+					_buildWarnings('WARNING: A '+macro.type+' macro for zone '+str(zn.index)+' already exists. Macro will not be defined, use overwrite = True in add() to overwrite the old macro.')
 					return
 				else:
 					self.delete(keys[zn.index])
@@ -5219,7 +5227,7 @@ class fdata(object):						#FEHM data file.
 			keys = dict(keys)
 			if zn.name in keys.keys():
 				if not overwrite:
-					print 'WARNING: A macro for zone \''+str(zn.name)+'\' already exists. Macro will not be defined, use overwrite = True in add() to overwrite the old macro.'
+					_buildWarnings('WARNING: A macro for zone \''+str(zn.name)+'\' already exists. Macro will not be defined, use overwrite = True in add() to overwrite the old macro.')
 					return
 				else:
 					self.delete(keys[zn.name])
@@ -5877,5 +5885,5 @@ class fdata(object):						#FEHM data file.
 		for t in self._output_times: self.change_timestepping(t)
 		if len(self._output_times) == 0: return
 		if np.max(self._output_times)>self.tf:
-			print 'WARNING: output requested for times after the simulation end time.'
+			_buildWarnings('WARNING: output requested for times after the simulation end time.')
 	output_times = property(_get_output_times, _set_output_times) #: (*lst*) List of times at which FEHM should produce output.
