@@ -1278,6 +1278,7 @@ class fhistory(object):						# Reading and plotting methods associated with hist
 		self._data={}
 		self._row=None
 		self._nodes=[]	
+		self._zones = []
 		self._variables=[] 
 		self._keyrows={}
 		self.column_name=[]
@@ -1502,8 +1503,9 @@ class fhistory(object):						# Reading and plotting methods associated with hist
 class fzoneflux(fhistory): 					# Derived class of fhistory, for zoneflux output
 	'''Zone flux history output information object.
 	'''
+#	__slots__ = ['_filename','_times','_verbose','_data','_row','_zones','_variables','_keyrows','column_name','num_columns','_nkeys']
 	def __init__(self,filename=None,verbose=True):
-		super(fzoneflux,self).__init__(filename=None, verbose = True)
+		super(fzoneflux,self).__init__(filename, verbose)
 		self._filename=None	
 		self._times=[]	
 		self._verbose = verbose
