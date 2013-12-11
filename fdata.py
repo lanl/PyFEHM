@@ -2749,7 +2749,6 @@ class fdata(object):						#FEHM data file.
 		line=infile.readline()
 		while more:
 			keyword=line[0:4].strip()
-			#print keyword
 			if keyword in fdata_sections and keyword not in skip:
 				print 'reading '+keyword
 				fn=read_fn[keyword]
@@ -2777,7 +2776,6 @@ class fdata(object):						#FEHM data file.
 				precedingKey = keyword
 			elif line.startswith('stop'): more=False; continue
 			else: 
-				#print line
 				# start recording a code block
 				foundKey = False
 				if not precedingZoneKey: block = []
@@ -2795,8 +2793,6 @@ class fdata(object):						#FEHM data file.
 					elif line.startswith('stop'):
 						foundKey = True
 						continue
-				#print precedingKey
-				#print block
 				self._unparsed_blocks.update(dict(((precedingKey,block),)))
 				continue
 			line=infile.readline()
@@ -4739,14 +4735,20 @@ class fdata(object):						#FEHM data file.
 						else: new_zone.nodelist.append(self.grid.node_nearest_point([float(pt) for pt in pts]))
 				elif line[0:4] == 'nnum':
 					new_zone.type='nnum'
-					line=infile.readline().strip(); block.append(line+'\n')		
+					line=infile.readline().strip()#; block.append(line+'\n')		
 					nums = line.split()
-					number_nodes = int(nums[0])					
-					for num in nums[1:]: new_zone.nodelist.append(self.grid.node[int(num)])
-					while (len(new_zone.nodelist)!=number_nodes):
-						line=infile.readline().strip(); block.append(line+'\n')		
+					number_nodes = int(nums[0])		
+					new_zone.nodelist = list(np.zeros((1,number_nodes))[0])
+					i = 0
+					for num in nums[1:]: 
+						new_zone.nodelist[i] = self.grid.node[int(num)]
+						i +=1
+					while i!=number_nodes:
+						line=infile.readline().strip()#; block.append(line+'\n')		
 						nums = line.split()
-						for num in nums: new_zone.nodelist.append(self.grid.node[int(num)])
+						for num in nums: 
+							new_zone.nodelist[i]=self.grid.node[int(num)]
+							i +=1
 				else:
 					new_zone.type='rect'
 					if not self.ctrl['geometry_ICNL']: 		# 3-D geometry
@@ -4871,10 +4873,10 @@ class fdata(object):						#FEHM data file.
 			for file_nm in file_nms:
 				outfile.write('zone\n')
 				outfile.write('file\n')
-				outfile.write(file_nm+'\n')			
+				outfile.write(file_nm+'\n')		
 				# if filename does not exist, write file
-				if not os.path.isfile(self.work_dir+file_nm) or self._writeSubFiles:
-					zonefile = open(self.work_dir+file_nm,'w')
+				if not os.path.isfile(self.work_dir+slash+file_nm) or self._writeSubFiles:
+					zonefile = open(self.work_dir+slash+file_nm,'w')
 					zns = [zn for zn in self.zonelist if zn.file==file_nm]
 					for zn in zns: zn.file = ''
 					self._write_zonn_one(zonefile,zns)
@@ -5126,7 +5128,7 @@ class fdata(object):						#FEHM data file.
 		print '***********************************************************************'
 	what = property(_get_info)
 ################## MACRO FUNCTIONS
-	def _read_macro(self,infile,macroName): 				#MACRO: Reads general format macros
+	def _read_macro(self,infile,macroName,second=False):		#MACRO: Reads general format macros
 		from copy import copy,deepcopy
 		more=True
 		file_flag=False
@@ -5166,7 +5168,8 @@ class fdata(object):						#FEHM data file.
 				nums_zone,nums_params = nums[:3],nums[3:]
 				if macroName == 'grad': nums_zone,nums_params = nums[:1],nums[1:]
 				m.zone = self._macro_zone(nums_zone)
-				if infile.name != self.filename: m.file=infile.name
+				if second: 
+					m.file=infile.name
 				for i,key in enumerate(macro_list[macroName]): m.param[key[0]] = float(nums_params[i])			
 				self._add_macro(m,overwrite=True)
 		if file_flag:
@@ -5182,12 +5185,12 @@ class fdata(object):						#FEHM data file.
 					else:
 						macrofile = open(fn0+slash+line)
 						line = macrofile.readline().strip()
-						self._read_macro(macrofile,macroName)
+						self._read_macro(macrofile,macroName,second = True)
 						macrofile.close()
 			else:
 				macrofile = open(line)
 				line = macrofile.readline().strip()
-				self._read_macro(macrofile,macroName)
+				self._read_macro(macrofile,macroName,second = True)
 				macrofile.close()
 	def _add_macro(self,macro,overwrite=False):					#Adds the macro to data file
 		# check macro zone definition
@@ -5309,7 +5312,7 @@ class fdata(object):						#FEHM data file.
 			else: print 'ERROR: zone '+str(k)+' has not been defined'; return None
 		else:
 			return (int(float(nums[0])),int(float(nums[1])),int(float(nums[2])))
-	def _write_macro(self,outfile,macroName):					#Writes macro dictionary to output file
+	def _write_macro(self,outfile,macroName):		#Writes macro dictionary to output file
 		ws = _title_string(macro_titles[macroName],72)
 		printToFile = False
 		filemacros = []
@@ -5440,6 +5443,7 @@ class fdata(object):						#FEHM data file.
 				outfile.write('file\n')
 				outfile.write(file_nm+'\n')	
 				# if filename does not exist, write file
+				file_nm = file_nm.split(slash)[-1]
 				if not os.path.isfile(self.work_dir+slash+file_nm) or self._writeSubFiles:
 					macrofile = open(self.work_dir+slash+file_nm,'w')
 					macros = [macro for macro in self._allMacro[macroName] if macro.file==file_nm]
