@@ -4514,7 +4514,7 @@ class fdata(object):						#FEHM data file.
 		if WINDOWS:
 			p = Popen(exe+' --data='+wd+slash+self._vtk.path.filename+' --script=pyfehm_paraview_startup.py')		
 		else:
-			p = Popen([exe,wd+slash+self._vtk.path.filename,' --script=pyfehm_paraview_startup.py'])		
+			p = Popen(exe+' --data='+wd+slash+self._vtk.path.filename+' --script=pyfehm_paraview_startup.py',shell=True)		
 	def visit(self,exe = 'visit',filename = 'temp.vtk',contour = None):
 		'''Exports the model object to VTK and loads in paraview.
 		
