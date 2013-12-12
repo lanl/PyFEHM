@@ -4516,13 +4516,28 @@ class fdata(object):						#FEHM data file.
 		self._vtk.startup_script(show)
 		if self.work_dir: wd = self.work_dir
 		else: wd = self._path.absolute_to_file		
-		if WINDOWS:
-			if len(fls)>1:
-				p = Popen(exe+' --data='+wd+slash+self._vtk.path.filename[:-4]+'...vtk'+' --script=pyfehm_paraview_startup.py')		
-			else:
-				p = Popen(exe+' --data='+wd+slash+self._vtk.path.filename+' --script=pyfehm_paraview_startup.py')		
+		
+		if len(fls)>1:
+			p = Popen(exe+' --data='+wd+slash+self._vtk.path.filename[:-4]+'...vtk'+' --script=pyfehm_paraview_startup.py',shell=(not WINDOWS))		
 		else:
-			p = Popen([exe,wd+slash+self._vtk.path.filename,' --script=pyfehm_paraview_startup.py'])		
+			p = Popen(exe+' --data='+wd+slash+self._vtk.path.filename+' --script=pyfehm_paraview_startup.py',shell=(not WINDOWS)
+	def visit(self,exe = 'visit',filename = 'temp.vtk',contour = None):
+		'''Exports the model object to VTK and loads in paraview.
+		
+		:param exe: Path to VisIt executable.
+		:type exe: str
+		:param filename: Name of VTK file to be output.
+		:type filename: str
+		:param contour: Contout output data object loaded using fcontour().
+		:type contour: fcontour
+		'''
+		self._vtk = fvtk(parent=self,filename=filename,contour=contour)
+		self._vtk.assemble()
+		self._vtk.write()
+		self._vtk.startup_script()
+		if self.work_dir: wd = self.work_dir
+		else: wd = self._path.absolute_to_file		
+		p = Popen(exe+' -o '+wd+slash+self._vtk.path.filename,shell=(not WINDOWS))		
 	def _summary(self):		
 		L = 62
 		print ''
