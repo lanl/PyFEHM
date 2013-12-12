@@ -69,6 +69,6 @@ xlabel='y / m', ylabel = 'z / m')
 c.slice_plot(save='Pslice.png',cbar=True,levels=np.linspace(4,6,9),slice=['x',5],variable='P',method='linear',title='pressure / MPa',
 xlabel='y / m', ylabel = 'z / m')
 
-dat.paraview(exe='C:\\Program Files (x86)\\ParaView 4.1.0-RC1\\bin\\paraview.exe',filename=root+'.vtk',contour = c, show='P')
+dat.paraview(filename=root+'.vtk',contour = c, show='P')
 
 
