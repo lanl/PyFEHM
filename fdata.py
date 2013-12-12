@@ -4511,7 +4511,10 @@ class fdata(object):						#FEHM data file.
 		self._vtk.startup_script()
 		if self.work_dir: wd = self.work_dir
 		else: wd = self._path.absolute_to_file		
-		p = Popen([exe,wd+slash+self._vtk.path.filename,' --script=pyfehm_paraview_startup.py'])		
+		if WINDOWS:
+			p = Popen(exe+' --data='+wd+slash+self._vtk.path.filename+' --script=pyfehm_paraview_startup.py')		
+		else:
+			p = Popen([exe,wd+slash+self._vtk.path.filename,' --script=pyfehm_paraview_startup.py'])		
 	def _summary(self):		
 		L = 62
 		print ''
