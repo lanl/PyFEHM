@@ -4533,11 +4533,14 @@ class fdata(object):						#FEHM data file.
 		'''
 		self._vtk = fvtk(parent=self,filename=filename,contour=contour)
 		self._vtk.assemble()
-		self._vtk.write()
+		fls = self._vtk.write()
 		#self._vtk.startup_script()
 		if self.work_dir: wd = self.work_dir
 		else: wd = self._path.absolute_to_file		
-		p = Popen(exe+' -o '+wd+slash+self._vtk.path.filename,shell=(not WINDOWS))		
+		if len(fls)>1:
+			p = Popen(exe+' -o '+wd+slash+self._vtk.path.filename[:-4]+'*.vtk',shell=(not WINDOWS))		
+		else:
+			p = Popen(exe+' -o '+wd+slash+self._vtk.path.filename,shell=(not WINDOWS))		
 	def _summary(self):		
 		L = 62
 		print ''
