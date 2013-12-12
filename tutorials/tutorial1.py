@@ -54,6 +54,7 @@ dat.zone['YMAX'].fix_pressure(P=4.,T=60.) 		# does steps (a)-(b) above for YMAX
 
 # 7.1.6 Running the simulation
 dat.cont.variables.append(['xyz','temperature','pressure'])
+dat.cont.time_interval = 2.
 
 dat.tf=10.
 #dat.time['max_time_TIMS']=10.
@@ -62,10 +63,12 @@ dat.files.root = root
 dat.run(root+'_INPUT.dat') 		# note, because no executable path is specified, PyFEHM retrieves the executable specified in the default path
 
 # 7.1.7 Visualisation
-c = fcontour(dat.work_dir+'\\*.csv',latest=True)
+c = fcontour(dat.work_dir+'\\*.csv')
 c.slice_plot(save='Tslice.png',cbar=True,levels=11,slice=['x',5],variable='T',method='linear',title='temperature / degC',
 xlabel='y / m', ylabel = 'z / m')
 c.slice_plot(save='Pslice.png',cbar=True,levels=np.linspace(4,6,9),slice=['x',5],variable='P',method='linear',title='pressure / MPa',
 xlabel='y / m', ylabel = 'z / m')
 
-dat.paraview(exe='C:\\Program Files (x86)\\ParaView 4.1.0-RC1\\bin\\paraview.exe',filename=root+'.vtk',contour = c)
+dat.paraview(exe='C:\\Program Files (x86)\\ParaView 4.1.0-RC1\\bin\\paraview.exe',filename=root+'.vtk',contour = c, show='P')
+
+

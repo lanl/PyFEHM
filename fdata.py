@@ -4495,7 +4495,7 @@ class fdata(object):						#FEHM data file.
 		if tempRstoFlag: 
 			self.files.incon = ''
 			self.files.write()
-	def paraview(self,exe = 'paraview',filename = 'temp.vtk',contour = None):
+	def paraview(self,exe = 'paraview',filename = 'temp.vtk',contour = None,show='kx'):
 		'''Exports the model object to VTK and loads in paraview.
 		
 		:param exe: Path to Paraview executable.
@@ -4504,15 +4504,23 @@ class fdata(object):						#FEHM data file.
 		:type filename: str
 		:param contour: Contout output data object loaded using fcontour().
 		:type contour: fcontour
+		:param show: Variable to show when Paraview starts up (default = 'kx').
+		:type show: str
 		'''
 		self._vtk = fvtk(parent=self,filename=filename,contour=contour)
 		self._vtk.assemble()
-		self._vtk.write()
-		self._vtk.startup_script()
+		fls = self._vtk.write()
+		if show not in self._vtk.variables:
+			print 'WARNING: property '+show+' not available, defaulting to \'kx\''
+			show = 'kx'
+		self._vtk.startup_script(show)
 		if self.work_dir: wd = self.work_dir
 		else: wd = self._path.absolute_to_file		
 		if WINDOWS:
-			p = Popen(exe+' --data='+wd+slash+self._vtk.path.filename+' --script=pyfehm_paraview_startup.py')		
+			if len(fls)>1:
+				p = Popen(exe+' --data='+wd+slash+self._vtk.path.filename[:-4]+'...vtk'+' --script=pyfehm_paraview_startup.py')		
+			else:
+				p = Popen(exe+' --data='+wd+slash+self._vtk.path.filename+' --script=pyfehm_paraview_startup.py')		
 		else:
 			p = Popen([exe,wd+slash+self._vtk.path.filename,' --script=pyfehm_paraview_startup.py'])		
 	def _summary(self):		
