@@ -474,7 +474,7 @@ class fgrid(object):				#Grid object.
 	""" FEHM grid object.
 	
 	"""
-	def __init__(self,full_connectivity=False):
+	def __init__(self,full_connectivity=True):
 		self._nodelist=[]			
 		self._node={}				
 		self._connlist=[]			
@@ -1038,7 +1038,7 @@ class fgrid(object):				#Grid object.
 			con.nodes[0].connections.append(con)
 			con.nodes[1].connections.append(con)
 		print "Number of connections (zeros removed):", len(self.connlist)
-	def make(self,gridfilename,x,y,z,full_connectivity=False,octree=False):
+	def make(self,gridfilename,x,y,z,full_connectivity=True,octree=False):
 		""" Generates an orthogonal mesh for input node positions. 
 		
 		The mesh is constructed using the ``fgrid.``\ **fmake** object and an FEHM grid file is written for the mesh.

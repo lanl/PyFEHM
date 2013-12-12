@@ -37,6 +37,7 @@ from fvars import*
 from fpost import*
 from fdflt import*
 from fhelp import*
+from fpara import*
 
 dflt = fdflt()
 
@@ -1344,11 +1345,11 @@ class fincon(object): 						#FEHM restart object.
 		'''
 		if inconfilename: 
 			self._path.filename = inconfilename
-			#self._parent.files._incon = inconfilename
 		if self._parent.work_dir:
 			outfile = open(self._path.absolute_to_workdir+slash+self._path.filename,'w')
 		else:
 			outfile = open(self._path.full_path,'w')
+		print 'Writing new INCON file '+inconfilename+'...'
 		# write headers
 		outfile.write('PyFEHM V1.0                      ')
 		import time
@@ -1409,6 +1410,7 @@ class fincon(object): 						#FEHM restart object.
 				if cnt!=0: outfile.write('\n')		
 		outfile.write('no fluxes\n\n')
 		outfile.close()
+		print 'Done!'
 		self._writeOut = False
 	def stressgrad(self,xgrad,ygrad,zgrad,xygrad = 0.,xzgrad=0.,yzgrad=0.,calculate_vertical=False,vertical_fraction=False):
 		'''Construct initial stress state with vertical stress gradients.
@@ -1479,10 +1481,6 @@ class fincon(object): 						#FEHM restart object.
 					self._strs_yz = list(yzgrad[0]*np.array(self.strs_zz)+yzgrad[1])
 				else: self._strs_yz = list(yzgrad*np.array(self.strs_zz))
 				
-				#self._strs_yy = list(ygrad*np.array(self.strs_zz))
-				#self._strs_xy = list(xygrad*np.array(self.strs_zz))
-				#self._strs_xz = list(xzgrad*np.array(self.strs_zz))
-				#self._strs_yz = list(yzgrad*np.array(self.strs_zz))
 			else:
 				if isinstance(xgrad,(tuple,list)): dx = abs(xgrad[0]); x0 = xgrad[1]
 				else: dx = abs(xgrad); x0 = 0
@@ -1770,6 +1768,7 @@ class fcarb(object):						#FEHM CO2 module.
 		
 		"""
 		self.iprtype = 1
+		self._parent.files._use_co2in = False
 	def _get_info(self):
 		if self.iprtype != 1: print 'CO2 module activated.'
 		else: print 'CO2 module inactive'; return
@@ -2561,7 +2560,7 @@ class fdata(object):						#FEHM data file.
 			'_bounlist','_cont','_ctrl','_grid','_incon','_hist','_iter','_nfinv','_nobr','_vapl','_adif','_rlpmlist','_sol',
 			'_time','text','_times','_zonelist','_writeSubFiles','_strs','_ngas','_carb','_trac','_files','_verbose',
 			'_tf','_ti','_dti','_dtmin','_dtmax','_dtn','_dtx','_sections','_help','_running','_unparsed_blocks','keep_unknown','_flxo',
-			'_output_times','_path']
+			'_output_times','_path','_vtk']
 	def __init__(self,filename='',gridfilename='',inconfilename='',sticky_zones=dflt.sticky_zones,associate=dflt.associate,work_dir = None,
 		full_connectivity=dflt.full_connectivity,skip=[],keep_unknown=dflt.keep_unknown):		#Initialise data file
 		from copy import copy
@@ -2601,6 +2600,7 @@ class fdata(object):						#FEHM data file.
 		# run object
 		self._path = fpath(parent=self)
 		self._files = files() 				
+		self._vtk = None
 		self._files._parent = self
 		self._verbose = True
 		self._running = False 		# boolean indicating whether a simulation is in progress
@@ -2822,12 +2822,6 @@ class fdata(object):						#FEHM data file.
 			pass
 		# open file
 		outfile = open(wd+slash+self._path.filename,'w')
-			
-		#if slash in self.filename:
-		#	make_directory(self.filename)
-		#if self.work_dir:
-		#	if not os.path.isdir(self.work_dir): os.makedirs(self.work_dir)			
-		#outfile = open(self.work_dir+self.filename,'w')
 		outfile.write('# '+self.filename+'\n')
 		self._write_unparsed(outfile,'start')
 		if self.text: self._write_text(outfile); self._write_unparsed(outfile,'text')
@@ -4501,6 +4495,15 @@ class fdata(object):						#FEHM data file.
 		if tempRstoFlag: 
 			self.files.incon = ''
 			self.files.write()
+	def paraview(self,exe = 'paraview',filename = 'temp.vtk'):
+		self._vtk = fvtk(parent=self,filename=filename)
+		self._vtk.assemble()
+		self._vtk.write()
+		self._vtk.startup_script()
+		p = Popen(exe+' --data='+self._vtk.filename+' --script=pyfehm_paraview_startup.py')		
+		#try: os.remove('pyfehm_paraview_startup.py')
+		#except: pass
+		
 	def _summary(self):		
 		L = 62
 		print ''
@@ -5236,7 +5239,6 @@ class fdata(object):						#FEHM data file.
 					self.delete(keys[zn.name])
 	
 		self._allMacro[macro.type].append(macro)
-		self._allMacro[macro.type].sort(key=lambda x: x.zone.index)
 		self._associate_macro(macro)
 	def _associate_macro(self,macro):							#Associates macro properties with nodes
 		if not self._associate: return
@@ -5318,6 +5320,7 @@ class fdata(object):						#FEHM data file.
 		filemacros = []
 		textmacros = []
 		singlemacros = []
+		self._allMacro[macroName].sort(key=lambda x: x.zone.index)
 		keys = [k for k,nul in macro_list[macroName]]
 		for macro in self._allMacro[macroName]:
 			# check no additional parameters defined
