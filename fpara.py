@@ -26,11 +26,12 @@ from ftool import*
 import pyvtk as pv
 
 class fvtk(object):
-	def __init__(self,parent,filename):
+	def __init__(self,parent,filename,contour):
 		self.parent = parent
 		self.path = fpath(parent = self)
 		self.path.filename = filename
 		self.data = None
+		self.contour = contour
 	def assemble(self):			
 		# node positions, connectivity information
 		nds = [nd.position for nd in self.parent.grid.nodelist]		
@@ -40,9 +41,13 @@ class fvtk(object):
 		self.data = pv.VtkData(pv.UnstructuredGrid(nds,hexahedron=cns))
 		
 		# add permeability data
-		self.assemble_property('perm')
+		self.assemble_properties()
+		
+		# add contour data
+		if self.contour != None:
+			self.assemble_contour()
 	
-	def assemble_property(self,macroName):
+	def assemble_properties(self):
 		perms = np.array([nd.permeability for nd in self.parent.grid.nodelist])
 		if np.mean(perms)>0.: perms = np.log10(perms)
 		
@@ -53,10 +58,20 @@ class fvtk(object):
 		self.data.point_data.append(pv.Scalars(perms[:,0],name='kx',lookup_table='default'))
 		self.data.point_data.append(pv.Scalars(perms[:,1],name='ky',lookup_table='default'))
 		self.data.point_data.append(pv.Scalars(perms[:,2],name='kz',lookup_table='default'))
-	
+		
+		nan = float('NaN')
+		dens = np.array([nd.density if nd.density != nan else nan for nd in self.parent.grid.nodelist])
+		self.data.point_data.append(pv.Scalars(dens,name='density',lookup_table='default'))
+	def assemble_contour(self):
+		for time in self.contour.times:
+			for var in self.contour.variables:
+				if time != self.contour.times[0] and var in ['x','y','z','n']: continue
+				if var in ['x','y','z','n']: name = var
+				else: name = var + '_'+str(time)
+				self.data.point_data.append(pv.Scalars(self.contour[time][var],name=name,lookup_table='default'))
 	def write(self):	
-		if self.parent.work_dir: wd = self.work_dir
-		else: wd = self.path.absolute_to_file
+		if self.parent.work_dir: wd = self.parent.work_dir
+		else: wd = self.parent._path.absolute_to_file
 		self.data.tofile(wd+slash+self.path.filename)
 	def startup_script(self):
 		x0,x1 = self.parent.grid.xmin, self.parent.grid.xmax
@@ -64,6 +79,7 @@ class fvtk(object):
 		z0,z1 = self.parent.grid.zmin, self.parent.grid.zmax
 		xm,ym,zm = (x0+x1)/2., (y0+y1)/2., (z0+z1)/2.
 		xr,yr,zr = (x1-x0), (y1-y0), (z1-z0)
+		initial_display = '\'kx\''
 		f = open('pyfehm_paraview_startup.py','w')
 		lns = [
 			'try: paraview.simple',
@@ -79,24 +95,29 @@ class fvtk(object):
 			'Render()',
 			'RenderView1.CenterOfRotation = [%10.5f, %10.5f, %10.5f]'%(xm,ym,zm),
 			'',
-			'#RenderView1.CameraViewUp = [-0.23, 0.92, -0.33]',
-			'RenderView1.CameraPosition = [%10.5f, %10.5f, %10.5f]'%(xm+1.2*xr,ym+1.8*yr,zm+2.2*zr),
-			'#RenderView1.CameraClippingRange = [18.30708778665068, 52.616576701919534]',
+			'RenderView1.CameraViewUp = [-0.4, -0.11, 0.92]',
+			'RenderView1.CameraPosition = [%10.5f, %10.5f, %10.5f]'%(xm+2.5*xr,ym+1.5*yr,zm+1.5*zr),
 			'RenderView1.CameraFocalPoint = [%10.5f, %10.5f, %10.5f]'%(xm,ym,zm),
-			'#RenderView1.CameraParallelScale = 8.660254037844387',
 			'',
 			'my_representation0 = GetDisplayProperties(temp_vtk)',
 			'my_representation0.Representation = \'Surface With Edges\'',
 			'',
-			'a1_kx_PVLookupTable = GetLookupTableForArray( "kx", 1, RGBPoints=[%4.2f, 0.23, 0.299, 0.754, %4.2f, 0.706, 0.016, 0.15], VectorMode=\'Magnitude\', NanColor=[0.25, 0.0, 0.0], ColorSpace=\'Diverging\', ScalarRangeInitialized=1.0 )'%tuple(self.kx_lim),
+			'a1_PVLookupTable = GetLookupTableForArray( '+initial_display+', 1, RGBPoints=[%4.2f, 0.23, 0.299, 0.754, %4.2f, 0.706, 0.016, 0.15], VectorMode=\'Magnitude\', NanColor=[0.25, 0.0, 0.0], ColorSpace=\'Diverging\', ScalarRangeInitialized=1.0 )'%tuple(self.kx_lim),
 			'',
-			'a1_kx_PiecewiseFunction = CreatePiecewiseFunction( Points=[-15.0, 0.0, 0.5, 0.0, -14.0, 1.0, 0.5, 0.0] )',
+			'a1_PiecewiseFunction = CreatePiecewiseFunction( Points=[%4.2f, 0.0, 0.5, 0.0, %4.2f, 1.0, 0.5, 0.0] )'%tuple(self.kx_lim),
 			'',
-			'my_representation0.ScalarOpacityFunction = a1_kx_PiecewiseFunction',
-			'my_representation0.ColorArrayName = (\'POINT_DATA\', \'kx\')',
-			'my_representation0.LookupTable = a1_kx_PVLookupTable',
+			'my_representation0.ScalarOpacityFunction = a1_PiecewiseFunction',
+			'my_representation0.ColorArrayName = (\'POINT_DATA\', '+initial_display+')',
+			'my_representation0.LookupTable = a1_PVLookupTable',
 			'',
-			'a1_kx_PVLookupTable.ScalarOpacityFunction = a1_kx_PiecewiseFunction',
+			'a1_PVLookupTable.ScalarOpacityFunction = a1_PiecewiseFunction',
+			'',
+			'ScalarBarWidgetRepresentation1 = CreateScalarBar( Title='+initial_display+', LabelFontSize=12, Enabled=1, TitleFontSize=12 )',
+			'GetRenderView().Representations.append(ScalarBarWidgetRepresentation1)',
+			'',
+			'a1_PVLookupTable = GetLookupTableForArray('+initial_display+', 1 )',
+			'',
+			'ScalarBarWidgetRepresentation1.LookupTable = a1_PVLookupTable',
 			'',
 			'',
 		]

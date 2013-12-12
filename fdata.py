@@ -4495,15 +4495,23 @@ class fdata(object):						#FEHM data file.
 		if tempRstoFlag: 
 			self.files.incon = ''
 			self.files.write()
-	def paraview(self,exe = 'paraview',filename = 'temp.vtk'):
-		self._vtk = fvtk(parent=self,filename=filename)
+	def paraview(self,exe = 'paraview',filename = 'temp.vtk',contour = None):
+		'''Exports the model object to VTK and loads in paraview.
+		
+		:param exe: Path to Paraview executable.
+		:type exe: str
+		:param filename: Name of VTK file to be output.
+		:type filename: str
+		:param contour: Contout output data object loaded using fcontour().
+		:type contour: fcontour
+		'''
+		self._vtk = fvtk(parent=self,filename=filename,contour=contour)
 		self._vtk.assemble()
 		self._vtk.write()
 		self._vtk.startup_script()
-		p = Popen(exe+' --data='+self._vtk.filename+' --script=pyfehm_paraview_startup.py')		
-		#try: os.remove('pyfehm_paraview_startup.py')
-		#except: pass
-		
+		if self.work_dir: wd = self.work_dir
+		else: wd = self._path.absolute_to_file		
+		p = Popen(exe+' --data='+wd+slash+self._vtk.path.filename+' --script=pyfehm_paraview_startup.py')		
 	def _summary(self):		
 		L = 62
 		print ''
