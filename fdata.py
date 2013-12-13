@@ -2858,7 +2858,7 @@ class fdata(object):						#FEHM data file.
 		outfile.write('stop\n')
 		outfile.close()
 		return True
-	def add(self,obj,overwrite=False):									#Adds a new object to the file
+	def add(self,obj,overwrite=False):					#Adds a new object to the file
 		'''Attach a zone, boundary condition or macro object to the data file.
 		
 		:param obj: Object to be added to the data file.
@@ -4495,7 +4495,7 @@ class fdata(object):						#FEHM data file.
 		if tempRstoFlag: 
 			self.files.incon = ''
 			self.files.write()
-	def paraview(self,exe = 'paraview',filename = 'temp.vtk',contour = None,show='kx'):
+	def paraview(self,exe = 'paraview',filename = 'temp.vtk',contour = None,show='kx',zones = 'user'):
 		'''Exports the model object to VTK and loads in paraview.
 		
 		:param exe: Path to Paraview executable.
@@ -4506,21 +4506,17 @@ class fdata(object):						#FEHM data file.
 		:type contour: fcontour
 		:param show: Variable to show when Paraview starts up (default = 'kx').
 		:type show: str
+		:param zones: Zones to plot: 'user' = user-defined zones (default), 'all' = all zones except zone[0].
+		:type zones: str
 		'''
-		self._vtk = fvtk(parent=self,filename=filename,contour=contour)
+		self._vtk = fvtk(parent=self,filename=filename,contour=contour,show_zones = zones)
 		self._vtk.assemble()
 		fls = self._vtk.write()
-		if show not in self._vtk.variables:
-			print 'WARNING: property '+show+' not available, defaulting to \'kx\''
-			show = 'kx'
-		self._vtk.startup_script(show)
-		if self.work_dir: wd = self.work_dir
-		else: wd = self._path.absolute_to_file		
+		self._vtk.initial_display(show)
+		self._vtk.startup_script()
 		
-		if len(fls)>1:
-			p = Popen(exe+' --data='+wd+slash+self._vtk.path.filename[:-4]+'...vtk'+' --script=pyfehm_paraview_startup.py',shell=(not WINDOWS))		
-		else:
-			p = Popen(exe+' --data='+wd+slash+self._vtk.path.filename+' --script=pyfehm_paraview_startup.py',shell=(not WINDOWS))
+		p = Popen(exe+' --script=pyfehm_paraview_startup.py',shell=(not WINDOWS))		
+		
 	def visit(self,exe = 'visit',filename = 'temp.vtk',contour = None):
 		'''Exports the model object to VTK and loads in paraview.
 		
@@ -4973,7 +4969,7 @@ class fdata(object):						#FEHM data file.
 				print 'Error: zone ' + str(obj.zone) + ' does not exist.'
 				return 		
 		return obj
-	def _get_info(self): 									#Prints out information about the data file
+	def _get_info(self): 										#Prints out information about the data file
 		# grid dimensions
 		import itertools
 		print '***********************************************************************'
@@ -5165,7 +5161,7 @@ class fdata(object):						#FEHM data file.
 		print '***********************************************************************'
 	what = property(_get_info)
 ################## MACRO FUNCTIONS
-	def _read_macro(self,infile,macroName,second=False):		#MACRO: Reads general format macros
+	def _read_macro(self,infile,macroName,second=False):	#MACRO: Reads general format macros
 		from copy import copy,deepcopy
 		more=True
 		file_flag=False
@@ -5348,7 +5344,7 @@ class fdata(object):						#FEHM data file.
 			else: print 'ERROR: zone '+str(k)+' has not been defined'; return None
 		else:
 			return (int(float(nums[0])),int(float(nums[1])),int(float(nums[2])))
-	def _write_macro(self,outfile,macroName):		#Writes macro dictionary to output file
+	def _write_macro(self,outfile,macroName):					#Writes macro dictionary to output file
 		ws = _title_string(macro_titles[macroName],72)
 		printToFile = False
 		filemacros = []

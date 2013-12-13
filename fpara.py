@@ -24,6 +24,7 @@ Public License for more details.
 import numpy as np
 from ftool import*
 import pyvtk as pv
+from copy import copy
 
 class fVtkData(pv.VtkData):
 	def __init__(self,*args,**kws):
@@ -32,7 +33,7 @@ class fVtkData(pv.VtkData):
 		self.material = pv.PointData()
 		self.contour = {}
 		
-	def to_string(self, time, format = 'ascii',material=False):
+	def to_string(self, time=None, format = 'ascii',material=False):
 		ret = ['# vtk DataFile Version 2.0',
 			   self.header,
 			   format.upper(),
@@ -41,8 +42,6 @@ class fVtkData(pv.VtkData):
 		if self.cell_data.data:
 			ret.append(self.cell_data.to_string(format))
 		if material:
-			for data in self.contour[time].data:
-				self.material.append(data)
 			ret.append(self.material.to_string(format))
 		else:
 			if self.contour[time].data:
@@ -53,40 +52,56 @@ class fVtkData(pv.VtkData):
 		"""Save VTK data to file.
 		"""
 		written_files = []
+		if not pv.common.is_string(filename):
+			raise TypeError,'argument filename must be string but got %s'%(type(filename))
+		if format not in ['ascii','binary']:
+			raise TypeError,'argument format must be ascii | binary'
+		filename = filename.strip()
+		if not filename:
+			raise ValueError,'filename must be non-empty string'
+		if filename[-4:]!='.vtk':
+			filename += '.vtk'
+		
+		# first write material properties file
+		filename_int = ''.join(filename[:-4]+'_mat.vtk')
+		f = open(filename_int,'wb')
+		f.write(self.to_string(format,material=True))
+		f.close()
+		written_files.append(filename_int)
+		
+		# write contour output file
 		times = np.sort(self.contour.keys())
 		for i,time in enumerate(times):
-			if not pv.common.is_string(filename):
-				raise TypeError,'argument filename must be string but got %s'%(type(filename))
-			if format not in ['ascii','binary']:
-				raise TypeError,'argument format must be ascii | binary'
-			filename = filename.strip()
-			if not filename:
-				raise ValueError,'filename must be non-empty string'
-			if filename[-4:]!='.vtk':
-				filename += '.vtk'
 			if len(times)>1:
 				filename_int = ''.join(filename[:-4]+'.%04i'%i+'.vtk')
 			else:
 				filename_int = filename
 			#print 'Creating file',`filename`
 			f = open(filename_int,'wb')
-			if i == 0:
-				f.write(self.to_string(time,format,material=True))
-			else:
-				f.write(self.to_string(time,format))
+			f.write(self.to_string(time,format))
 			f.close()
 			written_files.append(filename_int)
 		return written_files
-		
 class fvtk(object):
-	def __init__(self,parent,filename,contour):
+	def __init__(self,parent,filename,contour,show_zones):
 		self.parent = parent
 		self.path = fpath(parent = self)
 		self.path.filename = filename
 		self.data = None
 		self.contour = contour
 		self.variables = []
-	def assemble(self):			
+		self.materials = []
+		self.zones = []
+		self.show_zones = show_zones
+	def assemble(self):		
+		"""Assemble all information in pyvtk objects."""			
+		self.assemble_grid()		# add grid information
+		self.assemble_zones()		# add zone information
+		self.assemble_properties()	# add permeability data
+		if self.contour != None:	# add contour data
+			self.assemble_contour()
+	def assemble_grid(self):
+		"""Assemble grid information in pyvtk objects."""
 		# node positions, connectivity information
 		nds = [nd.position for nd in self.parent.grid.nodelist]		
 		cns = [[nd.index-1 for nd in el.nodes] for el in self.parent.grid.elemlist]
@@ -94,35 +109,58 @@ class fvtk(object):
 		# make grid
 		self.data = fVtkData(pv.UnstructuredGrid(nds,hexahedron=cns))
 		
-		# add permeability data
-		self.assemble_properties()
+		# grid information
+		dat = np.array([nd.position for nd in self.parent.grid.nodelist])
+		nds = np.array([nd.index for nd in self.parent.grid.nodelist])
+		self.data.material.append(pv.Scalars(nds,name='n',lookup_table='default'))
+		self.data.material.append(pv.Scalars(dat[:,0],name='x',lookup_table='default'))
+		self.data.material.append(pv.Scalars(dat[:,1],name='y',lookup_table='default'))
+		self.data.material.append(pv.Scalars(dat[:,2],name='z',lookup_table='default'))
 		
-		# add contour data
-		if self.contour != None:
-			self.assemble_contour()
-	
+		self.x_lim = [np.min(dat[:,0]),np.max(dat[:,0])]
+		self.y_lim = [np.min(dat[:,1]),np.max(dat[:,1])]
+		self.z_lim = [np.min(dat[:,2]),np.max(dat[:,2])]
+		self.n_lim = [1,len(self.parent.grid.nodelist)]
+	def assemble_zones(self):
+		"""Assemble zone information in pyvtk objects."""
+		# zones will be considered material properties as they only need to appear once
+		N = len(self.parent.grid.nodelist)
+		nds = np.zeros((1,N))[0]
+		self.parent.zonelist.sort(key=lambda x: x.index)
+		for zn in self.parent.zonelist:
+			if zn.index == 0: continue
+			name = 'zone%04i'%zn.index
+			if zn.name: name += '_'+zn.name.replace(' ','_')
+			self.zones.append(name)
+			zn_nds = copy(nds)
+			for nd in zn.nodelist: zn_nds[nd.index-1] = 1
+			self.data.material.append(
+				pv.Scalars(zn_nds,
+				name=name,
+				lookup_table='default'))
 	def assemble_properties(self):
+		"""Assemble material properties in pyvtk objects."""
 		nan = float('NaN')
 		
 		perms = np.array([nd.permeability for nd in self.parent.grid.nodelist])
 		if np.mean(perms)>0.: perms = np.log10(perms)
 		
-		self.kx_lim = [np.min(perms[:,0]),np.max(perms[:,0])]
-		self.ky_lim = [np.min(perms[:,1]),np.max(perms[:,1])]
-		self.kz_lim = [np.min(perms[:,2]),np.max(perms[:,2])]
+		self.perm_x_lim = [np.min(perms[:,0]),np.max(perms[:,0])]
+		self.perm_y_lim = [np.min(perms[:,1]),np.max(perms[:,1])]
+		self.perm_z_lim = [np.min(perms[:,2]),np.max(perms[:,2])]
 		
-		self.data.material.append(pv.Scalars(perms[:,0],name='kx',lookup_table='default'))
-		self.data.material.append(pv.Scalars(perms[:,1],name='ky',lookup_table='default'))
-		self.data.material.append(pv.Scalars(perms[:,2],name='kz',lookup_table='default'))
-		self.variables.append('kx')
-		self.variables.append('ky')
-		self.variables.append('kz')
+		self.data.material.append(pv.Scalars(perms[:,0],name='perm_x',lookup_table='default'))
+		self.data.material.append(pv.Scalars(perms[:,1],name='perm_y',lookup_table='default'))
+		self.data.material.append(pv.Scalars(perms[:,2],name='perm_z',lookup_table='default'))
+		self.materials.append('perm_x')
+		self.materials.append('perm_y')
+		self.materials.append('perm_z')
 		
 		dens = np.array([nd.density if nd.density != nan else nan for nd in self.parent.grid.nodelist])
 		self.data.material.append(pv.Scalars(dens,name='density',lookup_table='default'))
-		self.variables.append('density')
-		
+		self.materials.append('density')
 	def assemble_contour(self):
+		"""Assemble contour output in pyvtk objects."""
 		self.data.contour = dict([(time,pv.PointData()) for time in self.contour.times])
 		for time in self.contour.times:
 			do_lims = (time == self.contour.times[-1])
@@ -133,65 +171,279 @@ class fvtk(object):
 				
 				if do_lims: self.__setattr__(var+'_lim',[np.min(self.contour[time][var]),np.max(self.contour[time][var])])
 	def write(self):	
+		"""Call to write out vtk files."""
 		if self.parent.work_dir: wd = self.parent.work_dir
 		else: wd = self.parent._path.absolute_to_file
-		return self.data.tofile(wd+slash+self.path.filename)
-	def startup_script(self,show):
+		fls = self.data.tofile(wd+slash+self.path.filename)
+		# save file names for later use
+		self.material_file = fls[0]
+		self.contour_files = []
+		if len(fls)>1:
+			self.contour_files = fls[1:]
+		return fls
+	def initial_display(self,show):
+		"""Determines what variable should be initially displayed."""
+		mat_vars = ['n','x','y','z','perm_x','perm_y','perm_z','porosity','density','cond_x','cond_y','cond_z']
+		if self.contour:
+			cont_vars = self.contour.variables
+		
+		# convert k* format to perm_*
+		if show == 'kx': show = 'perm_x'
+		elif show == 'ky': show = 'perm_y'
+		elif show == 'kz': show = 'perm_z'
+		
+		# check for unspecified coordinate in potentially anisotropic properties
+		if show in ['permeability','perm']:
+			print 'NOTE: plotting z-component of permeability, for other components specify show=\'perm_x\', etc.'
+			show = 'perm_z'
+		if show in ['conducitivity','cond']:
+			print 'NOTE: plotting z-component of conductivity, for other components specify show=\'cond_x\', etc.'
+			show = 'cond_z'
+		
+		# check if material property or contour output requested for display
+		if show in mat_vars:
+			self.initial_show = 'material'
+			self.default_material_property = show
+			self.default_material_lims = self.__getattribute__(show+'_lim')
+			if self.contour:
+				# get default contour variable to display
+				for var in self.contour.variables:
+					if var not in ['x','y','z','n']: break
+				self.default_contour_variable = var
+				self.default_contour_lims = self.__getattribute__(var+'_lim')
+		elif show in cont_vars:
+			self.initial_show = 'contour'
+			self.default_contour_variable = show
+			self.default_contour_lims = self.__getattribute__(show+'_lim')
+			self.default_material_property = 'perm_x' 		# default 
+			self.default_material_lims = self.__getattribute__('perm_x_lim')
+		else:
+			print 'ERROR: requested property or variable does not exist, available options are...'
+			print 'Material properties:'
+			for mat in mat_vars:
+				print '  - '+mat
+			print 'Contour output variables:'
+			for var in cont_vars:
+				print '  - '+var
+			print ''
+	def startup_script(self):
 		x0,x1 = self.parent.grid.xmin, self.parent.grid.xmax
 		y0,y1 = self.parent.grid.ymin, self.parent.grid.ymax
 		z0,z1 = self.parent.grid.zmin, self.parent.grid.zmax
 		xm,ym,zm = (x0+x1)/2., (y0+y1)/2., (z0+z1)/2.
 		xr,yr,zr = (x1-x0), (y1-y0), (z1-z0)
-		initial_display = '\''+show+'\''
 		
-		lim = self.__getattribute__(show+'_lim')
+		dflt_mat = '\''+self.default_material_property+'\''		
+		mat_lim = self.default_material_lims
 		
 		f = open('pyfehm_paraview_startup.py','w')
-		viewTime = len(self.contour.times)-1
+		
+		contour_files=[file for file in self.contour_files]
+		
+		################################### load paraview modules ######################################
 		lns = [
 			'try: paraview.simple',
 			'except: from paraview.simple import *',
 			'paraview.simple._DisableFirstRenderCameraReset()',
 			'',
-			'temp_vtk = GetActiveSource()',
-			'RenderView1 = GetRenderView()',
-			'DataRepresentation1 = Show()',
-			'DataRepresentation1.ScalarOpacityUnitDistance = 1.7320508075688779',
-			'DataRepresentation1.EdgeColor = [0.0, 0.0, 0.5]',
+			]
+			
+		################################### load material properties ###################################
+		lns += ['mat_prop = LegacyVTKReader( FileNames=[']
+		file = self.material_file.replace('\\','/')
+		lns += ['\''+file+'\',']
+		lns += ['] )']
+		lns += ['RenameSource("model", mat_prop)']
+			
+		################################### initial property display ###################################
+		lns += [
+			'rv = GetRenderView()',
+			'dr = Show()',
+			'dr.ScalarOpacityUnitDistance = 1.7320508075688779',
+			'dr.EdgeColor = [0.0, 0.0, 0.5]',
 			'',
-			'Render()',
-			'RenderView1.CenterOfRotation = [%10.5f, %10.5f, %10.5f]'%(xm,ym,zm),
+			'rv.CenterOfRotation = [%10.5f, %10.5f, %10.5f]'%(xm,ym,zm),
 			'',
-			'RenderView1.CameraViewUp = [-0.4, -0.11, 0.92]',
-			'RenderView1.CameraPosition = [%10.5f, %10.5f, %10.5f]'%(xm+2.5*xr,ym+1.5*yr,zm+1.5*zr),
-			'RenderView1.CameraFocalPoint = [%10.5f, %10.5f, %10.5f]'%(xm,ym,zm),
+			'rv.CameraViewUp = [-0.4, -0.11, 0.92]',
+			'rv.CameraPosition = [%10.5f, %10.5f, %10.5f]'%(xm+2.5*xr,ym+1.5*yr,zm+1.5*zr),
+			'rv.CameraFocalPoint = [%10.5f, %10.5f, %10.5f]'%(xm,ym,zm),
 			'',
-			'RenderView1.ViewTime = %4i'%viewTime,
+			'mr = GetDisplayProperties(mat_prop)',
+			'mr.Representation = \'Surface With Edges\'',
 			'',
-			'my_representation0 = GetDisplayProperties(temp_vtk)',
-			'my_representation0.Representation = \'Surface With Edges\'',
+			'lt = GetLookupTableForArray( '+dflt_mat+', 1, RGBPoints=[%4.2f, 0.23, 0.299, 0.754, %4.2f, 0.706, 0.016, 0.15], VectorMode=\'Magnitude\', NanColor=[0.25, 0.0, 0.0], ColorSpace=\'Diverging\', ScalarRangeInitialized=1.0 )'%tuple(mat_lim),
 			'',
-			'a1_PVLookupTable = GetLookupTableForArray( '+initial_display+', 1, RGBPoints=[%4.2f, 0.23, 0.299, 0.754, %4.2f, 0.706, 0.016, 0.15], VectorMode=\'Magnitude\', NanColor=[0.25, 0.0, 0.0], ColorSpace=\'Diverging\', ScalarRangeInitialized=1.0 )'%tuple(lim),
+			'pf = CreatePiecewiseFunction( Points=[%4.2f, 0.0, 0.5, 0.0, %4.2f, 1.0, 0.5, 0.0] )'%tuple(mat_lim),
 			'',
-			'a1_PiecewiseFunction = CreatePiecewiseFunction( Points=[%4.2f, 0.0, 0.5, 0.0, %4.2f, 1.0, 0.5, 0.0] )'%tuple(lim),
+			'mr.ScalarOpacityFunction = pf',
+			'mr.ColorArrayName = (\'POINT_DATA\', '+dflt_mat+')',
+			'mr.LookupTable = lt',
 			'',
-			'my_representation0.ScalarOpacityFunction = a1_PiecewiseFunction',
-			'my_representation0.ColorArrayName = (\'POINT_DATA\', '+initial_display+')',
-			'my_representation0.LookupTable = a1_PVLookupTable',
+			'lt.ScalarOpacityFunction = pf',
 			'',
-			'a1_PVLookupTable.ScalarOpacityFunction = a1_PiecewiseFunction',
-			'',
-			'ScalarBarWidgetRepresentation1 = CreateScalarBar( Title='+initial_display+', LabelFontSize=12, Enabled=1, TitleFontSize=12 )',
+			'ScalarBarWidgetRepresentation1 = CreateScalarBar( Title='+dflt_mat+', LabelFontSize=12, Enabled=1, TitleFontSize=12 )',
 			'GetRenderView().Representations.append(ScalarBarWidgetRepresentation1)',
 			'',
-			'a1_PVLookupTable = GetLookupTableForArray('+initial_display+', 1 )',
+			'lt = GetLookupTableForArray('+dflt_mat+', 1 )',
 			'',
-			'ScalarBarWidgetRepresentation1.LookupTable = a1_PVLookupTable',
+			'ScalarBarWidgetRepresentation1.LookupTable = lt',
 			'',
-			'',
-		]
+			]
+			
+		################################### load in zones as glyphs ###################################		
+		colors = [
+			[1.,1.,0.],
+			[1.,0.,1.],
+			[0.,1.,1.],
+			[1.,1.,0.5],
+			[1.,0.5,1.],
+			[0.5,1.,1.],
+			[1.,1.,0.25],
+			[1.,0.25,1.],
+			[0.25,1.,1.],
+			[1.,1.,0.75],
+			[1.,0.75,1.],
+			[0.75,1.,1.],
+			
+			[0.5,1.,0.5],
+			[1.,0.5,0.5],
+			[0.5,0.5,1.],			
+			[0.5,0.75,0.5],
+			[0.75,0.5,0.5],
+			[0.5,0.5,0.75],		
+			[0.5,0.25,0.5],
+			[0.25,0.5,0.5],
+			[0.5,0.5,0.25],
+			
+			[0.75,1.,0.75],
+			[1.,0.75,0.75],
+			[0.75,0.75,1.],			
+			[0.75,0.5,0.75],
+			[0.5,0.75,0.75],
+			[0.75,0.75,0.5],			
+			[0.75,0.25,0.75],
+			[0.25,0.75,0.75],
+			[0.75,0.75,0.25],			
+			
+			[0.25,1.,0.25],
+			[1.,0.25,0.25],
+			[0.25,0.25,1.],			
+			[0.25,0.75,0.25],
+			[0.75,0.25,0.25],
+			[0.25,0.25,0.75],			
+			[0.25,0.5,0.25],
+			[0.5,0.25,0.25],
+			[0.25,0.25,0.5],
+			]
+		
+		zones = []; cols = []
+		for zone,color in zip(self.zones,colors):
+			if self.show_zones == 'user':			
+				if ('XMIN' in zone) or ('XMAX' in zone) or ('YMIN' in zone) or ('YMAX' in zone) or ('ZMIN' in zone) or ('ZMAX' in zone): continue
+			zones.append(zone)
+			cols.append(color)
+		
+		lns += ['cols = [']
+		for col in cols:
+			lns += ['[%3.2f,%3.2f,%3.2f],'%tuple(col)]
+		lns += [']']
+		lns += ['zones = [']
+		for zone in zones:
+			lns += ['\''+zone+'\',']
+		lns += [']']
+		lns += ['for zone,col in zip(zones,cols):',
+			'\tAnimationScene1 = GetAnimationScene()',
+			'\tAnimationScene1.AnimationTime = 0.0',
+			'\trv.ViewTime = 0.0',
+			'\tsource = FindSource("model")',
+			'\tSetActiveSource(source)',
+			'\t',
+			'\tG = Glyph( GlyphType="Arrow", GlyphTransform="Transform2" )',
+			'\tG.GlyphTransform = "Transform2"',
+			'\tG.Scalars = [\'POINTS\', zone]',
+			'\tG.ScaleMode = \'scalar\'',
+			'\tG.GlyphType = "Sphere"',
+			'\t',
+			'\tG.GlyphType.Radius = 0.15',
+			'\t',
+			'\tRenameSource(zone, G)',
+			'\t',
+			'\trv = GetRenderView()',
+			'\tmr = GetDisplayProperties(source)',
+			'\tdr = Show()',
+			'\tdr.ColorArrayName = (\'POINT_DATA\', \'n\')',
+			'\tdr.ScaleFactor = 1.1',
+			'\tdr.SelectionPointFieldDataArrayName = zone',
+			'\tdr.EdgeColor = [0.0, 0.0, 0.5000076295109483]',
+			'\tdr.Opacity = 0.5',
+			'\t',
+			'\tlt = GetLookupTableForArray(zone, 1, RGBPoints=[0.0, 0.23, 0.299, 0.754, 0.5, 0.865, 0.865, 0.865, 1.0]+col, VectorMode=\'Magnitude\', NanColor=[0.25, 0.0, 0.0], ColorSpace=\'Diverging\', ScalarRangeInitialized=1.0 )',
+			'\t',
+			'\tpf = CreatePiecewiseFunction( Points=[0.0, 0.0, 0.5, 0.0, 1.0, 1.0, 0.5, 0.0] )',
+			'\t',
+			'\tdr.ColorArrayName = (\'POINT_DATA\', zone)',
+			'\tdr.LookupTable = lt',
+			'\tdr.Visibility = 0',
+			'\t',
+			'\tlt.ScalarOpacityFunction = pf',
+			'\t',
+			'\trv.CameraClippingRange = [14.4623517627701, 55.07139973461899]',
+			]
+		
+		
+		################################### load in contour output ###################################	
+		if len(contour_files)>0:
+			lns += ['contour_output = LegacyVTKReader( FileNames=[']
+			for file in contour_files:
+				file = file.replace('\\','/')
+				lns += ['\''+file+'\',']
+			lns += ['] )']
+			lns += ['RenameSource("contour_output", contour_output)']
+		
+		################################### set up initial visualisation ###################################	
+			dflt_cont = '\''+self.default_contour_variable+'\''		
+			cont_lim = self.default_contour_lims
+		
+			viewTime = len(self.contour.times)-1
+		
+			lns += [
+				'lt = GetLookupTableForArray('+dflt_cont+', 1, RGBPoints=[%10.5f, 0.23, 0.299, 0.754, %10.5f, 0.706, 0.016, 0.15], VectorMode=\'Magnitude\', NanColor=[0.25, 0.0, 0.0], ColorSpace=\'Diverging\', ScalarRangeInitialized=1.0 )'%tuple(cont_lim),
+				'',
+				'pf = CreatePiecewiseFunction( Points=[%10.5f, 0.0, 0.5, 0.0, %10.5f, 1.0, 0.5, 0.0] )'%tuple(cont_lim),
+				'',
+				'dr = Show() #dr = DataRepresentation1',
+				'dr.Representation = \'Surface With Edges\'',
+				'dr.EdgeColor = [0.15, 0.15, 0.15]',
+				'dr.ScalarOpacityFunction = pf',
+				'dr.ColorArrayName = (\'POINT_DATA\', '+dflt_cont+')',
+				'dr.ScalarOpacityUnitDistance = 1.7320508075688779',
+				'dr.LookupTable = lt',
+				'',
+				'rv.ViewTime = %4i'%viewTime,
+				'',
+				'ScalarBarWidgetRepresentation1 = CreateScalarBar( Title='+dflt_cont+', LabelFontSize=12, Enabled=1, LookupTable=lt, TitleFontSize=12 )',
+				'GetRenderView().Representations.append(ScalarBarWidgetRepresentation1)',
+				'',
+				]
+			
+		if len(contour_files)>0:
+			lns+= [
+				'model = FindSource("model")',
+				'model_rep = GetDisplayProperties(model)',
+				'contour_output = FindSource("contour_output")',
+				'cont_rep = GetDisplayProperties(contour_output)',
+				]	
+			if self.initial_show == 'material':
+				lns+=[
+					'model_rep.Visibility = 1',
+					'cont_rep.Visibility = 0	',
+					]					
+			elif self.initial_show == 'contour':
+				lns += [
+					'model_rep.Visibility = 0',
+					'cont_rep.Visibility = 1',
+					]			
 		f.writelines('\n'.join(lns))
 		f.close()
-		
 	def _get_filename(self): return self.path.absolute_to_file+slash+self.path.filename
 	filename = property(_get_filename) #: (**)
