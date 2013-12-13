@@ -138,25 +138,24 @@ class fvtk(object):
 				lookup_table='default'))
 	def assemble_properties(self):
 		"""Assemble material properties in pyvtk objects."""
-		nan = float('NaN')
-		
+		# permeabilities
 		perms = np.array([nd.permeability for nd in self.parent.grid.nodelist])
 		if np.mean(perms)>0.: perms = np.log10(perms)
 		
-		self.perm_x_lim = [np.min(perms[:,0]),np.max(perms[:,0])]
-		self.perm_y_lim = [np.min(perms[:,1]),np.max(perms[:,1])]
-		self.perm_z_lim = [np.min(perms[:,2]),np.max(perms[:,2])]
-		
-		self.data.material.append(pv.Scalars(perms[:,0],name='perm_x',lookup_table='default'))
-		self.data.material.append(pv.Scalars(perms[:,1],name='perm_y',lookup_table='default'))
-		self.data.material.append(pv.Scalars(perms[:,2],name='perm_z',lookup_table='default'))
-		self.materials.append('perm_x')
-		self.materials.append('perm_y')
-		self.materials.append('perm_z')
-		
-		dens = np.array([nd.density if nd.density != nan else nan for nd in self.parent.grid.nodelist])
-		self.data.material.append(pv.Scalars(dens,name='density',lookup_table='default'))
-		self.materials.append('density')
+		self.add_material('perm_x',perms[:,0])
+		self.add_material('perm_y',perms[:,1])
+		self.add_material('perm_z',perms[:,2])
+
+		props = np.array([[nd.density, nd.porosity, nd.specific_heat, nd.youngs_modulus,nd.poissons_ratio,nd.thermal_expansion,nd.pressure_coupling,nd.Ti,nd.Pi,nd.Si] 	for nd in self.parent.grid.nodelist])
+		names = ['density','porosity','specific_heat','youngs_modulus','poissons_ratio','thermal_expansion','pressure_coupling','Pi','Ti','Si']
+		for name, column in zip(names,props.T):
+			self.add_material(name,column)
+	def add_material(self,name,data):
+		if all(v is None for v in data): return 		# if all None, no data to include
+		data = np.array([dt if dt != None else -1.e30 for dt in data]) 		# check for None, replace with -1.e30
+		self.data.material.append(pv.Scalars(data,name=name,lookup_table='default'))
+		self.materials.append(name)
+		self.__setattr__(name+'_lim',[np.min(data),np.max(data)])
 	def assemble_contour(self):
 		"""Assemble contour output in pyvtk objects."""
 		self.data.contour = dict([(time,pv.PointData()) for time in self.contour.times])
