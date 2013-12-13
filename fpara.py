@@ -81,7 +81,7 @@ class fVtkData(pv.VtkData):
 			written_files.append(filename_int)
 		return written_files
 class fvtk(object):
-	def __init__(self,parent,filename,contour,show_zones):
+	def __init__(self,parent,filename,contour,show_zones,diff):
 		self.parent = parent
 		self.path = fpath(parent = self)
 		self.path.filename = filename
@@ -91,6 +91,7 @@ class fvtk(object):
 		self.materials = []
 		self.zones = []
 		self.show_zones = show_zones
+		self.diff = diff
 	def assemble(self):		
 		"""Assemble all information in pyvtk objects."""			
 		self.assemble_grid()		# add grid information
@@ -159,13 +160,15 @@ class fvtk(object):
 	def assemble_contour(self):
 		"""Assemble contour output in pyvtk objects."""
 		self.data.contour = dict([(time,pv.PointData()) for time in self.contour.times])
+		if self.diff: time0 = self.contour.times[0]
 		for time in self.contour.times:
 			do_lims = (time == self.contour.times[-1])
 			for var in self.contour.variables:
 				if time != self.contour.times[0] and var in ['x','y','z','n']: continue
 				if var not in self.variables: self.variables.append(var)
 				self.data.contour[time].append(pv.Scalars(self.contour[time][var],name=var,lookup_table='default'))
-				
+				if self.diff:
+					self.data.contour[time].append(pv.Scalars(self.contour[time][var]-self.contour[time0][var],name='diff_'+var,lookup_table='default'))
 				if do_lims: self.__setattr__(var+'_lim',[np.min(self.contour[time][var]),np.max(self.contour[time][var])])
 	def write(self):	
 		"""Call to write out vtk files."""

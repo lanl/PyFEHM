@@ -4495,7 +4495,7 @@ class fdata(object):						#FEHM data file.
 		if tempRstoFlag: 
 			self.files.incon = ''
 			self.files.write()
-	def paraview(self,exe = 'paraview',filename = 'temp.vtk',contour = None,show='kx',zones = 'user'):
+	def paraview(self,exe = 'paraview',filename = 'temp.vtk',contour = None,show='kx',zones = 'user',diff = False):
 		'''Exports the model object to VTK and loads in paraview.
 		
 		:param exe: Path to Paraview executable.
@@ -4508,8 +4508,10 @@ class fdata(object):						#FEHM data file.
 		:type show: str
 		:param zones: Zones to plot: 'user' = user-defined zones (default), 'all' = all zones except zone[0].
 		:type zones: str
+		:param diff: Flag to request PyFEHM to also plot differences of contour variables (from initial state) with time.
+		:type diff: bool
 		'''
-		self._vtk = fvtk(parent=self,filename=filename,contour=contour,show_zones = zones)
+		self._vtk = fvtk(parent=self,filename=filename,contour=contour,show_zones = zones,diff=diff)
 		self._vtk.assemble()
 		fls = self._vtk.write()
 		self._vtk.initial_display(show)
