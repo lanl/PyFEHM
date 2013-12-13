@@ -297,8 +297,6 @@ class fvtk(object):
 			'',
 			'G = Glyph( GlyphType="Arrow", GlyphTransform="Transform2" )',
 			'G.GlyphTransform = "Transform2"',
-			'G.Scalars = [\'POINTS\', \'n\']',
-			'G.ScaleMode = \'scalar\'',
 			'G.GlyphType = "Sphere"',
 			'',
 			'G.GlyphType.Radius = 0.08',
@@ -310,21 +308,11 @@ class fvtk(object):
 			'dr = Show()',
 			'dr.ColorArrayName = (\'POINT_DATA\', \'n\')',
 			'dr.ScaleFactor = 1.1',
-			#tdr.SelectionPointFieldDataArrayName = zone',
+			'dr.SelectionPointFieldDataArrayName = "nodes"',
 			'dr.EdgeColor = [0.0, 0.0, 0.5000076295109483]',
-			'dr.Opacity = 0.5',
-			'',
-			'lt = GetLookupTableForArray("nodes", 1, RGBPoints=[0.0, 0.23, 0.299, 0.754, 0.5, 0.865, 0.865, 0.865, 1.0, 0., 0., 0.], VectorMode=\'Magnitude\', NanColor=[0.25, 0.0, 0.0], ColorSpace=\'Diverging\', ScalarRangeInitialized=1.0 )',
-			'',
-			'pf = CreatePiecewiseFunction( Points=[0.0, 0.0, 0.5, 0.0, 1.0, 1.0, 0.5, 0.0] )',
-			'',
-			'dr.ColorArrayName = (\'POINT_DATA\', "nodes")',
-			'dr.LookupTable = lt',
+			'dr.ColorArrayName = (\'POINT_DATA\', \'\')',
+			'dr.DiffuseColor = [0.,0.,0.]',
 			'dr.Visibility = 0',
-			'',
-			'lt.ScalarOpacityFunction = pf',
-			'',
-			'rv.CameraClippingRange = [14.4623517627701, 55.07139973461899]',
 			]
 		################################### load in zones as glyphs ###################################		
 		colors = [
@@ -422,8 +410,6 @@ class fvtk(object):
 			'\tdr.Visibility = 0',
 			'\t',
 			'\tlt.ScalarOpacityFunction = pf',
-			'\t',
-			'\trv.CameraClippingRange = [14.4623517627701, 55.07139973461899]',
 			]
 		
 		
