@@ -11,9 +11,6 @@ parser.add_option('-e','--exe', dest = 'exename', metavar = 'PATH', help = 'path
 
 from fdata import*
 
-print 'args',args
-print 'options',options
-
 if options.inconname != None:
 	dat = fdata(args[0],args[1],options.inconname)
 else:

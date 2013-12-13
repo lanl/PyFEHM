@@ -287,7 +287,9 @@ class fvtk(object):
 			'',
 			]
 			
-		################################### load in nodes as glyphs ###################################		
+		################################### load in nodes as glyphs ###################################	
+		
+		ndRadius = np.min([con.distance for con in self.parent.grid.connlist])/10.
 		lns += [
 			'AnimationScene1 = GetAnimationScene()',
 			'AnimationScene1.AnimationTime = 0.0',
@@ -298,8 +300,10 @@ class fvtk(object):
 			'G = Glyph( GlyphType="Arrow", GlyphTransform="Transform2" )',
 			'G.GlyphTransform = "Transform2"',
 			'G.GlyphType = "Sphere"',
-			'',
-			'G.GlyphType.Radius = 0.08',
+			'G.RandomMode = 0',
+			'G.ScaleMode = \'off\'',
+			'G.MaskPoints = 0',
+			'G.GlyphType.Radius = %10.5f'%ndRadius,
 			'',
 			'RenameSource("nodes", G)',
 			'',
@@ -387,8 +391,10 @@ class fvtk(object):
 			'\tG.Scalars = [\'POINTS\', zone]',
 			'\tG.ScaleMode = \'scalar\'',
 			'\tG.GlyphType = "Sphere"',
+			'\tG.RandomMode = 0',
+			'\tG.MaskPoints = 0',
 			'\t',
-			'\tG.GlyphType.Radius = 0.15',
+			'\tG.GlyphType.Radius = %10.5f'%(2*ndRadius),
 			'\t',
 			'\tRenameSource(zone, G)',
 			'\t',
