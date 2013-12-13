@@ -32,7 +32,6 @@ class fVtkData(pv.VtkData):
 		self.times = []
 		self.material = pv.PointData()
 		self.contour = {}
-		
 	def to_string(self, time=None, format = 'ascii',material=False):
 		ret = ['# vtk DataFile Version 2.0',
 			   self.header,
@@ -47,7 +46,6 @@ class fVtkData(pv.VtkData):
 			if self.contour[time].data:
 				ret.append(self.contour[time].to_string(format))
 		return '\n'.join(ret)
-
 	def tofile(self, filename, format = 'ascii'):
 		"""Save VTK data to file.
 		"""
@@ -107,7 +105,7 @@ class fvtk(object):
 		cns = [[nd.index-1 for nd in el.nodes] for el in self.parent.grid.elemlist]
 		
 		# make grid
-		self.data = fVtkData(pv.UnstructuredGrid(nds,hexahedron=cns))
+		self.data = fVtkData(pv.UnstructuredGrid(nds,hexahedron=cns),'PyFEHM VTK model output')
 		
 		# grid information
 		dat = np.array([nd.position for nd in self.parent.grid.nodelist])
