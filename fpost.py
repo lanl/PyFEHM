@@ -276,6 +276,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 		self._material_properties = []
 		self._row=None
 		self._variables=[]  
+		self._user_variables = []
 		self.key_name=[]
 		self._keyrows={}
 		self.column_name=[]
@@ -647,6 +648,24 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 			print '[[float,float],[float,float]] - point to point'
 			return True
 		return False
+	def new_variable(self,name,time,data): 	
+		'''Creates a new variable, which is some combination of the available variables.
+		
+		:param name: Name for the variable.
+		:type name: str
+		:param time: Time key which the variable should be associated with. Must be one of the existing keys, i.e., an item in fcontour.times.
+		:type time: fl64
+		:param data: Variable data, most likely some combination of the available parameters, e.g., pressure*temperature, pressure[t=10] - pressure[t=5]
+		:type data: lst[fl64]
+		'''
+		if time not in self.times: 
+			print 'ERROR: supplied time must correspond to an existing time in fcontour.times'
+			return
+		if name in self.variables:
+			print 'ERROR: there is already a variable called \''+name+'\', please choose a different name'
+			return
+		self._data[time][name] = data
+		self._user_variables.append(name)
 	def slice(self, variable, slice, divisions, time=None, method='nearest'):
 		'''Returns mesh data for a specified slice orientation from 3-D contour output data.
 		
@@ -1343,6 +1362,8 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 		return outdat
 	def _get_variables(self): return self._variables
 	variables = property(_get_variables)#: (*lst[str]*) List of variables for which output data are available.
+	def _get_user_variables(self): return self._user_variables
+	user_variables = property(_get_user_variables) #: (*lst[str]*) List of user-defined variables for which output data are available.
 	def _get_format(self): return self._format
 	format = property(_get_format) #: (*str*) Format of output file, options are 'tec', 'surf', 'avs' and 'avsx'.
 	def _get_filename(self): return self._filename

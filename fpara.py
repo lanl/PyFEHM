@@ -170,6 +170,14 @@ class fvtk(object):
 				if self.diff:
 					self.data.contour[time].append(pv.Scalars(self.contour[time][var]-self.contour[time0][var],name='diff_'+var,lookup_table='default'))
 				if do_lims: self.__setattr__(var+'_lim',[np.min(self.contour[time][var]),np.max(self.contour[time][var])])
+			for var in self.contour.user_variables:
+				if var not in self.variables: self.variables.append(var)
+				if var not in self.contour[time].keys(): continue
+				self.data.contour[time].append(pv.Scalars(self.contour[time][var],name=var,lookup_table='default'))
+				if self.diff:
+					if var not in self.contour[time0].keys(): continue
+					self.data.contour[time].append(pv.Scalars(self.contour[time][var]-self.contour[time0][var],name='diff_'+var,lookup_table='default'))
+				if do_lims: self.__setattr__(var+'_lim',[np.min(self.contour[time][var]),np.max(self.contour[time][var])])
 	def write(self):	
 		"""Call to write out vtk files."""
 		if self.parent.work_dir: wd = self.parent.work_dir
