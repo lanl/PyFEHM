@@ -136,12 +136,16 @@ if True: 					# output variable dictionaries defined in here, indented for code 
 
 	cont_var_names_surf=dict([
 	('X coordinate (m)','x'), 
+	('X Coordinate (m)','x'), 
 	('X (m)','x'), 
 	('Y coordinate (m)','y'), 
+	('Y Coordinate (m)','y'), 
 	('Y (m)','y'), 
 	('Z coordinate (m)','z'), 
+	('Z Coordinate (m)','z'), 
 	('Z (m)','z'),
 	('node','n'),
+	('Node','n'),
 	('Liquid Pressure (MPa)','P'),
 	('Vapor Pressure (MPa)','P_vap'),
 	('Capillary Pressure (MPa)','P_cap'),
@@ -268,6 +272,8 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 		self._times=[]   
 		self._format = ''
 		self._data={}
+		self._material = {}
+		self._material_properties = []
 		self._row=None
 		self._variables=[]  
 		self.key_name=[]
@@ -286,6 +292,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 		self._latest = latest
 		self._first = first
 		self._nearest = nearest
+		if isinstance(self._nearest,(float,int)): self._nearest = [self._nearest]
 		self._nkeys=1
 		if self._filename: self.read(filename,self._latest,self._first,self._nearest)
 	def __getitem__(self,key):
@@ -311,57 +318,104 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 		else:
 			files=glob(filename)
 			if len(files)==0: print 'ERROR: '+filename+' not found'; return
+			# decision-making
+			mat_file = None
+			multi_type = None
+			# are there multiple file types? e.g., _con_ and _sca_?
+			# is there a material properties file? e.g., 'mat_nodes'?
+			file_types = []
+			for file in files:
+				if '_sca_node' in file and 'sca' not in file_types: file_types.append('sca')
+				if '_vec_node' in file and 'vec' not in file_types: file_types.append('vec')
+				if '_con_node' in file and 'con' not in file_types: file_types.append('con')
+				if 'mat_node' in file: mat_file = file
+			
 			if self._nearest or latest or first:
 				files = filter(os.path.isfile, glob(filename))
+				if mat_file: files.remove(mat_file)
 				files.sort(key=lambda x: os.path.getmtime(x))
 				files2 = []
+				
+				# retrieve first created and same time in group
 				if first:
 					files2.append(files[0])
+					for file_type in file_types:
+						tag = '_'+file_type+'_node'
+						if tag in files2[-1]:
+							prefix = files2[-1].split(tag)[0]
+							break						
+					for file in files:
+						if file.startswith(prefix) and tag not in file: files2.append(file)
+						
+				# retrieve files nearest in time to given (and same time in group)
 				if self._nearest:
-					ts = [fl.split('_node')[0] for fl in files]
-					ts = [fl.split('_sca')[0] for fl in ts]
-					ts = [fl.split('_con')[0] for fl in ts]
-					ts = [fl.split('_days')[0] for fl in ts]
-					ts = [fl.split('.')[-2:] for fl in ts]
-					ts = [float(tsi[0]+'.'+tsi[1]) for tsi in ts]
-					if isinstance(self._nearest,(float,int)):
-						tsi = min(enumerate(ts), key=lambda x: abs(x[1]-self._nearest))[0]
+					ts = []
+					for file in files:
+						file = file.split('_node')[0]
+						file = file.split('_sca')[0]
+						file = file.split('_con')[0]
+						file = file.split('_vec')[0]
+						file = file.split('_days')[0]						
+						file = file.split('.')
+						file = [fl for fl in file if fl[0].isdigit()]
+						ts.append(float('.'.join(file)))
+					ts = np.unique(ts)
+					
+					for near in self._nearest:
+						tsi = min(enumerate(ts), key=lambda x: abs(x[1]-near))[0]
 						files2.append(files[tsi])
-					elif isinstance(self._nearest,(list,tuple)):
-						for near in self._nearest:
-							tsi = min(enumerate(ts), key=lambda x: abs(x[1]-near))[0]
-							files2.append(files[tsi])
+						for file_type in file_types:
+							tag = '_'+file_type+'_node'
+							if tag in files2[-1]:
+								prefix = files2[-1].split(tag)[0]
+								break
+						for file in files:
+							if file.startswith(prefix) and tag not in file: files2.append(file)						
+							
+				# retrieve last created and same time in group
 				if latest:
 					files2.append(files[-1])
+					for file_type in file_types:
+						tag = '_'+file_type+'_node'
+						if tag in files2[-1]:
+							prefix = files2[-1].split(tag)[0]
+							break
+					for file in files:
+						if file.startswith(prefix) and tag not in file: files2.append(file)
+						
+				# removes duplicates
 				files = []
 				for file in files2:
 					if file not in files: files.append(file)
-		configured=False
-		for i,fname in enumerate(files):
-			print fname
-			self._file=open(fname,'rU')
-			if not configured:
-				header=self._file.readline()
-				self._detect_format(header)
-				if self._format=='tec':
-					self._setup_headers_tec(header)
-				elif self._format=='avs':
-					self._setup_headers_avs(header)
-				elif self._format=='avsx':
-					self._setup_headers_avsx(header)
-				elif self._format=='surf':
-					self._setup_headers_surf(header)
-				else:
-					print 'Unrecognised format'; return
+		
+		# group files into their types
+		FILES = []
+		for file_type in file_types:
+			tag = '_'+file_type+'_node'
+			FILES.append([file for file in files if tag in file])
+		FILES = np.array(FILES)	
+		#for fname in files:
+		for i in range(FILES.shape[1]):
+			files = FILES[:,i]
+			for file in sorted(files): print file
+			if not self._variables:
+				headers = []
+				for file in sorted(files):
+					fp = open(file,'rU')
+					headers.append(fp.readline())
+					fp.close()
+				self._detect_format(headers)
+				if self._format=='tec': self._setup_headers_tec(headers)
+				elif self._format=='avs': self._setup_headers_avs(headers)
+				elif self._format=='avsx': self._setup_headers_avsx(headers)
+				elif self._format=='surf': self._setup_headers_surf(headers)
+				else: print 'Unrecognised format'; return
 				self.num_columns = len(self.variables)+1
-			if self.format == 'tec': self._read_data_tec()
-			elif self.format == 'surf': self._read_data_surf(fname,configured)
-			elif self.format == 'avs': self._read_data_avs(fname,configured)
-			elif self.format == 'avsx': 
-				if configured: self._read_data_avsx()
-				else: self._read_data_avsx(header)
-			self._file.close()
-			configured = True
+			if self.format == 'tec': self._read_data_tec(files,mat_file)
+			elif self.format == 'surf': self._read_data_surf(files,mat_file)
+			elif self.format == 'avs': self._read_data_avs(files,mat_file)
+			elif self.format == 'avsx': self._read_data_avsx(files,mat_file)
+		
 		# assemble grid information
 		if 'x' in self.variables:
 			self._x = np.unique(self[self.times[0]]['x'])
@@ -393,34 +447,48 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 			print 'To turn off this message, open the environment file \'fdflt.py\' and set self.parental_cont = False'
 			print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
 			print ''
-	def _detect_format(self,header):
-		if header.startswith('TITLE ='):		# check for TEC output
+	def _detect_format(self,headers):
+		if headers[0].startswith('TITLE ='):		# check for TEC output
 			self._format = 'tec'
-		elif header.startswith('node, '):		# check for SURF output
+		elif headers[0].startswith('node, '):		# check for SURF output
 			self._format = 'surf'
-		elif header.startswith('nodes at '):	# check for AVSX output
+		elif headers[0].startswith('nodes at '):	# check for AVSX output
 			self._format = 'avsx'
-		elif header.split()[0].isdigit():			# check for AVS output
+		elif headers[0].split()[0].isdigit():			# check for AVS output
 			self._format = 'avs'
-	def _setup_headers_avsx(self,header): 		# headers for the AVSX output format
-		header = header.strip().split(' : ')
+	def _setup_headers_avsx(self,headers): 		# headers for the AVSX output format
 		self._variables.append('n')
-		for key in header[1:]: 
-			if key in cont_var_names_avs.keys():
-				var = cont_var_names_avs[key]
-			else: var = key
-			self._variables.append(var)
-	def _read_data_avsx(self,header=''):				# read data in AVSX format
-		if not header: header = self._file.readline()
-		header = header.split('nodes at ')[1]
-		header = header.split('days')[0]
-		time = float(header)*24*2600
-		self._times.append(time)		
-		lns = self._file.readlines()
-		data = []
-		for ln in lns: data.append([float(d) for d in ln.strip().split(':')])
-		data = np.array(data)
+		for header in headers:
+			header = header.strip().split(' : ')
+			for key in header[1:]: 
+				if key in cont_var_names_avs.keys():
+					var = cont_var_names_avs[key]
+				else: var = key
+				self._variables.append(var)
+	def _read_data_avsx(self,files,mat_file):				# read data in AVSX format
+		datas = []
+		for file in sorted(files): 		# use alphabetical sorting
+			fp = open(file,'rU')
+			header = fp.readline()
+			if file == sorted(files)[0]:
+				header = header.split('nodes at ')[1]
+				header = header.split('days')[0]
+				time = float(header)*24*2600
+				self._times.append(time)		
+			lns = fp.readlines()
+			fp.close()
+			datas.append(np.array([[float(d) for d in ln.strip().split(':')] for ln in lns]))
+		data = np.concatenate(datas,1)
 		self._data[time] = dict([(var,data[:,icol]) for icol,var in enumerate(self.variables)])
+		
+		if mat_file and not self._material_properties:
+			fp = open(mat_file,'rU')
+			header = fp.readline()
+			self._material_properties = header.split(':')[1:]
+			lns = fp.readlines()
+			fp.close()
+			data = np.array([[float(d) for d in ln.strip().split(':')[1:]] for ln in lns])
+			self._material= dict([(var,data[:,icol]) for icol,var in enumerate(self._material_properties)])
 	def _setup_headers_avs(self,header): 		# headers for the AVS output format
 		lns_num = int(header.strip().split(' ')[0])
 		self._variables.append('n')
@@ -428,45 +496,71 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 			ln = self._file.readline().strip().split(',')[0]
 			var = cont_var_names_avs[ln]
 			self._variables.append(var)
-	def _read_data_avs(self,fname,configured):		# read data in AVS format
+	def _read_data_avs(self,fname):		# read data in AVS format
 		lni = fname.split('.',1)[1]
 		lni = lni.split('_',1)
 		time = float(lni[0])
 		if lni[1].startswith('days'):
 			time = time*24*2600
 		self._times.append(time)		
-		if configured: 
+		if self._variables: 
 			for var in self.variables: lni=self._file.readline()
 		lns = self._file.readlines()
 		data = []
 		for ln in lns: data.append([float(d) for d in ln.strip().split()])
 		data = np.array(data)
 		self._data[time] = dict([(var,data[:,icol]) for icol,var in enumerate(self.variables)])
-	def _setup_headers_surf(self,header): 		# headers for the SURF output format
-		header = header.strip().split(', ')
-		for key in header: 
-			varname = key.split('"')[0]
-			if varname in cont_var_names_surf.keys():
-				var = cont_var_names_surf[varname]
-			else: var = varname
-			self._variables.append(var)
-	def _read_data_surf(self,fname,configured):		# read data in SURF format
-		lni = fname.split('.',1)[1]
-		if '_sca_node' in fname: 
-			lni = fname.split('_sca_node',1)[0]
-		elif '_con_node' in fname: 
-			lni = fname.split('_con_node',1)[0] 
-		day_flag = False
-		if lni.endswith('days'): day_flag = True; lni = lni[:-5]
-		lni = lni.split('.')
-		time = float(lni[-2]+'.'+lni[-1])
-		self._times.append(time)		
-		if configured: lni=self._file.readline()
-		lns = self._file.readlines()
-		data = []
-		for ln in lns: data.append([float(d) for d in ln.strip().split(',')])
-		data = np.array(data)
+	def _setup_headers_surf(self,headers): 		# headers for the SURF output format
+		for header in headers:
+			header = header.strip().split(', ')
+			for key in header: 
+				varname = key.split('"')[0]
+				varname = varname.strip()
+				if varname in cont_var_names_surf.keys():
+					var = cont_var_names_surf[varname]
+				else: var = varname
+				if var not in self._variables: self._variables.append(var)
+	def _read_data_surf(self,files,mat_file):		# read data in SURF format
+		datas = []
+		for file in sorted(files):
+			first = (file == sorted(files)[0])
+			fp = open(file,'rU')
+			lni = file.split('.',1)[1]
+			
+			if first: 
+				file = file.split('_node')[0]
+				file = file.split('_sca')[0]
+				file = file.split('_con')[0]
+				file = file.split('_vec')[0]
+				file = file.split('_days')[0]						
+				file = file.split('.')
+				file = [fl for fl in file if fl[0].isdigit()]
+				time = float('.'.join(file))
+				self._times.append(time)
+			
+			lni=fp.readline()			
+			lns = fp.readlines()
+			fp.close()
+			
+			if first: 
+				datas.append(np.array([[float(d) for d in ln.strip().split(',')] for ln in lns]))
+			else:
+				datas.append(np.array([[float(d) for d in ln.strip().split(',')[4:]] for ln in lns]))
+			
+		data = np.concatenate(datas,1)
 		self._data[time] = dict([(var,data[:,icol]) for icol,var in enumerate(self.variables)])
+		
+		if mat_file and not self._material_properties:
+			fp = open(mat_file,'rU')
+			header = fp.readline()
+			for mat_prop in header.split(',')[1:]:
+				if 'specific heat' not in mat_prop:
+					self._material_properties.append(mat_prop.strip())
+			lns = fp.readlines()
+			fp.close()
+			data = np.array([[float(d) for d in ln.strip().split(',')[1:]] for ln in lns])
+			self._material= dict([(var,data[:,icol]) for icol,var in enumerate(self._material_properties)])
+			
 	def _setup_headers_tec(self,header): 		# headers for the TEC output format
 		while not header[0].startswith('VARIABLE'):
 			header = self._file.readline()
@@ -1230,6 +1324,12 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 	filename = property(_get_filename)  #: (*str*) Name of FEHM contour output file. Wildcards can be used to define multiple input files.
 	def _get_times(self): return np.sort(self._times)
 	times = property(_get_times)	#: (*lst[fl64]*) List of times (in seconds) for which output data are available.
+	def _get_material_properties(self): return self._material_properties
+	def _set_material_properties(self,value): self._material_properties = value
+	material_properties = property(_get_material_properties, _set_material_properties) #: (*lst[str]*) List of material properties, keys for the material attribute.
+	def _get_material(self): return self._material
+	def _set_material(self,value): self._material = value
+	material = property(_get_material, _set_material) #: (*dict[str]*) Dictionary of material properties, keyed by property name, items indexed by node_number - 1. This attribute is empty if no material property file supplied.
 	def _get_x(self): return self._x
 	def _set_x(self,value): self._x = value
 	x = property(_get_x, _set_x) #: (*lst[fl64]*) Unique list of nodal x-coordinates for grid.

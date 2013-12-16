@@ -8,7 +8,7 @@
 from fdata import*
 from fpost import*
 
-root = 'tut1'
+root = 'tut1_avsx'
 dat = fdata(work_dir = root) 					# creates an 'empty' input file
 
 # 7.1.2 Grid generation
@@ -53,7 +53,8 @@ dat.add(flow) 																				# (b) add macro to input file
 dat.zone['YMAX'].fix_pressure(P=4.,T=60.) 		# does steps (a)-(b) above for YMAX
 
 # 7.1.6 Running the simulation
-dat.cont.variables.append(['xyz','temperature','pressure'])
+dat.cont.variables.append(['xyz','temperature','pressure','velocity','mat'])
+dat.cont.format = 'avsx'
 dat.cont.time_interval = 2.
 
 dat.tf=10.
@@ -62,13 +63,13 @@ dat.tf=10.
 dat.files.root = root
 dat.run(root+'_INPUT.dat') 		# note, because no executable path is specified, PyFEHM retrieves the executable specified in the default path
 
-# 7.1.7 Visualisation
-c = fcontour(dat.work_dir+'\\*.csv')
-c.slice_plot(save='Tslice.png',cbar=True,levels=11,slice=['x',5],variable='T',method='linear',title='temperature / degC',
-xlabel='y / m', ylabel = 'z / m')
-c.slice_plot(save='Pslice.png',cbar=True,levels=np.linspace(4,6,9),slice=['x',5],variable='P',method='linear',title='pressure / MPa',
-xlabel='y / m', ylabel = 'z / m')
+## 7.1.7 Visualisation
+#c = fcontour(dat.work_dir+'\\*.csv')
+#c.slice_plot(save='Tslice.png',cbar=True,levels=11,slice=['x',5],variable='T',method='linear',title='temperature / degC',
+#xlabel='y / m', ylabel = 'z / m')
+#c.slice_plot(save='Pslice.png',cbar=True,levels=np.linspace(4,6,9),slice=['x',5],variable='P',method='linear',title='pressure / MPa',
+#xlabel='y / m', ylabel = 'z / m')
 
-dat.paraview(filename=root+'.vtk',contour = c, show='P',diff=True)
+#dat.paraview(filename=root+'.vtk',contour = c, show='P',diff=True)
 
 
