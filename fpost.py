@@ -394,7 +394,26 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 			tag = '_'+file_type+'_node'
 			FILES.append([file for file in files if tag in file])
 		FILES = np.array(FILES)	
-		#for fname in files:
+		
+		# determine headers for 'tec' output
+		for i in range(FILES.shape[1]):
+			if not self._variables:
+				headers = []
+				for file in sorted(files):
+					fp = open(file,'rU')
+					headers.append(fp.readline())
+					fp.close()
+				firstFile = self._detect_format(headers)
+				if self._format=='tec' and firstFile: 
+					headers = []
+					for file in sorted(files):
+						fp = open(file,'rU')
+						fp.readline()
+						headers.append(fp.readline())
+						fp.close()
+					self._setup_headers_tec(headers)		
+		
+		# read in output data
 		for i in range(FILES.shape[1]):
 			files = FILES[:,i]
 			for file in sorted(files): print file
@@ -405,8 +424,8 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 					headers.append(fp.readline())
 					fp.close()
 				self._detect_format(headers)
-				if self._format=='tec': self._setup_headers_tec(headers)
-				elif self._format=='avs': self._setup_headers_avs(headers)
+				#if self._format=='tec': self._setup_headers_tec(headers)
+				if self._format=='avs': self._setup_headers_avs(headers)
 				elif self._format=='avsx': self._setup_headers_avsx(headers)
 				elif self._format=='surf': self._setup_headers_surf(headers)
 				else: print 'Unrecognised format'; return
@@ -450,12 +469,16 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 	def _detect_format(self,headers):
 		if headers[0].startswith('TITLE ='):		# check for TEC output
 			self._format = 'tec'
+		if headers[0].startswith('ZONE '):		# check for TEC output
+			self._format = 'tec'
+			return False
 		elif headers[0].startswith('node, '):		# check for SURF output
 			self._format = 'surf'
 		elif headers[0].startswith('nodes at '):	# check for AVSX output
 			self._format = 'avsx'
 		elif headers[0].split()[0].isdigit():			# check for AVS output
 			self._format = 'avs'
+		return True
 	def _setup_headers_avsx(self,headers): 		# headers for the AVSX output format
 		self._variables.append('n')
 		for header in headers:
@@ -560,46 +583,48 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 			fp.close()
 			data = np.array([[float(d) for d in ln.strip().split(',')[1:]] for ln in lns])
 			self._material= dict([(var,data[:,icol]) for icol,var in enumerate(self._material_properties)])
-			
-	def _setup_headers_tec(self,header): 		# headers for the TEC output format
-		while not header[0].startswith('VARIABLE'):
-			header = self._file.readline()
+	def _setup_headers_tec(self,headers): 		# headers for the TEC output format
+		for header in headers:
 			header = header.split(' "')
-		for key in header[1:]: 
-			varname = key.split('"')[0]
-			if varname in cont_var_names_surf.keys():
-				var = cont_var_names_tec[varname]
-			else: var = varname
-			self._variables.append(var)
+			for key in header[1:]: 
+				varname = key.split('"')[0].strip()
+				if varname in cont_var_names_surf.keys():
+					var = cont_var_names_tec[varname]
+				else: var = varname
+				
+				if var not in self._variables: self._variables.append(var)
 	def _read_data_tec(self):						# read data in TEC format
-		ln = self._file.readline()
-		while not ln.startswith('ZONE'):
+		datas = []
+		for file in sorted(files):
+			first = (file == sorted(files)[0])
+			fp = open(file,'rU')
 			ln = self._file.readline()
-		lni = ln.split('"')[1]
-		time = lni.split('days')[0].strip()
-		time = float(time.split()[-1].strip())
-#		unit = lni.split()[3]
-#		if unit == 'days':
-#			time = time*24*2600
-		self._times.append(time)
-		lni = ln.split(',')[1]
-		nds = int(lni.split('=')[1])
-		lns = self._file.readlines()
-		data = []
-		for ln in lns[:nds]: data.append([float(d) for d in ln.strip().split()])
-		data = np.array(data)
-		if len(data[0])< len(self.variables): 		# insert xyz data from previous read
-			x0 = self._data[self.times[0]]['x']
-			y0 = self._data[self.times[0]]['y']
-			z0 = self._data[self.times[0]]['z']
-			j = 0
-			data2 = []
-			for var in self.variables:
-				if var == 'x': data2.append(x0)
-				elif var == 'y': data2.append(y0)
-				elif var == 'z': data2.append(z0)
-				else: data2.append(data[:,j]); j +=1
-			data = np.transpose(np.array(data2))
+			while not ln.startswith('ZONE'):
+				ln = self._file.readline()
+			
+			if first: 
+				lni = ln.split('"')[1]
+				time = lni.split('days')[0].strip()
+				time = float(time.split()[-1].strip())
+				self._times.append(time)
+		
+#		nds = int(lni.split('=')[1])
+#		lns = self._file.readlines()
+#		data = []
+#		for ln in lns[:nds]: data.append([float(d) for d in ln.strip().split()])
+#		data = np.array(data)
+#		if len(data[0])< len(self.variables): 		# insert xyz data from previous read
+#			x0 = self._data[self.times[0]]['x']
+#			y0 = self._data[self.times[0]]['y']
+#			z0 = self._data[self.times[0]]['z']
+#			j = 0
+#			data2 = []
+#			for var in self.variables:
+#				if var == 'x': data2.append(x0)
+#				elif var == 'y': data2.append(y0)
+#				elif var == 'z': data2.append(z0)
+#				else: data2.append(data[:,j]); j +=1
+#			data = np.transpose(np.array(data2))
 		
 		self._data[time] = dict([(var,data[:,icol]) for icol,var in enumerate(self.variables)])
 	def _check_inputs(self,variable, time, slice):	# assesses whether sufficient input information for slice plot

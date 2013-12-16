@@ -6,8 +6,8 @@ from fpost import*
 # 7.3.2 Setting up the simulations
 import multiprocessing
 
-models = range(1,5)
-processors = 2
+models = range(1,13)
+processors = 5
 
 params = [
 #[kmid,Tbase], 		# legend
@@ -16,6 +16,15 @@ params = [
 [1.e-16,80], 			# 3 
 [1.e-16,120], 			# 4 
 
+[1.e-20,80], 			# 1 
+[1.e-20,120], 			# 2 
+[1.e-16,80], 			# 3 
+[1.e-16,120], 			# 4 
+
+[1.e-20,80], 			# 1 
+[1.e-20,120], 			# 2 
+[1.e-16,80], 			# 3 
+[1.e-16,120], 			# 4 
 ]
 
 def execute(j):		

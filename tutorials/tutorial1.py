@@ -8,7 +8,7 @@
 from fdata import*
 from fpost import*
 
-root = 'tut1_avsx'
+root = 'tut1_tec'
 dat = fdata(work_dir = root) 					# creates an 'empty' input file
 
 # 7.1.2 Grid generation
@@ -53,8 +53,8 @@ dat.add(flow) 																				# (b) add macro to input file
 dat.zone['YMAX'].fix_pressure(P=4.,T=60.) 		# does steps (a)-(b) above for YMAX
 
 # 7.1.6 Running the simulation
-dat.cont.variables.append(['xyz','temperature','pressure','velocity','mat'])
-dat.cont.format = 'avsx'
+dat.cont.variables.append(['xyz','temperature','pressure','velocity','mat','grid'])
+dat.cont.format = 'tec'
 dat.cont.time_interval = 2.
 
 dat.tf=10.

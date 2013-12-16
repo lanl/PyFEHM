@@ -1800,6 +1800,8 @@ class ftrac(object): 						#FEHM chemistry module.
 		self._common_model_key = None
 		self._transport_porosity = -1
 		self._parent = parent
+		self._file = None
+		self._zonelist = []
 	def on(self): 
 		"""Switches on the **TRAC** macro. This occurs automatically when the first species object is added.
 		"""
@@ -1883,6 +1885,14 @@ class ftrac(object): 						#FEHM chemistry module.
 	def _get_specieslist(self): return self._specieslist
 	def _set_specieslist(self,value): self._specieslist = value
 	specieslist = property(_get_specieslist,_set_specieslist) #: (*lst*) List of species objects.
+	def _get_file(self): return self._file
+	def _set_file(self,value): 
+		self._file = value
+		self.on() 	# if set, turn on trac macro
+	file = property(_get_file, _set_file) #: (*str*) Path of auxiliary file containing trac information. PyFEHM will copy the contents of this file into the input file verbatim. Setting this variable will cause PyFEHM to use trac in 'stupid' mode.
+	def _get_zonelist(self): return self._zonelist
+	def _set_zonelist(self,value): self._zonelist = value
+	zonelist = property(_get_zonelist, _set_zonelist) #: (*lst[fzone]*) A list of zones to be written before the trac macro, for the situation that trac is used in 'stupid' model, i.e., the file attribute has been set to an auxiliary file.
 class fspecies(object):							# class for species transport model
 	"""Object for each chemical species. The species transport, adsorption, initial concentration and generator
 	properties are assigned in here.
@@ -3886,11 +3896,28 @@ class fdata(object):						#FEHM data file.
 		ws = _title_string('TRACKING MODULE',72)
 		outfile.write(ws)
 		if self.sticky_zones:
-			zns = []
-			for sp in self.trac.specieslist:
-				zns += [m.zone for m in sp._tracer_concentrationlist if m.zone.index]
-				zns += [m.zone for m in sp._tracer_generatorlist if m.zone.index]
+			if self.trac.file:
+				zns = self.trac.zonelist
+			else:
+				zns = []
+				for sp in self.trac.specieslist:
+					zns += [m.zone for m in sp._tracer_concentrationlist if m.zone.index]
+					zns += [m.zone for m in sp._tracer_generatorlist if m.zone.index]
 			self._write_zonn_one(outfile,list(set(zns)))
+		if self.trac.file: 				# write trac in stupid mode
+			if not os.path.isfile(self.trac.file):
+				print 'ERROR: cannot find trac file at location '+self.trac.file+'. Aborting...'
+				adsf
+			# open the auxiliary file and write it
+			fp = open(self.trac.file,'rU')
+			lns = fp.readlines()
+			# quality control
+			for i,ln in enumerate(lns):
+				if ln.startswith('trac'): break
+			lns = lns[i:]
+			fp.close()
+			outfile.writeline(lns)
+			return
 		outfile.write('trac\n')
 		# group 1
 		outfile.write(str(self.trac.param['init_solute_conc_ANO'])+'\t')
