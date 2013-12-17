@@ -649,6 +649,18 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 					data2.append(data[:,j]); j +=1
 			data = np.transpose(np.array(data2))
 		self._data[time] = dict([(var,data[:,icol]) for icol,var in enumerate(self.variables)])
+		
+		if mat_file and not self._material_properties:
+			fp = open(mat_file,'rU')
+			fp.readline()
+			header = fp.readline()
+			for mat_prop in header.split(' "')[5:]:
+				if 'specific heat' not in mat_prop:
+					self._material_properties.append(mat_prop.split('"')[0].strip())
+			lns = fp.readlines()
+			fp.close()
+			data = np.array([[float(d) for d in ln.strip().split()[4:]] for ln in lns])
+			self._material= dict([(var,data[:,icol]) for icol,var in enumerate(self._material_properties)])
 	def _check_inputs(self,variable, time, slice):	# assesses whether sufficient input information for slice plot
 		if not variable: 
 			print 'Error: no plot variable specified.'
