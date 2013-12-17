@@ -400,6 +400,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 		# determine headers for 'tec' output
 		for i in range(FILES.shape[1]):
 			if not self._variables:
+				files = FILES[:,i]
 				headers = []
 				for file in sorted(files):
 					fp = open(file,'rU')
@@ -595,39 +596,58 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 				else: var = varname
 				
 				if var not in self._variables: self._variables.append(var)
-	def _read_data_tec(self):						# read data in TEC format
+	def _read_data_tec(self,files,mat_file):						# read data in TEC format
 		datas = []
 		for file in sorted(files):
 			first = (file == sorted(files)[0])
 			fp = open(file,'rU')
-			ln = self._file.readline()
+			ln = fp.readline()
+			has_xyz = False
 			while not ln.startswith('ZONE'):
-				ln = self._file.readline()
+				ln = fp.readline()
+				has_xyz = True
 			
 			if first: 
 				lni = ln.split('"')[1]
 				time = lni.split('days')[0].strip()
 				time = float(time.split()[-1].strip())
 				self._times.append(time)
-		
-#		nds = int(lni.split('=')[1])
-#		lns = self._file.readlines()
-#		data = []
-#		for ln in lns[:nds]: data.append([float(d) for d in ln.strip().split()])
-#		data = np.array(data)
-#		if len(data[0])< len(self.variables): 		# insert xyz data from previous read
-#			x0 = self._data[self.times[0]]['x']
-#			y0 = self._data[self.times[0]]['y']
-#			z0 = self._data[self.times[0]]['z']
-#			j = 0
-#			data2 = []
-#			for var in self.variables:
-#				if var == 'x': data2.append(x0)
-#				elif var == 'y': data2.append(y0)
-#				elif var == 'z': data2.append(z0)
-#				else: data2.append(data[:,j]); j +=1
-#			data = np.transpose(np.array(data2))
-		
+				nds = None
+				if 'N =' in ln: 
+					nds = int(ln.split('N = ')[-1].strip().split(',')[0].strip())
+			
+			lns = fp.readlines()
+			fp.close()
+			if nds: lns = lns[:nds] 		# truncate to remove connectivity information
+			
+			if has_xyz:
+				if first: 
+					datas.append(np.array([[float(d) for d in ln.strip().split()] for ln in lns]))
+				else:
+					datas.append(np.array([[float(d) for d in ln.strip().split()[4:]] for ln in lns]))
+			else:
+				if first: 
+					datas.append(np.array([[float(d) for d in ln.strip().split()] for ln in lns]))
+				else:
+					datas.append(np.array([[float(d) for d in ln.strip().split()[1:]] for ln in lns]))
+						
+		data = np.concatenate(datas,1)
+		if data.shape[1]< len(self.variables): 		# insert xyz data from previous read
+			data2 = []
+			j = 0
+			for var in self.variables:
+				if var == 'x': 
+					x0 = self._data[self.times[0]]['x']
+					data2.append(x0)
+				elif var == 'y': 
+					y0 = self._data[self.times[0]]['y']
+					data2.append(y0)
+				elif var == 'z': 
+					z0 = self._data[self.times[0]]['z']
+					data2.append(z0)
+				else: 
+					data2.append(data[:,j]); j +=1
+			data = np.transpose(np.array(data2))
 		self._data[time] = dict([(var,data[:,icol]) for icol,var in enumerate(self.variables)])
 	def _check_inputs(self,variable, time, slice):	# assesses whether sufficient input information for slice plot
 		if not variable: 
