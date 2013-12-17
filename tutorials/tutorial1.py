@@ -8,7 +8,7 @@
 from fdata import*
 from fpost import*
 
-root = 'tut1_tec4'
+root = 'tut1'
 dat = fdata(work_dir = root) 					# creates an 'empty' input file
 
 # 7.1.2 Grid generation
@@ -64,12 +64,9 @@ dat.files.root = root
 dat.run(root+'_INPUT.dat') 		# note, because no executable path is specified, PyFEHM retrieves the executable specified in the default path
 
 # 7.1.7 Visualisation
-#c = fcontour(dat.work_dir+'\\*.csv')
-#c.slice_plot(save='Tslice.png',cbar=True,levels=11,slice=['x',5],variable='T',method='linear',title='temperature / degC',
-#xlabel='y / m', ylabel = 'z / m')
-#c.slice_plot(save='Pslice.png',cbar=True,levels=np.linspace(4,6,9),slice=['x',5],variable='P',method='linear',title='pressure / MPa',
-#xlabel='y / m', ylabel = 'z / m')
-
-#dat.paraview(zscale = 10.)
-
+c = fcontour(dat.work_dir+'\\*.csv')
+c.slice_plot(save='Tslice.png',cbar=True,levels=11,slice=['x',5],variable='T',method='linear',title='temperature / degC',
+xlabel='y / m', ylabel = 'z / m')
+c.slice_plot(save='Pslice.png',cbar=True,levels=np.linspace(4,6,9),slice=['x',5],variable='P',method='linear',title='pressure / MPa',
+xlabel='y / m', ylabel = 'z / m')
 
