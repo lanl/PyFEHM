@@ -323,7 +323,7 @@ class fzone(object):						#FEHM zone object.
 			:type T: fl64
 			:param multiplier: Multiplier for HFLX macro (default = 1.e10)
 			:type multiplier: fl64
-			:param file: Name of auxilliary file to save macro.
+			:param file: Name of auxiliary file to save macro.
 			:type file: str
 		'''
 		if not self._parent: print 'fix_temperature() only available if zone associated with fdata() object'; return
@@ -339,7 +339,7 @@ class fzone(object):						#FEHM zone object.
 			:type T: fl64
 			:param impedance: Impedance for FLOW macro (default = 1.e6)
 			:type impedance: fl64
-			:param file: Name of auxilliary file to save macro.
+			:param file: Name of auxiliary file to save macro.
 			:type file: str
 		'''
 		if not self._parent: print 'fix_pressure() only available if zone associated with fdata() object'; return
@@ -1888,10 +1888,10 @@ class ftrac(object): 						#FEHM chemistry module.
 	def _set_file(self,value): 
 		self._file = value
 		self.on() 	# if set, turn on trac macro
-	file = property(_get_file, _set_file) #: (*str*) Path of auxilliary file containing trac information. PyFEHM will copy the contents of this file into the input file verbatim. Setting this variable will cause PyFEHM to use trac in 'stupid' mode.
+	file = property(_get_file, _set_file) #: (*str*) Path of auxiliary file containing trac information. PyFEHM will copy the contents of this file into the input file verbatim. Setting this variable will cause PyFEHM to use trac in 'stupid' mode.
 	def _get_zonelist(self): return self._zonelist
 	def _set_zonelist(self,value): self._zonelist = value
-	zonelist = property(_get_zonelist, _set_zonelist) #: (*lst[fzone]*) A list of zones to be written before the trac macro, for the situation that trac is used in 'stupid' model, i.e., the file attribute has been set to an auxilliary file.
+	zonelist = property(_get_zonelist, _set_zonelist) #: (*lst[fzone]*) A list of zones to be written before the trac macro, for the situation that trac is used in 'stupid' model, i.e., the file attribute has been set to an auxiliary file.
 class fspecies(object):							# class for species transport model
 	"""Object for each chemical species. The species transport, adsorption, initial concentration and generator
 	properties are assigned in here.
@@ -3907,7 +3907,7 @@ class fdata(object):						#FEHM data file.
 			if not os.path.isfile(self.trac.file):
 				print 'ERROR: cannot find trac file at location '+self.trac.file+'. Aborting...'
 				adsf
-			# open the auxilliary file and write it
+			# open the auxiliary file and write it
 			fp = open(self.trac.file,'rU')
 			lns = fp.readlines()
 			# quality control
@@ -4105,7 +4105,7 @@ class fdata(object):						#FEHM data file.
 		:type rect: lst
 		:param nodelist: List of node objects or indices of zone. Only one of rect or nodelist should be specified (rect will be taken if both given).
 		:type nodelist: lst
-		:param file: Name of auxilliary file for zone
+		:param file: Name of auxiliary file for zone
 		:type file: str
 		:param permeability: Permeability of zone. One float for isotropic, three item list [x,y,z] for anisotropic.
 		:type permeability: fl64, list
@@ -4712,7 +4712,7 @@ class fdata(object):						#FEHM data file.
 			buildWarnings = []
 			
 		return False
-	def temperature_gradient(self,filename,offset=0.,first_zone = 100,auxilliary_file=None,hydrostatic = 0):
+	def temperature_gradient(self,filename,offset=0.,first_zone = 100,auxiliary_file=None,hydrostatic = 0):
 		'''Assign initial temperature distribution to model based on supplied temperature profile.
 		
 		:param filename: Name of a file containing temperature gradient data. File should be two columns, comma or space separated, with elevation in the first column and temperature (degC) in the second.
@@ -4721,8 +4721,8 @@ class fdata(object):						#FEHM data file.
 		:type offset: fl64
 		:param first_zone: Index of first zone created. Zone index will be incremented by 1 thereafter.
 		:type first_zone: int
-		:param auxilliary_file: Name of auxilliary file in which to store **PRES** macros.
-		:type auxilliary_file: str
+		:param auxiliary_file: Name of auxiliary file in which to store **PRES** macros.
+		:type auxiliary_file: str
 		:param hydrostatic: Pressure at top of well profile. PyFEHM will calculate hydrostatic pressures consistent with the temperature profile. If left blank, default pressures will be used.
 		:type hydrostatic: fl64
 		'''
@@ -4768,11 +4768,11 @@ class fdata(object):						#FEHM data file.
 				zn = fzone(index=ind)
 				zn.rect([x0-0.1,y0-0.1,zi-0.1],[x1+0.1,y1+0.1,zi+0.1])
 				self.add(zn)
-				self.add(fmacro('pres',zone=ind,file = auxilliary_file, param=(('pressure',pi),('temperature',ti),('saturation',1))))
+				self.add(fmacro('pres',zone=ind,file = auxiliary_file, param=(('pressure',pi),('temperature',ti),('saturation',1))))
 				ind +=1
 		else:
 			for nd,ti in zip(self.grid.nodelist,np.interp([nd.position[2] for nd in self.grid.nodelist],zt,tt)):
-				self.add(fmacro('pres',zone=(nd.index,nd.index,1),file = auxilliary_file, param=(('pressure',p0),('temperature',ti),('saturation',1))))
+				self.add(fmacro('pres',zone=(nd.index,nd.index,1),file = auxiliary_file, param=(('pressure',p0),('temperature',ti),('saturation',1))))
 ################## ZONE FUNCTIONS
 	def _read_zonn(self,infile,file=''):					#ZONE: Reads ZONE or ZONN macro.
 		block = ['zone\n']
@@ -5511,7 +5511,8 @@ class fdata(object):						#FEHM data file.
 				# if filename does not exist, write file
 				file_nm = file_nm.split(slash)[-1]
 				if not os.path.isfile(self.work_dir+slash+file_nm) or self._writeSubFiles:
-					macrofile = open(self.work_dir+slash+file_nm,'w')
+					if self.work_dir: macrofile = open(self.work_dir+slash+file_nm,'w')
+					else: macrofile = open(file_nm,'w')
 					macros = [macro for macro in self._allMacro[macroName] if macro.file==file_nm]
 					for macro in macros: macro.file = -1
 					self._write_macro(macrofile,macroName)

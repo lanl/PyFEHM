@@ -275,7 +275,6 @@ class fpath(object):
 			self.absolute_to_workdir = wd
 		else:
 			self.absolute_to_workdir = os.getcwd()+slash+wd	
-			
 	def _get_filename(self): return self._filename
 	def _set_filename(self,value): 
 		# ensure path specification consistent with OS
@@ -300,9 +299,7 @@ class fpath(object):
 			self.absolute_to_file = path
 		else:
 			self.absolute_to_file = os.getcwd()+slash+path
-			
 	filename = property(_get_filename, _set_filename) #: (**)
-	
 	def _get_full_path(self): 
 		return self.absolute_to_file+slash+self.filename
 	full_path = property(_get_full_path) #: (**)
