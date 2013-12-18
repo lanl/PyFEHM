@@ -3915,7 +3915,8 @@ class fdata(object):						#FEHM data file.
 				if ln.startswith('trac'): break
 			lns = lns[i:]
 			fp.close()
-			outfile.writeline(lns)
+			outfile.writelines(lns)
+			outfile.write('\n')
 			return
 		outfile.write('trac\n')
 		# group 1
