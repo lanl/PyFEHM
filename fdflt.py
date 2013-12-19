@@ -21,10 +21,31 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General
 Public License for more details.
 """
 
-import os
+import os,platform,pkgutil
 
+WINDOWS = platform.system()=='Windows'
+if WINDOWS: copyStr = 'copy'; delStr = 'del'; slash = '\\'
+else: copyStr = 'cp'; delStr = 'rm'; slash = '/'
+
+from types import*
+
+floatKeys = ['linear_converge_NRmult_G1','quadratic_converge_NRmult_G2','stop_criteria_NRmult_G3',
+	'machine_tolerance_TMCH','overrelaxation_factor_OVERF','newton_cycle_tolerance_EPM',
+	'upstream_weighting_UPWGT','timestep_multiplier_AIAA','min_timestep_DAYMIN','max_timestep_DAYMAX',
+	'initial_timestep_DAY','max_time_TIMS','initial_year_YEAR','initial_month_MONTH','initial_day_INITTIME',
+	'init_solute_conc_ANO','implicit_factor_AWC','tolerance_EPC','upstream_weight_UPWGTA','solute_start_DAYCS',
+	'solute_end_DAYCF','flow_end_DAYHF','flow_start_DAYHS','max_iterations_IACCMX','timestep_multiplier_DAYCM',
+	'initial_timestep_DAYCMM','max_timestep_DAYCMX','print_interval_NPRTTRC','alpha1_A1ADSF',
+	'alpha2_A2ADSF','beta_BETADF']	
+intKeys = ['reduced_dof_IRDOF','reordering_param_ISLORD','IRDOF_param_IBACK','number_SOR_iterations_ICOUPL',
+	'max_machine_time_RNMAX','max_newton_iterations_MAXIT','number_orthogonalizations_NORTH',
+	'max_solver_iterations_MAXSOLVE','JA','JB','JC','order_gauss_elim_NAR',	'max_multiply_iterations_IAMM',			
+	'implicitness_factor_AAW','gravity_direction_AGRAV','geometry_ICNL','stor_file_LDA','max_timestep_NSTEP',
+	'print_interval_IPRTOUT','coupling_NTT','element_integration_INTG','type_IADSF']
+boolKeys = []
+strKeys = ['acceleration_method_ACCM']
 class fdflt(object):
-	def __init__(self):
+	def __init__(self):			
 		# material properties - these values will be assigned as defaults if not otherwise set
 		self.permeability			=	1.e-15
 		self.conductivity			=	2.2
@@ -61,6 +82,7 @@ class fdflt(object):
 		self.full_connectivity 		=	True	
 		self.sleep_time 			= 	1.
 		self.keep_unknown 			= 	True 		# set true if PyFEHM should preserve unknown macros in future output files
+		self.silent 				=	False		# turns off all PyFEHM verbiage
 		
 		# default values for mactro ITER (parameters controlling solver)
 		self.iter = {
@@ -133,10 +155,124 @@ class fdflt(object):
 			'max_timestep_DAYCMX':1000.,
 			'print_interval_NPRTTRC':1.
 			}
-			
 		self.adsorption = {
 			'type_IADSF':None,
 			'alpha1_A1ADSF':None,
 			'alpha2_A2ADSF':None,
 			'beta_BETADF':None
 			}
+			
+		# check to see if rc file exist, update defaults
+		self._check_rc()
+	def _check_rc(self):
+		# check if pyfehmrc file exists		
+		rc_lib = pkgutil.get_loader('fdflt').filename.split(slash)
+		rc_lib = slash.join(rc_lib[:-1])+slash+'pyfehmrc'
+		#rc_lib = os.getcwd()+slash+'pyfehmrc'
+		rc_home = os.path.expanduser('~')+slash+'pyfehmrc'
+		if os.path.isfile(rc_lib): fp = open(rc_lib)
+		elif os.path.isfile(rc_home): fp = open(rc_home)
+		else: return
+		
+		lns = fp.readlines()
+		for ln in lns:
+			ln = ln.split('#')[0]		# strip off the comment
+			if ln.startswith('#'): continue
+			elif ln.strip() == '': continue
+			elif '&' in ln:
+				if len(ln.split('&')) == 2:
+					self._update_attribute(ln)
+				elif len(ln.split('&')) == 3:
+					self._update_dict(ln)
+				else:
+					print 'WARNING: unrecognized pyfehmrc line \''+ln.strip()+'\''
+			else:
+				print 'WARNING: unrecognized pyfehmrc line \''+ln.strip()+'\''
+	def _update_attribute(self,ln):
+		name,value = ln.split('&')
+		name,value = name.strip(), value.strip()
+		
+		attributelist = self.__dict__.keys()
+		
+		if name not in attributelist:
+			print 'ERROR: no attribute \''+name+'\''; return
+			
+		if isinstance(self.__dict__[name],dict):
+			print 'ERROR: \''+name+'\' a dictionary. To set a dictionary value supply the dictionary key in format:'
+			print 'dict_name : dict_key : value'
+			return
+		
+		# translate None string
+		if value in ['','None','none']: value = None
+		
+		if type(self.__dict__[name]) is IntType: 
+			if value is not None: self.__setattr__(name,int(float(value)))
+			else: self.__setattr__(name,None)
+		elif type(self.__dict__[name]) is FloatType: 
+			if value is not None: self.__setattr__(name,float(value))
+			else: self.__setattr__(name,None)
+		elif type(self.__dict__[name]) is StringType: 
+			if value is not None: self.__setattr__(name,value)
+			else:  self.__setattr__(name,None)
+		elif type(self.__dict__[name]) is NoneType: 
+			if value is not None: self.__setattr__(name,value)
+			else: self.__setattr__(name,None)
+		elif type(self.__dict__[name]) is BooleanType: 
+			if value in ['True','1','1.']:
+				self.__setattr__(name,True)
+			elif value in ['False','0.','0'] or value == None:
+				self.__setattr__(name,False)
+			else:
+				print 'ERROR: unrecognized boolean type \''+value+'\''; return
+	def _update_dict(self,ln):
+		name,key,value = ln.split('&')
+		name,key,value = name.strip(), key.strip(), value.strip()
+		
+		dictlist = [k for k in self.__dict__.keys() if type(self.__dict__[k]) is dict]
+		
+		if name not in dictlist:
+			print 'ERROR: no dictionary \''+name+'\''; return
+			
+		keys = self.__dict__[name].keys()
+		if key not in keys:
+			print 'ERROR: no such key \''+key+'\' in dictionary \''+name+'\''; return
+		
+		# translate None string
+		if value in ['','None','none']: value = None
+		
+		if type(self.__dict__[name][key]) is IntType: 
+			if value is not None: self.__dict__[name].__setitem__(key,int(float(value)))
+			else: self.__setattr__(name,None)
+		elif type(self.__dict__[name][key]) is FloatType: 
+			if value is not None: self.__dict__[name].__setitem__(key,float(value))
+			else: self.__setattr__(name,None)
+		elif type(self.__dict__[name][key]) is StringType: 
+			if value is not None: self.__dict__[name].__setitem__(key,value)
+			else:  self.__setattr__(name,None)
+		elif type(self.__dict__[name][key]) is NoneType: 
+			if key in strKeys:
+				if value is not None: self.__dict__[name].__setitem__(key,value)
+				else:  self.__dict__[name].__setitem__(key,None)
+			elif key in intKeys:
+				if value is not None: self.__dict__[name].__setitem__(key,int(float(value)))
+				else:  self.__dict__[name].__setitem__(key,None)
+			elif key in floatKeys:
+				if value is not None: self.__dict__[name].__setitem__(key,float(value))
+				else:  self.__dict__[name].__setitem__(key,None)
+			elif key in boolKeys:
+				if value in ['True','1','1.']:
+					self.__dict__[name].__setitem__(key,True)
+				elif value in ['False','0.','0'] or value == None:
+					self.__dict__[name].__setitem__(key,False)
+			else: self.__setattr__(name,None)
+		elif type(self.__dict__[name][key]) is BooleanType: 
+			if value in ['True','1','1.']:
+				self.__dict__[name].__setitem__(key,True)
+			elif value in ['False','0.','0'] or value == None:
+				self.__dict__[name].__setitem__(key,False)
+			else:
+				print 'ERROR: unrecognized boolean type \''+value+'\''; return
+		
+		
+		
+		
