@@ -167,11 +167,14 @@ class fdflt(object):
 	def _check_rc(self):
 		# check if pyfehmrc file exists		
 		rc_lib = pkgutil.get_loader('fdflt').filename.split(slash)
-		rc_lib = slash.join(rc_lib[:-1])+slash+'pyfehmrc'
-		#rc_lib = os.getcwd()+slash+'pyfehmrc'
-		rc_home = os.path.expanduser('~')+slash+'pyfehmrc'
-		if os.path.isfile(rc_lib): fp = open(rc_lib)
-		elif os.path.isfile(rc_home): fp = open(rc_home)
+		rc_lib1 = slash.join(rc_lib[:-1])+slash+'.pyfehmrc'
+		rc_lib2 = slash.join(rc_lib[:-1])+slash+'pyfehmrc'
+		rc_home1 = os.path.expanduser('~')+slash+'.pyfehmrc'
+		rc_home2 = os.path.expanduser('~')+slash+'pyfehmrc'
+		if os.path.isfile(rc_lib1): fp = open(rc_lib1)
+		elif os.path.isfile(rc_lib2): fp = open(rc_lib2)
+		elif os.path.isfile(rc_home1): fp = open(rc_home1)
+		elif os.path.isfile(rc_home2): fp = open(rc_home2)
 		else: return
 		
 		lns = fp.readlines()
@@ -185,9 +188,9 @@ class fdflt(object):
 				elif len(ln.split('&')) == 3:
 					self._update_dict(ln)
 				else:
-					print 'WARNING: unrecognized pyfehmrc line \''+ln.strip()+'\''
+					print 'WARNING: unrecognized .pyfehmrc line \''+ln.strip()+'\''
 			else:
-				print 'WARNING: unrecognized pyfehmrc line \''+ln.strip()+'\''
+				print 'WARNING: unrecognized .pyfehmrc line \''+ln.strip()+'\''
 	def _update_attribute(self,ln):
 		name,value = ln.split('&')
 		name,value = name.strip(), value.strip()

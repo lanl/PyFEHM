@@ -3,7 +3,7 @@
 # This is a example pyfehm configuration file - it is derived from the 
 # matplotlibrc file. You can find a copy of it on your system in 
 # site-packages/pyfehm/pyfehmrc_example. 
-# For PyFEHM to recognise this file, rename it to pyfehmrc.
+# For PyFEHM to recognise this file, rename it to .pyfehmrc (note the 'dot')
 # PyFEHM will look first in the PyFEHM source directory for this file, and then within
 # your home directory, i.e, HOME (unix/linux like systems) and 
 # C&\Documents and Settings\yourname (win32 systems).
