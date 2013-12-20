@@ -24,11 +24,13 @@ Public License for more details.
 import numpy as np
 from copy import copy, deepcopy
 import os,time,platform,shutil
-from subprocess import Popen
+from subprocess import Popen, PIPE
 from time import sleep
 try:
 	from matplotlib import pyplot as plt
 	from mpl_toolkits.mplot3d import axes3d
+	from matplotlib import cm
+	from matplotlib.pylab import subplots,close
 except ImportError:
 	'placeholder'
 
@@ -4368,7 +4370,7 @@ class fdata(object):						#FEHM data file.
 			self.zone[index]._Pi = Pi
 			self.zone[index]._Ti = Ti
 			self.zone[index]._Si = Si
-	def run(self,input='',grid = '',incon='',exe=dflt.fehm_path,files=dflt.files,verbose = None, until=None,autorestart=0,use_paths=False,write_files_only = False):
+	def run(self,input='',grid = '',incon='',exe=dflt.fehm_path,files=dflt.files,verbose = None, until=None,autorestart=0,use_paths=False,write_files_only = False,diagnostic = False):
 		'''Run an fehm simulation. This command first writes out the input file, *fehmn.files* and this incon file
 		if changes have been made. A command line call is then made to the FEHM executable at the specified path (defaults
 		to *fehm.exe* in the working directory if not specified).
@@ -4391,6 +4393,8 @@ class fdata(object):						#FEHM data file.
 		:type use_paths: bool
 		:param write_files_only: Flag to indicate the PyFEHM should write out input, incon, grid, fehmn.files, etc. but should not execute a simulation.
 		:type write_files_only: bool
+		:param diagnostic: Flag to indicate PyFEHM should flash up a diagnostic window to monitor the simulation.
+		:type diagnostic: bool
 		'''
 		
 		if verbose != None: self._verbose = verbose
@@ -4486,10 +4490,47 @@ class fdata(object):						#FEHM data file.
 		for attempt in range(autorestart+1): 	# restart execution
 			if breakAutorestart: break
 			untilFlag = False
-			#p = Popen(exe)
-			p = Popen(exe_path.full_path)
+			p = Popen(exe_path.full_path,stdout=PIPE)
 			if until is None:
-				p.communicate()
+				if diagnostic:
+					getTimeStep = False
+					plt.clf()
+					fig = plt.figure()
+					plt.ion()
+					#fig,ax = subplots(1,1)
+					ax = plt.axes([0.15,0.15,0.6,0.6])
+					#ax.set_aspect('equal')
+					#ax.set_xlim(0,255)
+					#ax.set_ylim(0,255)
+					ax.set_xlim([0., self.tf])
+					ax.set_ylim([0., self.dtmax])
+					ax.hold(True)
+					fig.canvas.draw()
+					bg = fig.canvas.copy_from_bbox(ax.bbox)
+									
+					dts = [0.]
+					days = [0.]
+					
+					dt_plt = ax.plot(days,dts,'ko-')[0]
+					
+					for line in iter(p.stdout.readline, b''):
+						print line.rstrip() 	# print to screen
+						if getTimeStep:
+							yr, day, dt = line.strip().split()
+							dts.append(float(dt))
+							days.append(float(day))
+													
+							dt_plt.set_data(days,dts)
+							fig.canvas.restore_region(bg)
+							ax.draw_artist(dt_plt)
+							fig.canvas.blit(ax.bbox)
+							
+							getTimeStep = False
+						if line.strip().startswith('Years'):
+							getTimeStep = True
+				else:
+					for line in iter(p.stdout.readline, b''):
+						print line.rstrip() 	# print to screen
 			else:
 				self._running = True
 				interval = 0
