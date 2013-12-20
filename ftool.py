@@ -27,6 +27,10 @@ WINDOWS = platform.system()=='Windows'
 if WINDOWS: slash = '\\'
 else: slash = '/'
 
+from fdflt import*
+
+dflt = fdflt()
+
 # dictionary of unit name, number to multiply by to yield SI measure
 units = dict([
 # flow
@@ -249,7 +253,8 @@ def SI(quantity,unit=None):
 	except KeyError:
 		print unit +' not a valid unit for conversion'
 		return	
-
+def pyfehm_print(s):
+	if not dflt.silent: print s
 #-----------------------------------------------------------------------------------------------------
 #------------------------------ FUNCTIONS AND CLASSES FOR INTERNAL USE -------------------------------
 #-----------------------------------------------------------------------------------------------------

@@ -221,7 +221,6 @@ buildWarnings = []
 def _buildWarnings(s):
 	global buildWarnings
 	buildWarnings.append(s)
-	print s
 def _title_string(s,n): 						#prepends headers to sections of FEHM input file
 	if not n: return
 	ws = '# '
@@ -326,7 +325,9 @@ class fzone(object):						#FEHM zone object.
 			:param file: Name of auxiliary file to save macro.
 			:type file: str
 		'''
-		if not self._parent: print 'fix_temperature() only available if zone associated with fdata() object'; return
+		if not self._parent: 
+			pyfehm_print('fix_temperature() only available if zone associated with fdata() object')
+			return
 		self._parent.add(fmacro('hflx',zone=self,param=(('heat_flow',T),('multiplier',multiplier)),file=file))
 		self._fixedT = T
 	def fix_pressure(self,P, T=30., impedance=1.e6, file = None):
@@ -342,7 +343,9 @@ class fzone(object):						#FEHM zone object.
 			:param file: Name of auxiliary file to save macro.
 			:type file: str
 		'''
-		if not self._parent: print 'fix_pressure() only available if zone associated with fdata() object'; return
+		if not self._parent: 
+			pyfehm_print('fix_pressure() only available if zone associated with fdata() object')
+			return
 		self._parent.add(fmacro('flow',zone=self,param=(('rate',P),('energy',-T),('impedance',impedance)),file=file))
 		self._fixedP = [P,T]
 	def copy_from(self,from_zone=None,grid_new=None,method = 'nearest',grid_old=None):
@@ -359,12 +362,14 @@ class fzone(object):						#FEHM zone object.
 		
 		if not self.index: self.index = from_zone.index
 		
-		if not from_zone: print 'No zone supplied'; return
+		if not from_zone: pyfehm_print('No zone supplied'); return
 		if from_zone.type == 'rect': 		# if rectangular zone, copy across bounding box
 			self.type = 'rect'
 			self.points = from_zone.points
 		else: 								# zone comprises a list of nodes
-			if not from_zone.grid or not from_zone.nodelist: print 'Supplied zone does not contain grid information.'; return
+			if not from_zone.grid or not from_zone.nodelist: 
+				pyfehm_print('Supplied zone does not contain grid information.')
+				return
 			from_nodes = from_zone.nodelist
 			if method == 'nearest':
 				ndinds = np.unique([self.grid.node_nearest_point(nd.position) for nd in from_nodes])
@@ -547,7 +552,9 @@ class fzone(object):						#FEHM zone object.
 		
 		'''	
 		save = os_path(save)
-		if not self.nodelist: print 'No node information, aborting...'; return
+		if not self.nodelist: 
+			pyfehm_print('ERROR: No node information, aborting...')
+			return
 		if not title: 
 			title = 'Topographic plot of zone ' +str(self.index)
 			if self.name: title += ': '+self.name
@@ -562,7 +569,6 @@ class fzone(object):						#FEHM zone object.
 		X,Y = np.meshgrid(xrange,yrange)
 		
 		ZI = np.ones((len(ys),len(xs)))*self._parent.grid.zmin-1
-		#print XI.shape,ZI.shape
 		for nd in self.nodelist:
 			i = np.where(xs==nd.position[0])[0][0]
 			j = np.where(ys==nd.position[1])[0][0]
@@ -626,8 +632,6 @@ class fzone(object):						#FEHM zone object.
 			ws += '  y-range: '+str(ymin)+' - '+str(ymax)+'\n'
 			ws += '  z-range: '+str(zmin)+' - '+str(zmax)+'\n'
 			ws += '  mid-point: ['+str((xmin+xmax)/2.)+', '+str((ymin+ymax)/2.)+', '+str((zmin+zmax)/2.)+']\n'
-			
-			#print ws; return
 		elif self.type == 'list':
 			#ws = 'Zone '+str(self.index)+'\n'
 			#ws+='\nGeometric properties.......\n'
@@ -642,7 +646,6 @@ class fzone(object):						#FEHM zone object.
 				ws+='  points: ['+str(self.points[0][0])+', '+str(self.points[0][1])+', '+str(self.points[0][2])+']\n'			
 				for pt in self.points[1:]:
 					ws+='        ['+str(pt[0])+', '+str(pt[1])+', '+str(pt[2])+']\n'			
-			#print ws; return
 		elif self.type == 'nnum':
 			ws += '  Type: nnum (list of nodes)\n'
 			ws += '  Contains '+str(len(self.nodelist))+' nodes\n'
@@ -693,7 +696,9 @@ class fzone(object):						#FEHM zone object.
 		if self.index == 0: self._nodelist = self._parent.grid.nodelist
 		return self._nodelist
 	def _set_nodes(self,value):
-		if self.type == 'rect': print 'Error: nodelist for zone defined by content of points.'; return
+		if self.type == 'rect': 
+			pyfehm_print('ERROR: nodelist for zone defined by content of points.')
+			return
 		self._nodelist = value
 	nodelist = property(_get_nodes,_set_nodes)	#: (*lst[fnode]*) List of nodes contained within the zone.
 	def _get_node(self): return dict([(nd.index,nd) for nd in self.nodelist])
@@ -713,7 +718,9 @@ class fzone(object):						#FEHM zone object.
 			self._points = pts
 		return self._points		
 	def _set_points(self,value): 
-		if self.type in ['list','nnum']: print 'Error: points defined by content of nodelist.'; return
+		if self.type in ['list','nnum']: 
+			pyfehm_print('ERROR: points defined by content of nodelist.')
+			return
 		self._points = value
 	points = property(_get_points,_set_points)#: (*lst[fl64]*) Spatial data defining the zone.
 	def _get_permeability(self): return self._permeability
@@ -758,7 +765,9 @@ class fzone(object):						#FEHM zone object.
 	def _set_density(self,value): 
 		self._density = value
 		# set commands
-		if not self._parent: print 'Zone not associated with input file, no macro changes made.'; return
+		if not self._parent: 
+			pyfehm_print('Zone not associated with input file, no macro changes made.')
+			return
 		if self.index in self._parent.rock.keys():
 			if self._updateFlag:
 				self._parent.rock[self.index].param['density']=value
@@ -776,7 +785,9 @@ class fzone(object):						#FEHM zone object.
 	def _set_specific_heat(self,value): 
 		self._specific_heat = value
 		# set commands
-		if not self._parent: print 'Zone not associated with input file, no macro changes made.'; return
+		if not self._parent: 
+			pyfehm_print('Zone not associated with input file, no macro changes made.')
+			return
 		if self.index in self._parent.rock.keys():
 			if self._updateFlag:
 				self._parent.rock[self.index].param['specific_heat']=value			
@@ -794,7 +805,9 @@ class fzone(object):						#FEHM zone object.
 	def _set_porosity(self,value): 
 		self._porosity = value
 		# set commands
-		if not self._parent: print 'Zone not associated with input file, no macro changes made.'; return
+		if not self._parent: 
+			pyfehm_print('Zone not associated with input file, no macro changes made.')
+			return
 		if self.index in self._parent.rock.keys():
 			if self._updateFlag:
 				self._parent.rock[self.index].param['porosity']=value
@@ -812,7 +825,9 @@ class fzone(object):						#FEHM zone object.
 	def _set_youngs_modulus(self,value): 
 		self._youngs_modulus = value
 		# set commands
-		if not self._parent: print 'Zone not associated with input file, no macro changes made.'; return
+		if not self._parent: 
+			pyfehm_print('Zone not associated with input file, no macro changes made.')
+			return
 		if self.index in self._parent.elastic.keys():
 			if self._updateFlag:
 				self._parent.elastic[self.index].param['youngs_modulus']=value
@@ -829,7 +844,9 @@ class fzone(object):						#FEHM zone object.
 	def _set_poissons_ratio(self,value): 
 		self._poissons_ratio = value
 		# set commands
-		if not self._parent: print 'Zone not associated with input file, no macro changes made.'; return
+		if not self._parent: 
+			pyfehm_print('Zone not associated with input file, no macro changes made.')
+			return
 		if self.index in self._parent.elastic.keys():
 			if self._updateFlag:
 				self._parent.elastic[self.index].param['poissons_ratio']=value
@@ -846,7 +863,9 @@ class fzone(object):						#FEHM zone object.
 	def _set_thermal_expansion(self,value): 
 		self._thermal_expansion = value
 		# set commands
-		if not self._parent: print 'Zone not associated with input file, no macro changes made.'; return
+		if not self._parent: 
+			pyfehm_print('Zone not associated with input file, no macro changes made.')
+			return
 		if self.index in self._parent.biot.keys():
 			if self._updateFlag:
 				self._parent.biot[self.index].param['thermal_expansion']=value
@@ -880,7 +899,9 @@ class fzone(object):						#FEHM zone object.
 	def _set_Pi(self,value): 
 		self._Pi = value
 		# set commands
-		if not self._parent: print 'Zone not associated with input file, no macro changes made.'; return
+		if not self._parent: 
+			pyfehm_print('Zone not associated with input file, no macro changes made.')
+			return
 		if self.index in self._parent.pres.keys():
 			if self._updateFlag:
 				self._parent.pres[self.index].param['pressure']=value
@@ -903,7 +924,9 @@ class fzone(object):						#FEHM zone object.
 	def _set_Ti(self,value): 
 		self._Ti = value
 		# set commands
-		if not self._parent: print 'Zone not associated with input file, no macro changes made.'; return
+		if not self._parent: 
+			pyfehm_print('Zone not associated with input file, no macro changes made.')
+			return
 		if self.index in self._parent.pres.keys():
 			if self._updateFlag:
 				self._parent.pres[self.index].param['temperature']=value
@@ -926,7 +949,9 @@ class fzone(object):						#FEHM zone object.
 	def _set_Si(self,value): 
 		self._Si = value
 		# set commands
-		if not self._parent: print 'Zone not associated with input file, no macro changes made.'; return
+		if not self._parent: 
+			pyfehm_print('Zone not associated with input file, no macro changes made.')
+			return
 		if self.index in self._parent.pres.keys():
 			if self._updateFlag:
 				self._parent.pres[self.index].param['temperature']=value
@@ -1138,10 +1163,7 @@ class fmodel(object): 						#FEHM model object.
 			self._param = dict([('param'+str(i+1),par[1]) for i,par in enumerate(param)])	
 			return																		
 		elif param.__len__() != len(self._param.keys()): 
-			print param
-			print param.__len__(), len(self._param.keys()) 	
 			return		# return if numbers don't match up
-		
 		if self.index in model_list[self.type].keys():
 			paramDict = model_list[self.type][self.index]
 		else:
@@ -1192,7 +1214,7 @@ class fmodel(object): 						#FEHM model object.
 		if oldtype != type: 
 			param_dicts = model_list[self._type]
 			if self.index not in param_dicts:
-				print 'ERROR: model index not known.'
+				pyfehm_print('ERROR: model index not known.')
 				return
 			self.param = param_dicts[self.index]
 	type = property(_get_type, _set_type) #: (*str*) Name of the macro for this model. Macro names are identical to those invoked in FEHM.
@@ -1348,7 +1370,7 @@ class fincon(object): 						#FEHM restart object.
 			outfile = open(self._path.absolute_to_workdir+slash+self._path.filename,'w')
 		else:
 			outfile = open(self._path.full_path,'w')
-		print 'Writing new INCON file '+inconfilename+'...'
+		pyfehm_print('Writing new INCON file '+inconfilename+'.')
 		# write headers
 		outfile.write('PyFEHM V1.0                      ')
 		import time
@@ -1409,7 +1431,6 @@ class fincon(object): 						#FEHM restart object.
 				if cnt!=0: outfile.write('\n')		
 		outfile.write('no fluxes\n\n')
 		outfile.close()
-		print 'Done!'
 		self._writeOut = False
 	def stressgrad(self,xgrad,ygrad,zgrad,xygrad = 0.,xzgrad=0.,yzgrad=0.,calculate_vertical=False,vertical_fraction=False):
 		'''Construct initial stress state with vertical stress gradients.
@@ -1431,12 +1452,18 @@ class fincon(object): 						#FEHM restart object.
 		:param vertical_fraction: Horizontal stresses calculated as a fraction of the vertical. If true, xgrad and ygrad are interpreted as fractions.
 		:type vertical_fraction: bool
 		'''
-		if not self.filename: print 'ERROR: initial conditions file containing temperature/pressure data not loaded.'; return
-		if not self._parent._associate: print 'ERROR: incon file not associated with parent data file - node and coordinate data not available.'; return
+		if not self.filename: 
+			pyfehm_print('ERROR: initial conditions file containing temperature/pressure data not loaded.')
+			return
+		if not self._parent._associate: 
+			pyfehm_print('ERROR: incon file not associated with parent data file - node and coordinate data not available.')
+			return
 		if vertical_fraction: calculate_vertical = True
 		if calculate_vertical:
-			print 'NOTE: density integration to obtain vertical stress should only be done for orthogonal meshes'
-			if not self._parent._associate: 'ERROR: node property association required to access density data - set associate=True in data file'
+			pyfehm_print('NOTE: density integration to obtain vertical stress should only be done for orthogonal meshes')
+			if not self._parent._associate: 
+				pyfehm_print('ERROR: node property association required to access density data - set associate=True in data file')
+				return
 			xs = np.unique([nd.position[0] for nd in self._parent.grid.nodelist])
 			ys = np.unique([nd.position[1] for nd in self._parent.grid.nodelist])
 			# for each x and y, find the column of z-values corresponding
@@ -1557,12 +1584,12 @@ class fincon(object): 						#FEHM restart object.
 				self._strs_xx = list((np.array(self.strs_yy)+np.array(self.strs_zz))/2)
 	def _summary(self):		
 		L = 62
-		print ''
-		print ' IIII---------------------------------------------------------IIII'
+		s = ['']
+		s.append(' IIII---------------------------------------------------------IIII')
 		line = ' IIII FEHM restart file \''+self.filename+'\' summary.'
 		for i in range(L-len(line)): line += ' '
-		print line+'IIII'
-		print ' IIII---------------------------------------------------------IIII'
+		s.append(line+'IIII')
+		s.append(' IIII---------------------------------------------------------IIII')
 		
 		lines = []
 		lines.append(' IIII Restart parameters:')
@@ -1573,7 +1600,7 @@ class fincon(object): 						#FEHM restart object.
 		for line in lines:
 			if line.startswith(' II'):
 				for i in range(L-len(line)): line += ' '
-				print line+'IIII'
+				s.append(line+'IIII')
 			else:
 				prntStr = ' IIII -'
 				keepGoing = True
@@ -1581,7 +1608,7 @@ class fincon(object): 						#FEHM restart object.
 				while keepGoing:
 					if not line: 
 						for i in range(L-len(prntStr)): prntStr += ' '
-						print prntStr+'IIII'
+						s.append(prntStr+'IIII')
 						prntStr = ' IIII '
 						break
 					if len(prntStr)<(L-len(line[0])): 
@@ -1589,10 +1616,12 @@ class fincon(object): 						#FEHM restart object.
 						line = line[1:]
 					else:
 						for i in range(L-len(prntStr)): prntStr += ' '
-						print prntStr+'IIII'
+						s.append(prntStr+'IIII')
 						prntStr = ' IIII   '
-		print ' IIII---------------------------------------------------------IIII'
-		print ''
+		s.append(' IIII---------------------------------------------------------IIII')
+		s.append('')
+		s = '\n'.join(s)
+		pyfehm_print(s)
 	def _get_filename(self): return self._path.filename
 	filename = property(_get_filename)	#: (*str*) Name of restart file (initial conditions)
 	def _get_time(self): return self._time
@@ -1903,7 +1932,9 @@ class fspecies(object):							# class for species transport model
 		
 		self._adsorption_model = adsorption_model
 		if adsorption:
-			if len(adsorption) != 3: print 'ERROR: expecting three adsorption parameters'; return
+			if len(adsorption) != 3: 
+				pyfehm_print('ERROR: expecting three adsorption parameters')
+				return
 			self._adsorption = adsorption
 		self._diffusion_model = diffusion_model
 		self._dispersion = dispersion
@@ -2345,25 +2376,33 @@ class frlpm_table(object):						# different object for specifying tables
 		vars = ['water','h2o_liquid','air','h2o_gas','vapor','co2_gas','co2_liquid','co2_sc']
 		if phase1:
 			if phase1[0] not in vars: 
-				print 'ERROR: first entry of phase1 must be one of ',vars; return
+				pyfehm_print('ERROR: first entry of phase1 must be one of '+str(vars))
+				return
 			if not self._saturation:
-				print 'ERROR: no saturation data supplied'; return
+				pyfehm_print('ERROR: no saturation data supplied')
+				return
 			if len(phase1[1]) != len(self._saturation):
-				print 'ERROR: length of supplied phase1 relperm vector does not match saturation data'; return
+				pyfehm_print('ERROR: length of supplied phase1 relperm vector does not match saturation data')
+				return
 			self._phase1 = phase1
 		if phase2:
 			if phase2[0] not in vars: 
-				print 'ERROR: first entry of phase2 must be one of ',vars; return
+				pyfehm_print('ERROR: first entry of phase2 must be one of '+str(vars))
+				return
 			if not self._saturation:
-				print 'ERROR: no saturation data supplied'; return
+				pyfehm_print('ERROR: no saturation data supplied')
+				return
 			if len(phase1[1]) != len(self._saturation):
-				print 'ERROR: length of supplied phase2 relperm vector does not match saturation data'; return
+				pyfehm_print('ERROR: length of supplied phase2 relperm vector does not match saturation data')
+				return
 			self._phase2 = phase2
 		if capillary:
 			if not self._saturation:
-				print 'ERROR: no saturation data supplied'; return
+				pyfehm_print('ERROR: no saturation data supplied')
+				return
 			if len(capillary) != len(self._saturation):
-				print 'ERROR: length of supplied capillary vector does not match saturation data'; return
+				pyfehm_print('ERROR: length of supplied capillary vector does not match saturation data')
+				return
 			self._capillary = capillary		
 		self._parent = None	
 	def _get_zone(self): return self._zone
@@ -2683,7 +2722,8 @@ class fdata(object):						#FEHM data file.
 			self.read(full_connectivity=full_connectivity,skip=skip)
 		
 		else:
-			print 'ERROR: file configuration not recognized'; return
+			pyfehm_print('ERROR: file configuration not recognized')
+			return
 	def __repr__(self): 
 		if self.filename == None:
 			return 'empty object'
@@ -2722,7 +2762,7 @@ class fdata(object):						#FEHM data file.
 			self.files.incon = self.incon._path.full_path
 			self.files._use_incon = True
 			if len(self.incon.P) != self.grid.number_nodes: 
-				print 'ERROR: grid and incon files contain different numbers of nodes'
+				pyfehm_print('ERROR: grid and incon files contain different numbers of nodes')
 				self.incon = fincon() 	# empty incon
 				self.files.incon = ''	
 				self.files._use_incon = False
@@ -2730,7 +2770,7 @@ class fdata(object):						#FEHM data file.
 		
 		self.files.input = self._path.full_path
 			
-		print 'reading input file'
+		pyfehm_print('reading input file')
 		#infile = open(filename,'r')
 		infile = open(self._path.full_path,'r')
 		read_fn=dict(zip(fdata_sections,
@@ -2759,7 +2799,7 @@ class fdata(object):						#FEHM data file.
 		while more:
 			keyword=line[0:4].strip()
 			if keyword in fdata_sections and keyword not in skip:
-				print 'reading '+keyword
+				pyfehm_print('reading '+keyword)
 				fn=read_fn[keyword]
 				if keyword in macro_list.keys():
 					self._read_macro(infile,keyword)
@@ -2778,7 +2818,7 @@ class fdata(object):						#FEHM data file.
 				precedingKey = keyword
 			elif keyword[0:3] in fdata_sections and keyword not in skip:
 				keyword = keyword[0:3]
-				print 'reading '+keyword
+				pyfehm_print('reading '+keyword)
 				fn=read_fn[keyword]
 				fn(infile)
 				self._sections.append(keyword)
@@ -2958,7 +2998,7 @@ class fdata(object):						#FEHM data file.
 			self.add(zn,overwrite=True)
 			
 		else:
-			print 'Unrecognized grid dimensionality'
+			pyfehm_print('ERROR: Unrecognized grid dimensionality')
 	def _associate_incon(self):							#Associates initial condition data with nodes
 		if not self._associate: return
 		names = ('T','P','S','S_co2l','S_co2g','co2aq')
@@ -3037,7 +3077,7 @@ class fdata(object):						#FEHM data file.
 					fn0 = ''
 					for fn in fname[:-1]: fn0 += fn
 					if not os.path.isfile(fn0+slash+line):
-						print 'ERROR: cannot find macro file '+line
+						pyfehm_print('ERROR: cannot find macro file '+line)
 					else:
 						macrofile = open(fn0+slash+line)
 						line = macrofile.readline().strip()
@@ -3887,7 +3927,6 @@ class fdata(object):						#FEHM data file.
 			while keepReading:
 				line=infile.readline().strip()
 				if not line: break
-				print nums
 				self.trac.specieslist[-1].add_tracer_generator(zone=self._macro_zone(nums),
 					injection_concentration=float(nums[3]),time_start=float(nums[4]),time_end=float(nums[5]))
 			line=infile.readline().strip()
@@ -3905,7 +3944,7 @@ class fdata(object):						#FEHM data file.
 			self._write_zonn_one(outfile,list(set(zns)))
 		if self.trac.file: 				# write trac in stupid mode
 			if not os.path.isfile(self.trac.file):
-				print 'ERROR: cannot find trac file at location '+self.trac.file+'. Aborting...'
+				pyfehm_print('ERROR: cannot find trac file at location '+self.trac.file+'. Aborting...')
 				adsf
 			# open the auxiliary file and write it
 			fp = open(self.trac.file,'rU')
@@ -4137,7 +4176,7 @@ class fdata(object):						#FEHM data file.
 		
 		# if neither rect nor nodelist specified, not enough information to create the zone
 		if not rect and not nodelist:
-			print 'ERROR: either rect or nodelist must be specified'
+			pyfehm_print('ERROR: either rect or nodelist must be specified')
 			return
 		# if both rect and nodelist are specified, proceed with rect, print warning
 		if rect and nodelist:
@@ -4173,7 +4212,7 @@ class fdata(object):						#FEHM data file.
 		# add permeability property macros
 		if permeability:
 			if not (isinstance(permeability,(int,float)) or (isinstance(permeability,list) and len(permeability) == 3)):
-				print 'ERROR: permeability must be a single float (isotropic) or three item list ([x,y,z] anisotropic'
+				pyfehm_print('ERROR: permeability must be a single float (isotropic) or three item list ([x,y,z] anisotropic')
 				return
 			# unpack values
 			if isinstance(permeability,(int,float)):
@@ -4192,7 +4231,7 @@ class fdata(object):						#FEHM data file.
 		# add conductivity property macros
 		if conductivity:
 			if not (isinstance(conductivity,(int,float)) or (isinstance(conductivity,list) and len(conductivity) == 3)):
-				print 'ERROR: conductivity must be a single float (isotropic) or three item list ([x,y,z] anisotropic'
+				pyfehm_print('ERROR: conductivity must be a single float (isotropic) or three item list ([x,y,z] anisotropic')
 				return
 			# unpack values
 			if isinstance(conductivity,(int,float)):
@@ -4294,7 +4333,7 @@ class fdata(object):						#FEHM data file.
 				
 			elif Si and Ti and not Pi:
 				Pi = sat(Ti)[0]
-				print 'NOTE: For supplied saturation '+str(Si)+' and temperature '+str(Ti)+', saturation pressure of '+str(Pi)+' will be used.'
+				pyfehm_print('NOTE: For supplied saturation '+str(Si)+' and temperature '+str(Ti)+', saturation pressure of '+str(Pi)+' will be used.')
 				
 				ti = Si
 				si = 2
@@ -4361,7 +4400,7 @@ class fdata(object):						#FEHM data file.
 		exe_path.filename = exe
 		
 		if not os.path.isfile(exe_path.full_path): 	# if can't find the executable, halt
-			print 'ERROR: No executable at location '+exe
+			pyfehm_print('ERROR: No executable at location '+exe)
 			return
 		
 		tempRstoFlag = False
@@ -4390,7 +4429,7 @@ class fdata(object):						#FEHM data file.
 		else: wd = os.getcwd() + slash
 		returnFlag = self.write(wd+self._path.filename) 				# ALWAYS write input file
 		if not returnFlag: 
-			print 'ERROR: writing files'
+			pyfehm_print('ERROR: writing files')
 			return
 		self.files.input = self._path.filename
 		# 1. Copy everything to working directory 
@@ -4408,7 +4447,7 @@ class fdata(object):						#FEHM data file.
 						shutil.copy(temp_path.full_path,wd+temp_path.filename)
 					except: pass
 				else:
-					print 'ERROR: cant find stor file at '+temp_path.full_path
+					pyfehm_print('ERROR: cant find stor file at '+temp_path.full_path)
 					return
 		else:	
 			self.files.grid = self.grid._path.full_path
@@ -4569,12 +4608,12 @@ class fdata(object):						#FEHM data file.
 			p = Popen(exe+' -o '+wd+slash+self._vtk.path.filename,shell=(not WINDOWS))		
 	def _summary(self):		
 		L = 62
-		print ''
-		print ' ****---------------------------------------------------------****'
+		s = ['']
+		s.append(' ****---------------------------------------------------------****')
 		line = ' **** FEHM input file \''+self.filename+'\' summary.'
 		for i in range(L-len(line)): line += ' '
-		print line+'****'
-		print ' ****---------------------------------------------------------****'
+		s.append(line+'****')
+		s.append(' ****---------------------------------------------------------****')
 		
 		lines = []
 		lines.append(' **** Zones:')
@@ -4584,7 +4623,7 @@ class fdata(object):						#FEHM data file.
 		for line in lines:
 			if line.startswith(' **'):
 				for i in range(L-len(line)): line += ' '
-				print line+'****'
+				s.append(line+'****')
 			else:
 				prntStr = ' **** -'
 				keepGoing = True
@@ -4592,7 +4631,7 @@ class fdata(object):						#FEHM data file.
 				while keepGoing:
 					if not line: 
 						for i in range(L-len(prntStr)): prntStr += ' '
-						print prntStr+'****'
+						s.append(prntStr+'****')
 						prntStr = ' **** '
 						break
 					if len(prntStr)<(L-len(line[0])): 
@@ -4600,10 +4639,12 @@ class fdata(object):						#FEHM data file.
 						line = line[1:]
 					else:
 						for i in range(L-len(prntStr)): prntStr += ' '
-						print prntStr+'****'
+						s.append(prntStr+'****')
 						prntStr = ' ****   '
-		print ' ****---------------------------------------------------------****'
-		print ''
+		s.append(' ****---------------------------------------------------------****')
+		s.append('')
+		s = '\n'.join(s)
+		pyfehm_print(s)
 	def _write_prep(self):						#Determine if data object fit for writing
 		global buildWarnings
 		# WARNING: if cont output specifies pressure, but not state, then no pressure data will be written
@@ -4643,7 +4684,7 @@ class fdata(object):						#FEHM data file.
 		if self.co2preslist:
 			for m in self.co2preslist:
 				if m.param['pressure'] == 0:
-					print checkWarnings.append('Zero pressure  in CO2PRES can cause instability.')
+					checkWarnings.append('Zero pressure  in CO2PRES can cause instability.')
 					break
 		# WARNING: if stress gradients have been specified and bodyforce applied
 		if self.incon._stressgradCalled and self.strs.bodyforce:
@@ -4705,12 +4746,9 @@ class fdata(object):						#FEHM data file.
 			else: fp = open('pyfehm.err','w')
 			fp.write(s)
 			fp.close()
-			print ''
-			print s
-			print ''
+			pyfehm_print(s)
 			checkWarnings = []
 			buildWarnings = []
-			
 		return False
 	def temperature_gradient(self,filename,offset=0.,first_zone = 100,auxiliary_file=None,hydrostatic = 0):
 		'''Assign initial temperature distribution to model based on supplied temperature profile.
@@ -4727,7 +4765,9 @@ class fdata(object):						#FEHM data file.
 		:type hydrostatic: fl64
 		'''
 		# check if file exists
-		if not os.path.isfile(filename): print 'ERROR: cannot find temperature gradient file \''+filename+'\'.'; return
+		if not os.path.isfile(filename): 
+			pyfehm_print('ERROR: cannot find temperature gradient file \''+filename+'\'.')
+			return
 		# determine uniqueness of z-coords - if less than 100, use zones, if more than 100, use nodes.
 		z = np.unique([nd.position[2] for nd in self.grid.nodelist])
 		if len(z) <= 100: zoneFlag = True
@@ -4739,7 +4779,9 @@ class fdata(object):						#FEHM data file.
 		commaFlag = False; spaceFlag = False
 		if len(ln.split(',')) > 1: commaFlag = True
 		elif len(ln.split()) > 1: spaceFlag = True
-		if not commaFlag and not spaceFlag: print 'ERROR: incorrect formatting for \''+filename+'\'. Expect first column depth (m) and second column temperature (degC), either comma or space separated.'; return
+		if not commaFlag and not spaceFlag: 
+			pyfehm_print('ERROR: incorrect formatting for \''+filename+'\'. Expect first column depth (m) and second column temperature (degC), either comma or space separated.')
+			return
 		if commaFlag: tempdat = np.loadtxt(filename,delimiter=',')
 		else: tempdat = np.loadtxt(filename)
 		zt = tempdat[:,0]; tt = tempdat[:,1]
@@ -4942,7 +4984,10 @@ class fdata(object):						#FEHM data file.
 				outfile.write(file_nm+'\n')		
 				# if filename does not exist, write file
 				if not os.path.isfile(self.work_dir+slash+file_nm) or self._writeSubFiles:
-					zonefile = open(self.work_dir+slash+file_nm,'w')
+					if self.work_dir:
+						zonefile = open(self.work_dir+slash+file_nm,'w')
+					else:
+						zonefile = open(file_nm,'w')
 					zns = [zn for zn in self.zonelist if zn.file==file_nm]
 					for zn in zns: zn.file = ''
 					self._write_zonn_one(zonefile,zns)
@@ -4999,7 +5044,7 @@ class fdata(object):						#FEHM data file.
 			if obj.zone in self._zone_indices: 
 				obj.zone = self.zone[obj.zone]
 			else:
-				print 'Error: zone ' + str(obj.zone) + ' does not exist.'
+				pyfehm_print('Error: zone ' + str(obj.zone) + ' does not exist.')
 				return 		
 		return obj
 	def _get_info(self): 										#Prints out information about the data file
@@ -5247,7 +5292,7 @@ class fdata(object):						#FEHM data file.
 					fn0 = ''
 					for fn in fname[:-1]: fn0 += fn
 					if not os.path.isfile(fn0+slash+line):
-						print 'ERROR: cannot find macro file '+line
+						pyfehm_print('ERROR: cannot find macro file '+line)
 					else:
 						macrofile = open(fn0+slash+line)
 						line = macrofile.readline().strip()
@@ -5265,7 +5310,7 @@ class fdata(object):						#FEHM data file.
 		elif isinstance(macro.zone,tuple): macro.zone = tuple([int(ls) for ls in macro.zone])
 		elif isinstance(macro.zone,(int,str)):
 			if macro.zone in self.zone.keys(): macro.zone = self.zone[macro.zone]
-			else: print 'ERROR: Specified zone '+str(ind)+' for macro '+macro.type+' does not exist.'
+			else: pyfehm_print('ERROR: Specified zone '+str(ind)+' for macro '+macro.type+' does not exist.')
 		
 		# check if macro already exists
 		exclusions = ['grad','stressboun']
@@ -5374,7 +5419,7 @@ class fdata(object):						#FEHM data file.
 		if (nums[0] == '1' and nums[1] == '0' and nums[2] == '0') or (int(float(nums[0]))<0):
 			k = _zone_ind(float(nums[0]))
 			if k in self.zone.keys(): return self.zone[k]
-			else: print 'ERROR: zone '+str(k)+' has not been defined'; return None
+			else: pyfehm_print('ERROR: zone '+str(k)+' has not been defined'); return None
 		else:
 			return (int(float(nums[0])),int(float(nums[1])),int(float(nums[2])))
 	def _write_macro(self,outfile,macroName):					#Writes macro dictionary to output file
@@ -5623,14 +5668,19 @@ class fdata(object):						#FEHM data file.
 		if isinstance(model.zonelist,list) and len(model.zonelist)==0: model.zonelist = [self.zone[0]] 	# assign everywhere zone
 		elif isinstance(model.zonelist,tuple): model.zonelist = [tuple([int(ls) for ls in model.zonelist])]
 		elif isinstance(model.zonelist,(int,str)):
-			if model.zonelist in self.zone.keys(): model.zonelist = [self.zone[model.zonelist]]
-			else: print 'ERROR: Specified zone '+str(model.zonelist)+' for model '+model.type+' does not exist.'
+			if model.zonelist in self.zone.keys(): 
+				model.zonelist = [self.zone[model.zonelist]]
+			else: 
+				pyfehm_print('ERROR: Specified zone '+str(model.zonelist)+' for model '+model.type+' does not exist.')
+				return
 		elif isinstance(model.zonelist,fzone): model.zonelist = [model.zonelist]
 		newlist = []
 		for zn in model.zonelist:
 			if isinstance(zn,(tuple,fzone)): newlist.append(zn)
 			elif zn in self.zone.keys(): newlist.append(self.zone[zn])
-			else: print 'ERROR: Specified zone '+str(zn)+' for model '+model.type+' does not exist.'
+			else: 
+				pyfehm_print('ERROR: Specified zone '+str(zn)+' for model '+model.type+' does not exist.')
+				return
 		model.zonelist = newlist
 		self._allModel[model.type].append(model)
 		self._allModel[model.type].sort(key=lambda x: x.index)
@@ -5837,7 +5887,7 @@ class fdata(object):						#FEHM data file.
 	inconfilename = property(_get_inconfilename, _set_inconfilename) #: (*str*) File name of FEHM restart file.
 	def _get_verbose(self): return self._verbose
 	def _set_verbose(self,value): 
-		if not(isinstance(value,bool) or value in [0,1]): print 'Boolean values only'; return
+		if not(isinstance(value,bool) or value in [0,1]): pyfehm_print('Boolean values only'); return
 		if isinstance(value,int):
 			if value == 1: value = True
 			elif value == 0: value = False
@@ -5900,7 +5950,7 @@ class fdata(object):						#FEHM data file.
 	def _set_tf(self,value): 
 		self._tf = value
 		self.time['max_time_TIMS'] = value
-		print 'Maximum simulation time set to '+str(value)+' days.'
+		pyfehm_print('Maximum simulation time set to '+str(value)+' days.')
 	tf = property(_get_tf, _set_tf) #: (*fl64*) Final simulation time (shortcut).
 	def _get_ti(self): return self._ti
 	def _set_ti(self,value): 
@@ -5908,38 +5958,38 @@ class fdata(object):						#FEHM data file.
 		self.time['initial_day_INITTIME'] = value
 		self.time['initial_year_YEAR']=0.
 		self.time['initial_month_MONTH']=0.
-		print 'Initial simulation time set to '+str(value)+ 'days.'
+		pyfehm_print('Initial simulation time set to '+str(value)+ 'days.')
 	ti = property(_get_ti, _set_ti) #: (*fl64*) Initial simulation time (shortcut), defaults to zero.
 	def _get_dti(self): return self._dti
 	def _set_dti(self,value): 
 		self._dti = value
 		self.time['initial_timestep_DAY'] = value
-		print 'Initial time step size set to '+str(value)+' days.'
+		pyfehm_print('Initial time step size set to '+str(value)+' days.')
 	dti = property(_get_dti, _set_dti) #: (*fl64*) Initial time step size (shortcut).
 	def _get_dtmin(self): return self._dtmin
 	def _set_dtmin(self,value): 
 		self._dtmin = value
 		self.ctrl['min_timestep_DAYMIN'] = value
-		print 'Minimum time step size set to '+str(value)+' days.'
+		pyfehm_print('Minimum time step size set to '+str(value)+' days.')
 	dtmin = property(_get_dtmin, _set_dtmin) #: (*fl64*) Minimum time step size (shortcut).
 	def _get_dtmax(self): return self._dtmax
 	def _set_dtmax(self,value): 
 		self._dtmax = value
 		self.ctrl['max_timestep_DAYMAX'] = value
-		print 'Maximum time step size set to '+str(value)+' days.'
+		pyfehm_print('Maximum time step size set to '+str(value)+' days.')
 	dtmax = property(_get_dtmax, _set_dtmax) #: (*fl64*) Maximum time step size (shortcut).
 	def _get_dtn(self): return self._dtn
 	def _set_dtn(self,value): 
 		value = int(value)
 		self._dtn = value
 		self.time['max_timestep_NSTEP'] = value
-		print 'Maximum time step number set to '+str(value)+'.'
+		pyfehm_print('Maximum time step number set to '+str(value)+'.')
 	dtn = property(_get_dtn, _set_dtn) #: (*int*) Maximum number of time steps (shortcut).
 	def _get_dtx(self): return self._dtx
 	def _set_dtx(self,value): 
 		self._dtx = value
 		self.ctrl['timestep_multiplier_AIAA'] = value
-		print 'Time step multiplier set to '+str(value)+'.'
+		pyfehm_print('Time step multiplier set to '+str(value)+'.')
 	dtx = property(_get_dtx, _set_dtx) #: (*fl64*) Time step multiplier, acceleration (shortcut).
 	def _get_help(self): return self._help
 	def _set_help(self,value): self._help = value
