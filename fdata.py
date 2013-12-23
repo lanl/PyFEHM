@@ -26,8 +26,15 @@ from copy import copy, deepcopy
 import os,time,platform,shutil
 from subprocess import Popen, PIPE
 from time import sleep
+import Tkinter as tk
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+
+try: import ctypes; has_ctypes = True
+except: has_ctypes = False
+
 try:
 	from matplotlib import pyplot as plt
+	#plt.ion()
 	from mpl_toolkits.mplot3d import axes3d
 	from matplotlib import cm
 	from matplotlib.pylab import subplots,close
@@ -2610,7 +2617,7 @@ class fdata(object):						#FEHM data file.
 			'_bounlist','_cont','_ctrl','_grid','_incon','_hist','_iter','_nfinv','_nobr','_vapl','_adif','_rlpmlist','_sol',
 			'_time','text','_times','_zonelist','_writeSubFiles','_strs','_ngas','_carb','_trac','_files','_verbose',
 			'_tf','_ti','_dti','_dtmin','_dtmax','_dtn','_dtx','_sections','_help','_running','_unparsed_blocks','keep_unknown','_flxo',
-			'_output_times','_path','_vtk']
+			'_output_times','_path','_vtk','_diagnostic']
 	def __init__(self,filename='',gridfilename='',inconfilename='',sticky_zones=dflt.sticky_zones,associate=dflt.associate,work_dir = None,
 		full_connectivity=dflt.full_connectivity,skip=[],keep_unknown=dflt.keep_unknown):		#Initialise data file
 		from copy import copy
@@ -2652,6 +2659,7 @@ class fdata(object):						#FEHM data file.
 		self._files = files() 				
 		self._vtk = None
 		self._files._parent = self
+		self._diagnostic = fdiagnostic(parent=self)
 		self._verbose = True
 		self._running = False 		# boolean indicating whether a simulation is in progress
 		self._unparsed_blocks = {}
@@ -4493,41 +4501,9 @@ class fdata(object):						#FEHM data file.
 			p = Popen(exe_path.full_path,stdout=PIPE)
 			if until is None:
 				if diagnostic:
-					getTimeStep = False
-					plt.clf()
-					fig = plt.figure()
-					plt.ion()
-					#fig,ax = subplots(1,1)
-					ax = plt.axes([0.15,0.15,0.6,0.6])
-					#ax.set_aspect('equal')
-					#ax.set_xlim(0,255)
-					#ax.set_ylim(0,255)
-					ax.set_xlim([0., self.tf])
-					ax.set_ylim([0., self.dtmax])
-					ax.hold(True)
-					fig.canvas.draw()
-					bg = fig.canvas.copy_from_bbox(ax.bbox)
-									
-					dts = [0.]
-					days = [0.]
-					
-					dt_plt = ax.plot(days,dts,'ko-')[0]
-					
-					for line in iter(p.stdout.readline, b''):
-						print line.rstrip() 	# print to screen
-						if getTimeStep:
-							yr, day, dt = line.strip().split()
-							dts.append(float(dt))
-							days.append(float(day))
-													
-							dt_plt.set_data(days,dts)
-							fig.canvas.restore_region(bg)
-							ax.draw_artist(dt_plt)
-							fig.canvas.blit(ax.bbox)
-							
-							getTimeStep = False
-						if line.strip().startswith('Years'):
-							getTimeStep = True
+					self._diagnostic.stdout = p.stdout
+					self._diagnostic.poll = p.poll
+					self._diagnostic.construct_viewer() 			# construct the diagnosis window					
 				else:
 					for line in iter(p.stdout.readline, b''):
 						print line.rstrip() 	# print to screen
@@ -6049,3 +6025,347 @@ class fdata(object):						#FEHM data file.
 		if np.max(self._output_times)>self.tf:
 			_buildWarnings('WARNING: output requested for times after the simulation end time.')
 	output_times = property(_get_output_times, _set_output_times) #: (*lst*) List of times at which FEHM should produce output.
+class fdiagnostic(object):
+	"""Class for FEHM real-time diagnosis 
+	
+	"""		
+	def __init__(self,parent):
+		self.parent = parent
+		self.time_step = [0.]
+		self.time = [0.]
+		
+		self.total_mass = []
+		self.mass_bg = None
+		self.masslim = [0.,1.]
+		self.total_enthalpy = []
+		self.engy_bg = None
+		self.engylim = [0.,1.]
+		
+		self.mass_input_rate = []
+		self.mass_output_rate = []
+		
+		self.enthalpy_input_rate = []
+		self.enthalpy_output_rate = []
+		
+		self.mass_error = []
+		self.energy_error = []
+		
+		self.R1 = []
+		self.R2 = []
+		self.R3 = []
+		
+		self.R1_nd = []
+		self.R2_nd = []
+		self.R3_nd = []
+		
+		self.rel_frame = 20.		# maintain frame at 20x current size
+	def split_line(self,line):
+		""" Splits a line from command output stream, returns list of string or floats.
+		"""
+		ln = line.rstrip().split()
+		ln2 = []
+		for lni in ln:
+			try: ln2.append(float(lni))
+			except: ln2.append(lni)
+		if len(ln2) == 0: return None
+		
+		return ln2
+	def parse_line(self):
+		line = self.stdout.readline()
+		if not line and self.poll() is not None: return
+		print line.rstrip() 
+		ln = self.split_line(line)
+		if ln is not None:
+			if self.update_timestep(ln): pass
+			elif self.update_mass(ln): pass
+			elif self.update_engy(ln): pass
+			elif self.update_mass_input(ln): pass
+			elif self.update_mass_output(ln): pass
+			elif self.update_enthalpy_input(ln): pass
+			elif self.update_enthalpy_output(ln): pass
+			elif self.update_errors(ln): pass			
+			elif self.update_residuals(ln): pass			
+		self.root.after(0,self.parse_line)
+	def handler(self):
+		self.stdout = None
+		self.poll = None
+		self.root.quit()
+	def construct_viewer(self):
+		""" Assembles axes on the screen.
+		"""
+		# create figure window
+		self.root = tk.Tk()
+		self.root.wm_title('PyFEHM diagnostic window: '+self.parent.filename)
+		self.root.protocol('WM_DELETE_WINDOW', self.handler)
+		#plt.ion()
+		if has_ctypes:
+			user32 = ctypes.windll.user32
+			screensize = np.array([user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)])
+			self.fig = plt.figure(figsize = screensize/120.,dpi = 100)
+			mng = plt.get_current_fig_manager()
+			mng.window.wm_geometry('+%04i+%04i'%(screensize[0]/20.,screensize[1]/20.))
+		else:
+			self.fig = plt.figure()
+
+		x1,x2 = 0.1, 0.5
+		y1,y2,y3 = 0.1,0.4,0.7
+		dx = 0.35
+		dy = 0.25
+		
+		text_size = 9
+		self.axs = []
+		self.plts = []
+		
+		self.tlim = np.min([self.parent.dti*self.rel_frame,self.parent.tf])
+		self.dtlim = np.min([self.parent.dti*self.rel_frame,self.parent.dtmax])
+		
+		# create time axes
+		self.time_ax = plt.axes([x1,y3,dx,dy])
+		self.time_ax.set_xlim([0., self.tlim])
+		self.time_ax.set_ylim([0., self.dtlim])
+		self.time_ax.hold(True)
+		self.time_ax.set_xlabel('time / days',size = text_size)
+		self.time_ax.set_ylabel('time step / days',size = text_size)
+		self.axs.append(self.time_ax)
+		
+		# create conservation axes
+		self.mass_ax = plt.axes([x1,y2,dx,dy])
+		self.mass_ax.set_xlim([0., self.tlim])
+		self.mass_ax.set_ylim(self.masslim)
+		self.mass_ax.hold(True)
+		self.mass_ax.set_xlabel('time / days',size = text_size)
+		self.mass_ax.set_ylabel('Net water discharge / kg',size = text_size)
+		self.axs.append(self.mass_ax)
+		
+		self.engy_ax = self.mass_ax.twinx()
+		self.engy_ax.set_xlim([0., self.tlim])
+		self.engy_ax.set_ylim(self.engylim)
+		self.engy_ax.set_ylabel('Net energy discharge / MJ',size = text_size, color='r')
+		self.engy_ax.hold(True)
+		for t in self.engy_ax.get_yticklabels(): t.set_color('r')
+		self.axs.append(self.engy_ax)
+		
+		# create nodal output axes 1
+		self.nd00_ax = plt.axes([x1,y1,dx,dy])
+		self.nd00_ax.set_xlim([0., self.tlim])
+		self.nd00_ax.set_ylim([0., 1.])
+		self.nd00_ax.hold(True)
+		self.nd00_ax.set_xlabel('time / days',size = text_size)
+		self.axs.append(self.nd00_ax)
+		
+		self.nd01_ax = self.nd00_ax.twinx()
+		self.nd01_ax.set_xlim([0., self.tlim])
+		self.nd01_ax.set_ylim([0., 1.])
+		self.nd01_ax.hold(True)
+		self.axs.append(self.nd01_ax)
+		
+		# create nodal output axes 2
+		self.nd10_ax = plt.axes([x2,y1,dx,dy])
+		self.nd10_ax.set_xlim([0., self.tlim])
+		self.nd10_ax.set_ylim([0., 1.])
+		self.nd10_ax.hold(True)
+		self.nd10_ax.set_xlabel('time / days',size = text_size)
+		self.axs.append(self.nd10_ax)
+		
+		self.nd11_ax = self.nd10_ax.twinx()
+		self.nd11_ax.set_xlim([0., self.tlim])
+		self.nd11_ax.set_ylim([0., 1.])
+		self.nd11_ax.hold(True)
+		self.axs.append(self.nd11_ax)
+		
+		for ax in self.axs:
+			for t in ax.get_yticklabels(): t.set_fontsize(text_size)
+			for t in ax.get_xticklabels(): t.set_fontsize(text_size)
+		
+		self.canvas = FigureCanvasTkAgg(self.fig,master = self.root)
+		self.canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+		self.canvas.show()
+		
+		self.time_bg = self.fig.canvas.copy_from_bbox(self.time_ax.bbox)
+		self.time_plot = self.time_ax.plot(self.time,self.time_step,'ko-',ms = 3)[0]
+		self.plts.append(self.time_plot)
+		
+		self.root.after(0,self.parse_line)
+		self.root.mainloop()
+	def redraw_tlim(self):	
+		""" Redraw all horizontal axes when simulation time exceeds limit. """
+		self.tlim = np.min([self.time[-1]*self.rel_frame,self.parent.tf])
+		for ax in self.axs:
+			ax.set_xlim([0., self.tlim])
+		self.fig.canvas.draw()
+		self.time_bg = self.fig.canvas.copy_from_bbox(self.time_ax.bbox)
+	def redraw_dtlim(self):
+		""" Redraw vertical axis on time step plot when simulation time exceeds limit. """
+		self.dtlim = np.min([self.time_step[-1]*self.rel_frame,self.parent.tf])
+		self.time_ax.set_ylim([0., self.dtlim])
+		self.fig.canvas.draw()
+		self.time_bg = self.fig.canvas.copy_from_bbox(self.time_ax.bbox)	
+	def update_timestep(self,ln):
+		""" Update the time step plot.
+		"""
+		check_string = 'Years  Days  Step Size'
+		if not all([(lni == chk) for lni, chk in zip(check_string.split(),ln)]): return False
+		ln = self.split_line(self.stdout.readline())
+		
+		yr, day, dt = ln
+		self.time_step.append(dt)
+		self.time.append(day)	
+		self.time_plot.set_data(self.time,self.time_step)
+		
+		if day>self.tlim: self.redraw_tlim()
+		elif dt>self.dtlim: self.redraw_dtlim()
+		
+		self.fig.canvas.restore_region(self.time_bg)
+		self.time_ax.draw_artist(self.time_plot)
+		self.fig.canvas.blit(self.time_ax.bbox)
+	def update_mass(self,ln):
+		check_string = 'Net kg water discharge'
+		if not all([(lni == chk) for lni, chk in zip(check_string.split(),ln)]): return False
+		self.total_mass.append(ln[-1])
+		if len(self.total_mass) == 1: return True
+		
+		if not self.mass_bg and len(self.total_mass)>1:
+			self.mass_plot = self.mass_ax.plot(self.time[1:],self.total_mass,'ko-',ms = 3)[0]
+			self.plts.append(self.mass_plot)
+			self.redraw_masslim()
+			return True
+		
+		self.mass_plot.set_data(self.time[1:],self.total_mass)		
+		
+		if np.max(self.total_mass)>self.masslim[1] or np.min(self.total_mass)<self.masslim[0]: self.redraw_masslim()
+		
+		self.fig.canvas.restore_region(self.engy_bg)
+		self.fig.canvas.restore_region(self.mass_bg)
+		self.engy_ax.draw_artist(self.engy_plot)
+		self.mass_ax.draw_artist(self.mass_plot)
+		
+		self.fig.canvas.blit(self.engy_ax.bbox)
+		self.fig.canvas.blit(self.mass_ax.bbox)
+		return True
+	def redraw_masslim(self):
+		""" Redraw vertical axis on mass conservation plot when simulation time exceeds limit. """
+		mmin = np.min(self.total_mass)
+		mmax = np.max(self.total_mass)
+		mmid = (mmin+mmax)/2.
+		mrange = mmax-mmin
+		if self.total_mass[-1]>self.masslim[1]:
+			self.masslim = [mmid-mrange*1.1,mmid+mrange*self.rel_frame/5.]
+		else:
+			self.masslim = [mmid-mrange*self.rel_frame/5.,mmid+mrange*1.1]
+		self.mass_ax.set_ylim(self.masslim)
+
+		try: self.engy_plot.set_data([],[])		
+		except: pass
+		self.mass_plot.set_data([],[])		
+		self.fig.canvas.draw()
+		self.engy_bg = self.fig.canvas.copy_from_bbox(self.engy_ax.bbox)	
+		self.mass_bg = self.fig.canvas.copy_from_bbox(self.mass_ax.bbox)	
+		try: self.engy_plot.set_data(self.time[1:-1],self.total_enthalpy)			
+		except: pass
+		self.mass_plot.set_data(self.time[1:],self.total_mass)				
+	def update_engy(self,ln):
+		check_string = 'Net MJ energy discharge'
+		if not all([(lni == chk) for lni, chk in zip(check_string.split(),ln)]): return False
+		self.total_enthalpy.append(ln[-1])
+		if len(self.total_enthalpy) == 1: return True
+		
+		if len(self.total_enthalpy) == 2:
+			self.engy_plot = self.engy_ax.plot(self.time[1:],self.total_mass,'ro-',ms = 3)[0]
+			self.plts.append(self.engy_plot)
+			self.redraw_engylim()
+			return True
+		
+		self.engy_plot.set_data(self.time[1:],self.total_enthalpy)		
+		
+		if np.max(self.total_enthalpy)>self.engylim[1] or np.min(self.total_enthalpy)<self.engylim[0]: self.redraw_engylim()
+		
+		self.fig.canvas.restore_region(self.engy_bg)
+		self.fig.canvas.restore_region(self.mass_bg)
+		self.engy_ax.draw_artist(self.engy_plot)
+		self.mass_ax.draw_artist(self.mass_plot)
+		
+		self.fig.canvas.blit(self.engy_ax.bbox)
+		self.fig.canvas.blit(self.mass_ax.bbox)
+			
+		return True
+	def redraw_engylim(self):
+		""" Redraw vertical axis on energy conservation plot when simulation time exceeds limit. """
+		mmin = np.min(self.total_enthalpy)
+		mmax = np.max(self.total_enthalpy)
+		mmid = (mmin+mmax)/2.
+		mrange = mmax-mmin
+		if self.total_enthalpy[-1]>self.engylim[1]:
+			self.engylim = [mmid-mrange*1.1,mmid+mrange*self.rel_frame/5.]
+		else:
+			self.engylim = [mmid-mrange*self.rel_frame/5.,mmid+mrange*1.1]
+		self.engy_ax.set_ylim(self.engylim)
+		self.engy_plot.set_data([],[])		
+		self.mass_plot.set_data([],[])		
+		self.fig.canvas.draw()
+		self.engy_bg = self.fig.canvas.copy_from_bbox(self.engy_ax.bbox)	
+		self.mass_bg = self.fig.canvas.copy_from_bbox(self.mass_ax.bbox)	
+		self.engy_plot.set_data(self.time[1:],self.total_enthalpy)			
+		self.mass_plot.set_data(self.time[1:],self.total_mass)		
+		for t in self.engy_ax.get_yticklabels(): t.set_color('r')
+	def update_mass_input(self,ln):
+		check_string = 'Water input this time step:'
+		if not all([(lni == chk) for lni, chk in zip(check_string.split(),ln)]): return False
+		self.mass_input_rate.append(float(ln[-2][1:]))
+		return True
+	def update_mass_output(self,ln):
+		check_string = 'Water discharge this time step:'
+		if not all([(lni == chk) for lni, chk in zip(check_string.split(),ln)]): return False
+		self.mass_output_rate.append(float(ln[-2][1:]))
+		return True		
+	def update_enthalpy_input(self,ln):
+		check_string = 'Enthalpy input this time step:'
+		if not all([(lni == chk) for lni, chk in zip(check_string.split(),ln)]): return False
+		self.enthalpy_input_rate.append(float(ln[-2][1:]))
+		return True
+	def update_enthalpy_output(self,ln):
+		check_string = 'Enthalpy discharge this time step:'
+		if not all([(lni == chk) for lni, chk in zip(check_string.split(),ln)]): return False
+		self.enthalpy_output_rate.append(float(ln[-2][1:]))
+		return True
+	def update_errors(self,ln):
+		check_string = 'Conservation Errors:'
+		if not all([(lni == chk) for lni, chk in zip(check_string.split(),ln)]): return False
+		self.mass_error.append(ln[2])
+		self.energy_error.append(ln[-2])
+		return True
+	def update_residuals(self,ln):
+		check_string = 'Largest Residuals'
+		if not all([(lni == chk) for lni, chk in zip(check_string.split(),ln)]): return False
+		# get first residual
+		ln = self.split_line(self.stdout.readline())
+		self.R1.append(ln[2])
+		self.R1_nd.append(int(ln[4]))
+		# get second residual
+		ln = self.split_line(self.stdout.readline())
+		self.R2.append(ln[2])
+		self.R2_nd.append(int(ln[4]))
+		# get third residual
+		ln = self.split_line(self.stdout.readline())
+		try:
+			self.R3.append(ln[2])
+			self.R3_nd.append(int(ln[4]))
+		except: pass
+		
+		# plot residuals on log axes
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		

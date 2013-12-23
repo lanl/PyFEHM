@@ -14,7 +14,7 @@ dat = fdata(work_dir = root) 					# creates an 'empty' input file
 # 7.1.2 Grid generation
 x = np.linspace(0,10,11)
 dat.grid.make(root+'_GRID.inp',x=x,y=x,z=x)
-dat.grid.plot(root+'_GRID.png',color='r',angle=[45,45])
+#dat.grid.plot(root+'_GRID.png',color='r',angle=[45,45])
 
 # 7.1.3 Zone creation
 zn = fzone(index=1,name='lower') 			# (a) create the zone object, with index, name
@@ -57,16 +57,16 @@ dat.cont.variables.append(['xyz','temperature','pressure','grid','mat'])
 dat.cont.format = 'tec'
 dat.cont.time_interval = 2.
 
-dat.tf=10.
+dat.tf=100.
 #dat.time['max_time_TIMS']=10.
 
 dat.files.root = root
-dat.run(root+'_INPUT.dat') 		# note, because no executable path is specified, PyFEHM retrieves the executable specified in the default path
+dat.run(root+'_INPUT.dat', diagnostic = True) 		# note, because no executable path is specified, PyFEHM retrieves the executable specified in the default path
 
 # 7.1.7 Visualisation
-c = fcontour(dat.work_dir+'\\*.csv')
-c.slice_plot(save='Tslice.png',cbar=True,levels=11,slice=['x',5],variable='T',method='linear',title='temperature / degC',
-xlabel='y / m', ylabel = 'z / m')
-c.slice_plot(save='Pslice.png',cbar=True,levels=np.linspace(4,6,9),slice=['x',5],variable='P',method='linear',title='pressure / MPa',
-xlabel='y / m', ylabel = 'z / m')
+#c = fcontour(dat.work_dir+'\\*.csv')
+#c.slice_plot(save='Tslice.png',cbar=True,levels=11,slice=['x',5],variable='T',method='linear',title='temperature / degC',
+#xlabel='y / m', ylabel = 'z / m')
+#c.slice_plot(save='Pslice.png',cbar=True,levels=np.linspace(4,6,9),slice=['x',5],variable='P',method='linear',title='pressure / MPa',
+#xlabel='y / m', ylabel = 'z / m')
 
