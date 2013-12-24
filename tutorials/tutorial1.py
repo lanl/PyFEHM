@@ -54,11 +54,13 @@ dat.zone['YMAX'].fix_pressure(P=4.,T=60.) 		# does steps (a)-(b) above for YMAX
 
 # 7.1.6 Running the simulation
 dat.cont.variables.append(['xyz','temperature','pressure','grid','mat'])
-dat.cont.format = 'tec'
-dat.cont.time_interval = 2.
+dat.cont.format = 'surf'
+#dat.cont.time_interval = 2.
 
 dat.tf=100.
 #dat.time['max_time_TIMS']=10.
+
+dat.iter['machine_tolerance_TMCH'] = -0.5e-5
 
 dat.files.root = root
 dat.run(root+'_INPUT.dat', diagnostic = True) 		# note, because no executable path is specified, PyFEHM retrieves the executable specified in the default path

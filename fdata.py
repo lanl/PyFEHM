@@ -6027,12 +6027,13 @@ class fdata(object):						#FEHM data file.
 	output_times = property(_get_output_times, _set_output_times) #: (*lst*) List of times at which FEHM should produce output.
 class fdiagdata(object):
 	"""Class for diagnostic data object."""
-	def __init__(self,parent,name,label,data,lim=[-1.e-9,1.e-9],label_color='k',linestyle='ko-',markersize=4):
+	def __init__(self,parent,name,label,data,lim=[-1.e-9,1.e-9],label_color='k',linestyle='ko-',markersize=4,log=False):
 		self.parent = parent
 		self.name = name
 		self.data = data
 		self.label = label
 		self.lim = lim
+		self.log = log
 		self.label_color = label_color
 		self.linestyle = linestyle
 		self.markersize = markersize
@@ -6053,6 +6054,10 @@ class fdiagax(object):
 		self._plot1 = []
 		self.bg0 = None
 		self.bg1 = None
+		self.residual_plot = None
+		self.largest_NR_plot1 = None
+		self.largest_NR_plot2 = None
+		self.largest_NR_plot3 = None
 	def add_empty_plots(self):
 		for slot in self.slot0:
 			try:
@@ -6061,6 +6066,16 @@ class fdiagax(object):
 				ms = fdd.markersize
 			except: ls = 'ko-'; ms = 3
 			self._plot0.append(self.sub0.plot([],[],ls,ms=ms)[0])
+			
+			if slot.startswith('residual') and not self.residual_plot:
+				tol = self.parent.parent.ctrl['newton_cycle_tolerance_EPM']
+				tol2 = self.parent.parent.iter['machine_tolerance_TMCH']
+				if tol2 < 0.: tol = abs(tol2)
+				self.residual_plot = self.sub0.plot(self.parent.time.lim,[tol,tol],'k:')[0]
+				
+				self.largest_NR_plot1 = self.sub0.plot([],[],'b*',ms=8)[0]
+				self.largest_NR_plot2 = self.sub0.plot([],[],'r*',ms=8)[0]
+				self.largest_NR_plot3 = self.sub0.plot([],[],'k*',ms=8)[0]
 		for slot in self.slot1:
 			try:
 				fdd = self.parent.__getattribute__(slot)
@@ -6068,10 +6083,25 @@ class fdiagax(object):
 				ms = fdd.markersize
 			except: ls = 'ko-'; ms = 3
 			self._plot1.append(self.sub1.plot([],[],ls,ms=ms)[0])
+			
+			if slot.startswith('residual') and not self.residual_plot:
+				tol = self.parent.parent.ctrl['newton_cycle_tolerance_EPM']
+				tol2 = self.parent.parent.iter['machine_tolerance_TMCH']
+				if tol2 < 0.: tol = abs(tol2)
+				self.residual_plot = self.sub1.plot(self.parent.time.lim,[tol,tol],'k:')[0]
+				
+				self.largest_NR_plot1 = self.sub1.plot([],[],'b*',ms=8)[0]
+				self.largest_NR_plot2 = self.sub1.plot([],[],'r*',ms=8)[0]
+				self.largest_NR_plot3 = self.sub1.plot([],[],'k*',ms=8)[0]
 	def reset_bg(self):
 		# remove any plots
 		for plt in self._plot0+self._plot1: plt.set_data([],[])		
 		self.parent.fig.canvas.draw()
+		
+		replotResidual = False
+		if self.residual_plot:
+			self.residual_plot.set_data([],[])
+			replotResidual = True
 		
 		# save bbox
 		self.bg0 = self.parent.fig.canvas.copy_from_bbox(self.sub0.bbox)
@@ -6082,6 +6112,12 @@ class fdiagax(object):
 			self.plot0[slot].set_data(self.parent.__getattribute__(slot).time,self.parent.__getattribute__(slot).data)
 		for slot in self.slot1:
 			self.plot1[slot].set_data(self.parent.__getattribute__(slot).time,self.parent.__getattribute__(slot).data)
+			
+		if replotResidual:
+			tol = self.parent.parent.ctrl['newton_cycle_tolerance_EPM']
+			tol2 = self.parent.parent.iter['machine_tolerance_TMCH']
+			if tol2 < 0.: tol = abs(tol2)
+			self.residual_plot.set_data(self.parent.time.lim,[tol,tol])
 	def redraw(self):
 		self.parent.fig.canvas.restore_region(self.bg0)
 		self.parent.fig.canvas.restore_region(self.bg1)
@@ -6089,6 +6125,24 @@ class fdiagax(object):
 			self.sub0.draw_artist(plt)
 		for plt in self._plot1:
 			self.sub1.draw_artist(plt)		
+			
+		# show residuals
+		if self.largest_NR_plot1:
+			k = None
+			for k in self.slot0:
+				if k.startswith('residual'): ax = 0; break
+			for k in self.slot1:
+				if k.startswith('residual'): ax = 1; break
+			if k:
+				if ax: 
+					self.sub1.draw_artist(self.largest_NR_plot1)
+					self.sub1.draw_artist(self.largest_NR_plot2)
+					self.sub1.draw_artist(self.largest_NR_plot3)
+				else: 
+					self.sub0.draw_artist(self.largest_NR_plot1)
+					self.sub0.draw_artist(self.largest_NR_plot2)
+					self.sub0.draw_artist(self.largest_NR_plot3)
+				
 		self.parent.fig.canvas.blit(self.sub0.bbox)
 		self.parent.fig.canvas.blit(self.sub1.bbox)
 	def _get_lim0(self): 
@@ -6097,6 +6151,16 @@ class fdiagax(object):
 			lim = self.parent.__getattribute__(slot).lim
 			lim0[0] = np.min([lim0[0],lim[0]])
 			lim0[1] = np.max([lim0[1],lim[1]])
+			if slot.startswith('residual'):
+				if self.residual_plot:
+					tol = self.parent.parent.ctrl['newton_cycle_tolerance_EPM']
+					tol2 = self.parent.parent.iter['machine_tolerance_TMCH']
+					if tol2 < 0.: tol = abs(tol2)
+					if tol>lim0[1]: 
+						lim0[1] = tol*10.
+				NRdat = self.parent.largest_NR.R_data
+				if len(NRdat)>0:	
+					lim0[1] = np.max([lim0[1],np.max(NRdat)*10])
 		return lim0
 	ylim0 = property(_get_lim0) 
 	def _get_lim1(self): 
@@ -6105,16 +6169,26 @@ class fdiagax(object):
 			lim = self.parent.__getattribute__(slot).lim
 			lim1[0] = np.min([lim1[0],lim[0]])
 			lim1[1] = np.max([lim1[1],lim[1]])
+			if slot.startswith('residual'):
+				if self.residual_plot:
+					tol = self.parent.parent.ctrl['newton_cycle_tolerance_EPM']
+					tol2 = self.parent.parent.iter['machine_tolerance_TMCH']
+					if tol2 < 0.: tol = abs(tol2)
+					if tol>lim1[1]: 
+						lim1[1] = tol*10.
+				NRdat = self.parent.largest_NR.R_data
+				if len(NRdat)>0:	
+					lim1[1] = np.max([lim1[1],np.max(NRdat)*10])
 		return lim1
 	ylim1 = property(_get_lim1) 
 	def _get_logflag0(self): 
 		for slot in self.slot0:
-			if slot.startswith('residual'): return True
+			if self.parent.__getattribute__(slot).log: return True
 		return False
 	logflag0 = property(_get_logflag0) 
 	def _get_logflag1(self): 
 		for slot in self.slot1:
-			if slot.startswith('residual'): return True
+			if self.parent.__getattribute__(slot).log: return True
 		return False
 	logflag1 = property(_get_logflag1) 
 	def _get_ylabel0(self): 
@@ -6139,16 +6213,23 @@ class fdiagnostic(object):
 		self.parent = parent
 		
 		self.time = fdiagdata(parent=self,data=[0.],name='time',label='time / days')
-		self.timestep = fdiagdata(parent=self,data=[0.],name='timestep',label='time step / days')
+		self.timestep = fdiagdata(parent=self,data=[],name='timestep',label='time step / days',log=True)
 		self.total_mass = fdiagdata(parent=self,data=[],name='total_mass',label='Net water discharge / kg')
 		self.total_energy = fdiagdata(parent=self,data=[],name='total_energy',
 			label='Net energy discharge / MJ',label_color='r',linestyle='rs-')
-		self.residual1 = fdiagdata(parent=self,data=[],name='residual1',label='residuals (log10)',lim = [1.e-30,1.e-29],linestyle='b^-')
-		self.residual2 = fdiagdata(parent=self,data=[],name='residual2',label='residuals (log10)',lim = [1.e-30,1.e-29],linestyle='rs-')
-		self.residual3 = fdiagdata(parent=self,data=[],name='residual3',label='residuals (log10)',lim = [1.e-30,1.e-29],linestyle='ko-')
+		self.residual1 = fdiagdata(parent=self,data=[],name='residual1',label='residuals (log10)',lim = [1.e-30,1.e-29],linestyle='b^-',log=True)
+		self.residual2 = fdiagdata(parent=self,data=[],name='residual2',label='residuals (log10)',lim = [1.e-30,1.e-29],linestyle='rs-',log=True)
+		self.residual3 = fdiagdata(parent=self,data=[],name='residual3',label='residuals (log10)',lim = [1.e-30,1.e-29],linestyle='ko-',log=True)
 		self.residual1.node = []
 		self.residual2.node = []
 		self.residual3.node = []
+		
+		self.largest_NR = fdiagdata(parent=self,data=[],name='largest_NR',label='largest_NR')
+		self.largest_NR.timestep = []
+		self.largest_NR.R_data = []
+		self.largest_NR.R_time = []
+		self.largest_NR.R_node = []
+		self.largest_NR.R_type = []
 		
 		self.mass_input_rate = fdiagdata(parent=self,data=[],name='mass_input_rate',label='mass input rate / kg s$^{-1}$')
 		self.mass_output_rate = fdiagdata(parent=self,data=[],name='mass_output_rate',label='mass discharge rate / kg s$^{-1}$')
@@ -6171,16 +6252,12 @@ class fdiagnostic(object):
 		
 		self.ax1.slot0 = ['total_mass']
 		self.ax1.slot1 = ['total_energy']
-		#self.ax10_slot = 'mass_error'
-		#self.ax11_slot = 'energy_error'
-		#self.ax11_slot = 'mass_input_rate'
 		
 		self.ax2.slot0 = ['residual1','residual2']
 		self.ax2.slot1 = []
 		
 		self.ax3.slot0 = []
 		self.ax3.slot1 = []
-		
 	def split_line(self,line):
 		""" Splits a line from command output stream, returns list of string or floats.
 		"""
@@ -6198,7 +6275,6 @@ class fdiagnostic(object):
 		print line.rstrip() 
 		ln = self.split_line(line)
 		if ln is not None:
-			'placeholder'
 			if self.update_timestep(ln): pass
 			elif self.update_mass(ln): pass
 			elif self.update_energy(ln): pass
@@ -6208,6 +6284,7 @@ class fdiagnostic(object):
 			elif self.update_enthalpy_output(ln): pass
 			elif self.update_errors(ln): pass			
 			elif self.update_residuals(ln): pass			
+			elif self.update_largestNR(ln): pass			
 		self.root.after(0,self.parse_line)
 	def handler(self):
 		self.stdout = None
@@ -6319,7 +6396,7 @@ class fdiagnostic(object):
 		if not (np.min(dat0)<lim0[0] or np.max(dat0)>lim0[1]): return 	# check if update required
 		
 		# calculate new limit
-		if not name.startswith('residual'):
+		if not self.__getattribute__(name).log:
 			dmin = np.min(dat0)
 			dmax = np.max(dat0)
 			dmid = (dmin+dmax)/2.
@@ -6365,6 +6442,9 @@ class fdiagnostic(object):
 		yr, day, dt = ln
 		self.time.data.append(day)
 		self.timestep.data.append(dt)
+		if len(self.timestep.data) == 1: 
+			pt = self.timestep.data[0]
+			self.timestep.lim = [pt-1.e-30,pt+1.e-30]
 		
 		self.update_tlim()
 		self.update_lim('timestep')
@@ -6476,19 +6556,80 @@ class fdiagnostic(object):
 		
 		self.update_lim('residual3')
 		self.update_plot('residual3')
+	def update_largestNR(self,ln):
+		check_string = '#### largest N-R corrections, timestep'
+		if not all([(lni == chk) for lni, chk in zip(check_string.split(),ln)]): return False
+		
+		self.largest_NR.timestep.append(int(ln[-2]))
+		line = self.stdout.readline()
+		print line.rstrip() 
+		ln = self.split_line(line)
+		R1_data = ln[2]
+		R1_node = int(ln[4])
+		
+		line = self.stdout.readline()
+		print line.rstrip() 
+		ln = self.split_line(line)
+		R2_data = ln[2]
+		R2_node = int(ln[4])
+		
+		line = self.stdout.readline()
+		print line.rstrip() 
+		ln = self.split_line(line)
+		try:
+			R3_data = ln[2]
+			R3_node = int(ln[4])
+		except: 
+			R3_data = 1.e-30
+		
+		Rmax = np.max([R1_data,R2_data,R3_data])
+		self.largest_NR.R_data.append(Rmax)
+		self.largest_NR.R_time.append(self.time.data[-1])
+		if Rmax == R1_data:
+			self.largest_NR.R_node.append(R1_node)
+			self.largest_NR.R_type.append(1)
+		elif Rmax == R2_data:
+			self.largest_NR.R_node.append(R2_node)
+			self.largest_NR.R_type.append(2)
+		else:
+			self.largest_NR.R_node.append(R3_node)
+			self.largest_NR.R_type.append(3)
+		
+		self.redraw_largestNR()
+		self.retext_largestNR()
+	def redraw_largestNR(self):
+		# search for plot of residuals, if found, plot as stars
+		k = None
+		for k in self.axs.keys():
+			for slot in self.axs[k].slot1:
+				if slot.startswith('residual'): ax=1;break
+			for slot in self.axs[k].slot0:
+				if slot.startswith('residual'): ax=0;break
+		if k is None: return
+		nr1 = np.array([[t,r] for t,r,d in zip(self.largest_NR.R_time,self.largest_NR.R_data,self.largest_NR.R_type) if d == 1])
+		nr2 = np.array([[t,r] for t,r,d in zip(self.largest_NR.R_time,self.largest_NR.R_data,self.largest_NR.R_type) if d == 2])
+		nr3 = np.array([[t,r] for t,r,d in zip(self.largest_NR.R_time,self.largest_NR.R_data,self.largest_NR.R_type) if d == 3])
+		
+		if len(nr1) != 0: self.axs[k].largest_NR_plot1.set_data(nr1[:,0],nr1[:,1])
+		if len(nr2) != 0: self.axs[k].largest_NR_plot2.set_data(nr2[:,0],nr2[:,1])
+		if len(nr3) != 0: self.axs[k].largest_NR_plot3.set_data(nr3[:,0],nr3[:,1])
+		
+		self.axs[k].redraw()
+	def retext_largestNR(self):
+		pass
 	def _get_axs(self): return dict(zip(['0','1','2','3'],[self.ax0,self.ax1,self.ax2,self.ax3]))
 	axs = property(_get_axs)
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
