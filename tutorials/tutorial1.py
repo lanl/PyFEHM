@@ -57,7 +57,8 @@ dat.cont.variables.append(['xyz','temperature','pressure','grid','mat'])
 dat.cont.format = 'surf'
 #dat.cont.time_interval = 2.
 
-dat.hist.nodelist.append([100,800])
+dat.hist.nodelist.append([100,400,800])
+#dat.hist.nodelist.append([100])
 dat.hist.variables.append(['pressure','temperature'])
 
 dat.tf=100.

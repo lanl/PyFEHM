@@ -29,6 +29,7 @@ from time import sleep
 from collections import Counter
 import Tkinter as tk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+from matplotlib.patches import Rectangle
 
 try: import ctypes; has_ctypes = True
 except: has_ctypes = False
@@ -6077,6 +6078,7 @@ class fdiagax(object):
 		self.largest_NR_plot1 = None
 		self.largest_NR_plot2 = None
 		self.largest_NR_plot3 = None
+		self.legend = False
 	def add_empty_plots(self):
 		for slot in self.slot0:
 			try:
@@ -6085,7 +6087,6 @@ class fdiagax(object):
 				ms = fdd.markersize
 			except: ls = 'ko-'; ms = 3
 			self._plot0.append(self.sub0.plot([],[],ls,ms=ms)[0])
-			
 			if slot.startswith('residual') and not self.residual_plot:
 				tol = self.parent.parent.ctrl['newton_cycle_tolerance_EPM']
 				tol2 = self.parent.parent.iter['machine_tolerance_TMCH']
@@ -6140,11 +6141,12 @@ class fdiagax(object):
 	def redraw(self):
 		self.parent.fig.canvas.restore_region(self.bg0)
 		self.parent.fig.canvas.restore_region(self.bg1)
+		self.sub0.hold(True)
+		self.sub1.hold(True)
 		for plt in self._plot0:
 			self.sub0.draw_artist(plt)
 		for plt in self._plot1:
-			self.sub1.draw_artist(plt)		
-			
+			self.sub1.draw_artist(plt)	
 		# show residuals
 		if self.largest_NR_plot1:
 			k = None
@@ -6162,8 +6164,51 @@ class fdiagax(object):
 					self.sub0.draw_artist(self.largest_NR_plot2)
 					self.sub0.draw_artist(self.largest_NR_plot3)
 				
+		if self.legend: self.redraw_legend()	
+		
 		self.parent.fig.canvas.blit(self.sub0.bbox)
 		self.parent.fig.canvas.blit(self.sub1.bbox)
+	def make_legend(self):	
+		if self.slot0 == []: return
+		self.legend = True
+		
+		entries = zip([slot.split('_')[0] for slot in self.slot0],['k-','k--','k-.','k:'])
+		
+		self.lp = [0.15,0.4,0.02,.02,.04,.02,.1]
+		self.lp[1] = self.lp[6]*(len(entries))
+				
+		x,y = self.sub1.get_xlim()[0], self.sub1.get_ylim()[0]
+		dx,dy = np.diff(self.sub1.get_xlim()),np.diff(self.sub1.get_ylim())
+		self.legend_bg = Rectangle((x+.01*dx,y+.01*dy), dx*self.lp[0], dy*self.lp[1], color='white',zorder=200)
+		self.sub1.add_patch(self.legend_bg)
+		
+		text_size = 'x-small'
+		x1,y1 = x+self.lp[2]*dx,y+(self.lp[1]-self.lp[3])*dy
+		ln_len = self.lp[4]
+		txt_gap = self.lp[5]
+		dyi = -self.lp[6]*dy
+		
+		self.legend_plts = []
+		self.legend_txts = []
+		for entry in entries:
+			self.legend_plts.append(self.sub1.plot([x1,x1+ln_len*dx],[y1,y1],entry[1],zorder=300)[0])
+			self.legend_txts.append(self.sub1.text(x1+(ln_len+txt_gap)*dx,y1,entry[0],size=text_size,ha='left',va='center',zorder=300))
+			y1 = y1 + dyi
+			
+	def redraw_legend(self):
+		x,y = self.sub1.get_xlim()[0], self.sub1.get_ylim()[0]
+		dx,dy = np.diff(self.sub1.get_xlim()),np.diff(self.sub1.get_ylim())
+		self.legend_bg.set_bounds(x+.01*dx,y+.01*dy,dx*self.lp[0], dy*self.lp[1])
+		
+		x1,y1 = x+self.lp[2]*dx,y+(self.lp[1]-self.lp[3])*dy
+		ln_len = self.lp[4]
+		txt_gap = self.lp[5]
+		dyi = -self.lp[6] *dy
+		
+		for plt,txt in zip(self.legend_plts,self.legend_txts):
+			plt.set_data([x1,x1+ln_len*dx],[y1,y1])
+			txt.set_position((x1+(ln_len+txt_gap)*dx,y1))
+			y1 = y1 + dyi	
 	def _get_lim0(self): 
 		lim0 = self.parent.__getattribute__(self.slot0[0]).lim
 		for slot in self.slot0:
@@ -6589,6 +6634,7 @@ class fdiagnostic(object):
 					t.set_fontsize(text_size)
 					t.set_color(col)
 		
+			if k == '3': self.axs[k].make_legend()
 		self.canvas = FigureCanvasTkAgg(self.fig,master = self.root)
 		self.canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 		self.canvas.show()
@@ -6604,7 +6650,9 @@ class fdiagnostic(object):
 		self.time.lim[1] = np.min([self.time.data[-1]*self.rel_frame,self.parent.tf])
 		for k in self.axs.keys():
 			self.axs[k].sub0.set_xlim(self.time.lim)
+			self.axs[k].sub0.hold(True)
 			self.axs[k].sub1.set_xlim(self.time.lim)
+			self.axs[k].sub1.hold(True)
 	def update_lim(self,name):
 		""" Redraw vertical axes if necessary. """
 		# rescale axes
@@ -6650,8 +6698,12 @@ class fdiagnostic(object):
 			else:
 				self.__getattribute__(name).lim = 10**(np.array([dmid-drange*self.rel_frame/5.,dmid+drange*1.1]))
 			
-		if ax: self.axs[k].sub1.set_ylim(self.axs[k].ylim1)
-		else: self.axs[k].sub0.set_ylim(self.axs[k].ylim0)
+		if ax: 
+			self.axs[k].sub1.set_ylim(self.axs[k].ylim1)
+			self.axs[k].sub1.hold(True)
+		else: 
+			self.axs[k].sub0.set_ylim(self.axs[k].ylim0)
+			self.axs[k].sub0.hold(True)
 		
 		self.axs[k].reset_bg()
 	def update_plot(self,name):
