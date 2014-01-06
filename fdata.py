@@ -26,6 +26,7 @@ from copy import copy, deepcopy
 import os,time,platform,shutil
 from subprocess import Popen, PIPE
 from time import sleep
+from collections import Counter
 import Tkinter as tk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 
@@ -4498,15 +4499,16 @@ class fdata(object):						#FEHM data file.
 		for attempt in range(autorestart+1): 	# restart execution
 			if breakAutorestart: break
 			untilFlag = False
+			if diagnostic: self._diagnostic.refresh_nodes()
 			p = Popen(exe_path.full_path,stdout=PIPE)
 			if until is None:
 				if diagnostic:
 					self._diagnostic.stdout = p.stdout
 					self._diagnostic.poll = p.poll
-					self._diagnostic.construct_viewer() 			# construct the diagnosis window					
-				else:
-					for line in iter(p.stdout.readline, b''):
-						print line.rstrip() 	# print to screen
+					self._diagnostic.construct_viewer() 			# construct the diagnosis window
+					
+				for line in iter(p.stdout.readline, b''):
+					print line.rstrip() 	# print remainder to screen	
 			else:
 				self._running = True
 				interval = 0
@@ -6037,6 +6039,23 @@ class fdiagdata(object):
 		self.label_color = label_color
 		self.linestyle = linestyle
 		self.markersize = markersize
+		self.defaulting()
+	def defaulting(self):
+		"""Some defaults to assign"""
+		# if its a node, default coloring, units
+		if self.name.startswith('nd'):
+			if self.label == 'pressure':
+				self.label = 'P / MPa'
+				self.label_color = 'b'
+				self.linestyle = 'bs-'
+			elif self.label == 'temperature':
+				self.label = 'T / degC'
+				self.label_color = 'r'
+				self.linestyle = 'r^-'
+			elif self.label == 'flow':
+				self.label = 'source / kg/s'
+				self.label_color = 'k'
+				self.linestyle = 'ko-'
 	def _get_time(self): 
 		if len(self.data) == len(self.parent.time.data):
 			return self.parent.time.data
@@ -6205,12 +6224,152 @@ class fdiagax(object):
 	plot0 = property(_get_plot0) 
 	def _get_plot1(self): return dict(zip(self.slot1,self._plot1))
 	plot1 = property(_get_plot1) 
+class fdiagNR(object):
+	def __init__(self,parent):
+		self.parent = parent
+		self.timestep = []
+		self.R1_data = []
+		self.R1_node = []
+		self.R2_data = []
+		self.R2_node = []
+		self.R3_data = []
+		self.R3_node = []
+		
+		self.R_time = []
+		
+	def new_node(self,data,node,type):
+		if type == 1:
+			self.R1_data.append(data)
+			self.R1_node.append(self.parent.parent.grid.node[node])		
+			self.R_time.append(self.parent.time.data[-1])
+		elif type == 2:
+			self.R2_data.append(data)
+			self.R2_node.append(self.parent.parent.grid.node[node])			
+		elif type == 3:
+			self.R3_data.append(data)
+			self.R3_node.append(self.parent.parent.grid.node[node])			
+		else:
+			print 'Invalid type'
+	def redraw(self):
+		# search for plot of residuals, if found, plot as stars
+		k = None
+		for k in self.parent.axs.keys():
+			for slot in self.parent.axs[k].slot1:
+				if slot.startswith('residual'): ax=1;break
+			for slot in self.parent.axs[k].slot0:
+				if slot.startswith('residual'): ax=0;break
+		if k is None: return
+		nr1 = np.array([[t,r] for t,r,d in zip(self.R_time,self.R_data,self.R_type) if d == 1])
+		nr2 = np.array([[t,r] for t,r,d in zip(self.R_time,self.R_data,self.R_type) if d == 2])
+		nr3 = np.array([[t,r] for t,r,d in zip(self.R_time,self.R_data,self.R_type) if d == 3])
+		
+		if len(nr1) != 0: self.parent.axs[k].largest_NR_plot1.set_data(nr1[:,0],nr1[:,1])
+		if len(nr2) != 0: self.parent.axs[k].largest_NR_plot2.set_data(nr2[:,0],nr2[:,1])
+		if len(nr3) != 0: self.parent.axs[k].largest_NR_plot3.set_data(nr3[:,0],nr3[:,1])
+		
+		self.parent.axs[k].redraw()
+	def retext(self):
+		txt = self.text_R(0)		
+		self.parent.texts[0].set_text(txt)
+		
+		#cnts = bincount
+		#cnts = heapq.nlargest(2,np.unique())
+		c = Counter(np.array([nd.index for nd in self.R_node]))
+		cnts = c.most_common(2)
+		nd_max = cnts[0][0]
+		
+		for i,nd in enumerate(self.R_node):
+			if nd.index == nd_max: break
+				
+		txt = self.text_R(i)		
+		txt2 = '(1) '+str(cnts[0][1])+' appearance'
+		if cnts[0][1]>1: txt2 += 's'
+		txt2 += ':\n'
+		
+		txt = txt2+txt+'\n'
+		
+		if len(cnts)>1:
+			nd_max = cnts[1][0]
+			for i,nd in enumerate(self.R_node):
+				if nd.index == nd_max: break
+					
+			txt1 = self.text_R(i)		
+			txt2 = '(2) '+str(cnts[1][1])+' appearance'
+			if cnts[1][1]>1: txt2 += 's'
+			txt2 += ':\n'				
+		
+			txt += txt2+txt1
+		
+		self.parent.texts[1].set_text(txt)
+		
+		txt = self.text_R(-1)		
+		self.parent.texts[2].set_text(txt)
+		
+		self.parent.fig.canvas.draw()
+	def text_R(self,i):
+		nd = self.R_node[i]
+		txt =  'EQ'+str(self.R_type[i])+', '
+		txt += 'R = %3.2E, '%self.R_data[i]
+		txt += 'nd = '+str(nd.index)+', '
+		txt += 'x = '+str(nd.position[0])+', '
+		txt += 'y = '+str(nd.position[1])+', '
+		txt += 'z = '+str(nd.position[2])
+		txt += '\n'
+		
+		if len(nd.zonelist)>1:
+			txt += 'In zones: '
+			zns = copy(nd.zonelist)
+			zns.sort(key=lambda x: x.index)
+			for zn in zns:
+				txt += str(zn.index)
+				if zn.name: txt += ' ('+zn.name+')'
+				txt+= ', '
+			txt = txt[:-2]
+		else:
+			txt += 'Unzoned'
+		txt += '\n'		
+		
+		if isinstance(nd.permeability,(float,int)):
+			k = [nd.permeability,nd.permeability,nd.permeability]
+		else: k = nd.permeability
+		if k[0] == k[1] and k[0] == k[2]:
+			txt += 'k = '+str(k[0])+', '
+		else:
+			txt += 'k = ['+str(k[0])+', '+str(k[1])+', '+str(k[2])+'], '
+		txt += '\n'	
+		
+		txt += 'Pi = '+str(nd.Pi)+', Ti = '+str(nd.Ti)+', '
+		txt += '\n'			
+		return txt
+	def _get_R_data(self): 
+		return [np.max([r1,r2,r3]) for r1,r2,r3 in zip(self.R1_data,self.R2_data,self.R3_data)]
+	R_data = property(_get_R_data) #: (**)
+	def _get_R_node(self): 
+		nd = []
+		for r1,n1,r2,n2,r3,n3 in zip(self.R1_data,self.R1_node,self.R2_data,self.R2_node,self.R3_data,self.R3_node):
+			if (r1>r2) and (r1>r3):	nd.append(n1)
+			else:
+				if r2>r3: nd.append(n2)
+				else: nd.append(n3)				
+		return nd
+	R_node = property(_get_R_node) #: (**)
+	def _get_R_type(self): 
+		tp = []
+		for r1,r2,r3 in zip(self.R1_data,self.R2_data,self.R3_data):
+			if (r1>r2) and (r1>r3):	tp.append(1)
+			else:
+				if r2>r3: tp.append(2)
+				else: tp.append(3)				
+		return tp
+	R_type = property(_get_R_type) #: (**)
 class fdiagnostic(object):
 	"""Class for FEHM real-time diagnosis 
 	
 	"""		
 	def __init__(self,parent):
 		self.parent = parent
+		
+		self._job = True
 		
 		self.time = fdiagdata(parent=self,data=[0.],name='time',label='time / days')
 		self.timestep = fdiagdata(parent=self,data=[],name='timestep',label='time step / days',log=True)
@@ -6224,12 +6383,7 @@ class fdiagnostic(object):
 		self.residual2.node = []
 		self.residual3.node = []
 		
-		self.largest_NR = fdiagdata(parent=self,data=[],name='largest_NR',label='largest_NR')
-		self.largest_NR.timestep = []
-		self.largest_NR.R_data = []
-		self.largest_NR.R_time = []
-		self.largest_NR.R_node = []
-		self.largest_NR.R_type = []
+		self.largest_NR = fdiagNR(parent=self)
 		
 		self.mass_input_rate = fdiagdata(parent=self,data=[],name='mass_input_rate',label='mass input rate / kg s$^{-1}$')
 		self.mass_output_rate = fdiagdata(parent=self,data=[],name='mass_output_rate',label='mass discharge rate / kg s$^{-1}$')
@@ -6258,6 +6412,54 @@ class fdiagnostic(object):
 		
 		self.ax3.slot0 = []
 		self.ax3.slot1 = []
+	def refresh_nodes(self):
+		ndN = len(self.parent.hist.nodelist)
+		varN = len(self.parent.hist.variables)
+		if ndN == 0 or varN == 0: return
+		if ndN > 0:
+			self.ax3.slot0.append('nd'+str(self.parent.hist.nodelist[0].index)+'_')
+			self.ax3.slot0[-1] += self.parent.hist.variables[0]
+			self.__setattr__(self.ax3.slot0[-1],fdiagdata(parent=self,data=[],name=self.ax3.slot0[-1],label=self.parent.hist.variables[0]))
+			if varN > 1:
+				self.ax3.slot1.append('nd'+str(self.parent.hist.nodelist[0].index)+'_')
+				self.ax3.slot1[-1] += self.parent.hist.variables[1]
+				self.__setattr__(self.ax3.slot1[-1],fdiagdata(parent=self,data=[],name=self.ax3.slot1[-1],label=self.parent.hist.variables[1]))
+		if ndN > 1:
+			self.ax3.slot0.append('nd'+str(self.parent.hist.nodelist[1].index)+'_')
+			self.ax3.slot0[-1] += self.parent.hist.variables[0]
+			self.__setattr__(self.ax3.slot0[-1],fdiagdata(parent=self,data=[],name=self.ax3.slot0[-1],label=self.parent.hist.variables[0]))
+			ls = self.__getattribute__(self.ax3.slot0[-1]).linestyle
+			self.__getattribute__(self.ax3.slot0[-1]).linestyle = ls[:-1]+'--'
+			if varN > 1:
+				self.ax3.slot1.append('nd'+str(self.parent.hist.nodelist[1].index)+'_')
+				self.ax3.slot1[-1] += self.parent.hist.variables[1]
+				self.__setattr__(self.ax3.slot1[-1],fdiagdata(parent=self,data=[],name=self.ax3.slot1[-1],label=self.parent.hist.variables[1]))
+				ls = self.__getattribute__(self.ax3.slot1[-1]).linestyle
+				self.__getattribute__(self.ax3.slot1[-1]).linestyle = ls[:-1]+'--'
+		if ndN > 2:
+			self.ax3.slot0.append('nd'+str(self.parent.hist.nodelist[2].index)+'_')
+			self.ax3.slot0[-1] += self.parent.hist.variables[0]
+			self.__setattr__(self.ax3.slot0[-1],fdiagdata(parent=self,data=[],name=self.ax3.slot0[-1],label=self.parent.hist.variables[0]))
+			ls = self.__getattribute__(self.ax3.slot0[-1]).linestyle
+			self.__getattribute__(self.ax3.slot0[-1]).linestyle = ls[:-1]+'-.'
+			if varN > 1:
+				self.ax3.slot1.append('nd'+str(self.parent.hist.nodelist[2].index)+'_')
+				self.ax3.slot1[-1] += self.parent.hist.variables[1]
+				self.__setattr__(self.ax3.slot1[-1],fdiagdata(parent=self,data=[],name=self.ax3.slot1[-1],label=self.parent.hist.variables[1]))
+				ls = self.__getattribute__(self.ax3.slot1[-1]).linestyle
+				self.__getattribute__(self.ax3.slot1[-1]).linestyle = ls[:-1]+'-.'
+		if ndN > 3:
+			self.ax3.slot0.append('nd'+str(self.parent.hist.nodelist[3].index)+'_')
+			self.ax3.slot0[-1] += self.parent.hist.variables[0]
+			self.__setattr__(self.ax3.slot0[-1],fdiagdata(parent=self,data=[],name=self.ax3.slot0[-1],label=self.parent.hist.variables[0]))
+			ls = self.__getattribute__(self.ax3.slot0[-1]).linestyle
+			self.__getattribute__(self.ax3.slot0[-1]).linestyle = ls[:-1]+':'
+			if varN > 1:
+				self.ax3.slot1.append('nd'+str(self.parent.hist.nodelist[3].index)+'_')
+				self.ax3.slot1[-1] += self.parent.hist.variables[1]
+				self.__setattr__(self.ax3.slot1[-1],fdiagdata(parent=self,data=[],name=self.ax3.slot1[-1],label=self.parent.hist.variables[1]))
+				ls = self.__getattribute__(self.ax3.slot1[-1]).linestyle
+				self.__getattribute__(self.ax3.slot1[-1]).linestyle = ls[:-1]+':'
 	def split_line(self,line):
 		""" Splits a line from command output stream, returns list of string or floats.
 		"""
@@ -6282,14 +6484,14 @@ class fdiagnostic(object):
 			elif self.update_mass_output(ln): pass
 			elif self.update_enthalpy_input(ln): pass
 			elif self.update_enthalpy_output(ln): pass
+			elif self.update_node(ln): pass
 			elif self.update_errors(ln): pass			
 			elif self.update_residuals(ln): pass			
 			elif self.update_largestNR(ln): pass			
-		self.root.after(0,self.parse_line)
+		self._job = self.root.after(0,self.parse_line)
 	def handler(self):
-		self.stdout = None
-		self.poll = None
 		self.root.quit()
+		self.root.destroy()
 	def construct_viewer(self):
 		""" Assembles axes on the screen.
 		"""
@@ -6306,7 +6508,7 @@ class fdiagnostic(object):
 		else:
 			self.fig = plt.figure()
 
-		x1,x2 = 0.1, 0.5
+		x1,x2 = 0.1, 0.55
 		y1,y2,y3 = 0.1,0.4,0.7
 		dx = 0.35
 		dy = 0.25
@@ -6326,6 +6528,22 @@ class fdiagnostic(object):
 		self.ax3.sub0 = plt.axes([x2,y1,dx,dy])
 		self.ax3.sub1 = self.ax3.sub0.twinx()
 		
+		# set up text axes
+		self.txt = plt.axes([x2,y2,dx,dy+(y2-y1)])
+		self.txt.set_xticks([])
+		self.txt.set_yticks([])
+		self.txt.hold(True)
+		
+		self.texts = []
+		self.txt.text(0.5,0.95,'Summary of largest N-R corrections',ha='center',va='center',weight='bold',size=12)
+		self.txt.text(0.03,0.85,'First..............................................................................',ha='left',va='center',weight='bold',fontstyle='italic',size=11)
+		self.txt.text(0.03,0.63,'Most frequent...............................................................',ha='left',va='center',weight='bold',fontstyle='italic',size=11)
+		self.txt.text(0.03,0.21,'Most recent..................................................................',ha='left',va='center',weight='bold',fontstyle='italic',size=11)
+		
+		self.texts.append(self.txt.text(0.07,0.82,'',ha='left',va='top',size=10))
+		self.texts.append(self.txt.text(0.07,0.6,'',ha='left',va='top',size=10))
+		self.texts.append(self.txt.text(0.07,0.18,'',ha='left',va='top',size=10))
+		
 		t1 = np.min([self.parent.dti*self.rel_frame,self.parent.tf])		
 		self.time.lim=[0.,t1]
 		
@@ -6343,27 +6561,33 @@ class fdiagnostic(object):
 				ax0.set_yticks([])
 				ax0.set_yticklabels([])
 			else:
+				c = Counter([self.__getattribute__(slot).label_color for slot in ax.slot0])
+				col = c.most_common(1)[0][0]
+				
 				ax0.set_ylim(ax.ylim0)
-				ax0.set_ylabel(ax.ylabel0,size = text_size)
+				ax0.set_ylabel(ax.ylabel0,size = text_size,color = col)
 				if ax.logflag0: ax0.set_yscale('log')
 				ax0.hold(True)
 				
 				for t in ax0.get_yticklabels(): 
 					t.set_fontsize(text_size)
-					#t.set_color(fdd.label_color)
+					t.set_color(col)
 				
 			if not ax.slot1:
 				ax1.set_yticks([])
 				ax1.set_yticklabels([])
 			else:
+				c = Counter([self.__getattribute__(slot).label_color for slot in ax.slot1])
+				col = c.most_common(1)[0][0]
+				
 				ax1.set_ylim(ax.ylim1)
-				ax1.set_ylabel(ax.ylabel1,size = text_size)
+				ax1.set_ylabel(ax.ylabel1,size = text_size,color = col)
 				if ax.logflag1: ax1.set_yscale('log')
 				ax1.hold(True)
 				
 				for t in ax1.get_yticklabels(): 
 					t.set_fontsize(text_size)
-					#t.set_color(fdd.label_color)
+					t.set_color(col)
 		
 		self.canvas = FigureCanvasTkAgg(self.fig,master = self.root)
 		self.canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
@@ -6395,10 +6619,21 @@ class fdiagnostic(object):
 		
 		if not (np.min(dat0)<lim0[0] or np.max(dat0)>lim0[1]): return 	# check if update required
 		
+		if ax: 
+			dat0 = []
+			for slot in self.axs[k].slot1:
+				dat0 += list(self.__getattribute__(slot).data)
+		else: 
+			dat0 = []
+			for slot in self.axs[k].slot0:
+				dat0 += list(self.__getattribute__(slot).data)
+				
 		# calculate new limit
 		if not self.__getattribute__(name).log:
 			dmin = np.min(dat0)
 			dmax = np.max(dat0)
+			#if ax: dmid = (0.4*dmin+0.6*dmax)/2.
+			#else: dmid = (0.6*dmin+0.4*dmax)/2.
 			dmid = (dmin+dmax)/2.
 			drange = dmax-dmin
 			if dat0[-1]>lim0[1]:
@@ -6500,6 +6735,42 @@ class fdiagnostic(object):
 		self.update_lim('enthalpy_output_rate')
 		self.update_plot('enthalpy_output_rate')
 		return True
+	def update_node(self,ln):
+		check_string = 'Nodal Information (Water)'
+		if not all([(lni == chk) for lni, chk in zip(check_string.split(),ln)]): return False
+		print self.stdout.readline().rstrip()
+		print self.stdout.readline().rstrip()
+		
+		keepReading = True
+		updates = []
+		while keepReading:
+			# get line to process
+			line = self.stdout.readline()
+			print line.rstrip() 
+			ln = self.split_line(line)
+			# check if line empty -> break
+			if ln == None: break
+			# parse line, store information
+			nd,ndP,ndE,ndL,ndT,ndQ,ndQE = ln
+			nd = str(int(nd))
+			try: 
+				self.__getattribute__('nd'+nd+'_pressure').data.append(ndP)
+				updates.append('nd'+nd+'_pressure')
+			except: pass
+			try: 
+				self.__getattribute__('nd'+nd+'_temperature').data.append(ndT)
+				updates.append('nd'+nd+'_temperature')
+			except: pass
+			try: 
+				self.__getattribute__('nd'+nd+'_flow').data.append(ndQ)
+				updates.append('nd'+nd+'_flow')
+			except: pass
+		
+		for update in updates:
+			self.update_lim(update)
+			self.update_plot(update)
+		
+		return True
 	def update_errors(self,ln):
 		check_string = 'Conservation Errors:'
 		if not all([(lni == chk) for lni, chk in zip(check_string.split(),ln)]): return False
@@ -6564,59 +6835,24 @@ class fdiagnostic(object):
 		line = self.stdout.readline()
 		print line.rstrip() 
 		ln = self.split_line(line)
-		R1_data = ln[2]
-		R1_node = int(ln[4])
+		self.largest_NR.new_node(ln[2],int(ln[4]),1)
 		
 		line = self.stdout.readline()
 		print line.rstrip() 
 		ln = self.split_line(line)
-		R2_data = ln[2]
-		R2_node = int(ln[4])
+		self.largest_NR.new_node(ln[2],int(ln[4]),2)
 		
 		line = self.stdout.readline()
 		print line.rstrip() 
 		ln = self.split_line(line)
 		try:
-			R3_data = ln[2]
-			R3_node = int(ln[4])
+			self.largest_NR.new_node(ln[2],int(ln[4]),3)
 		except: 
-			R3_data = 1.e-30
+			self.largest_NR.R3_data.append(1.e-30)
+			self.largest_NR.R3_node.append([])
 		
-		Rmax = np.max([R1_data,R2_data,R3_data])
-		self.largest_NR.R_data.append(Rmax)
-		self.largest_NR.R_time.append(self.time.data[-1])
-		if Rmax == R1_data:
-			self.largest_NR.R_node.append(R1_node)
-			self.largest_NR.R_type.append(1)
-		elif Rmax == R2_data:
-			self.largest_NR.R_node.append(R2_node)
-			self.largest_NR.R_type.append(2)
-		else:
-			self.largest_NR.R_node.append(R3_node)
-			self.largest_NR.R_type.append(3)
-		
-		self.redraw_largestNR()
-		self.retext_largestNR()
-	def redraw_largestNR(self):
-		# search for plot of residuals, if found, plot as stars
-		k = None
-		for k in self.axs.keys():
-			for slot in self.axs[k].slot1:
-				if slot.startswith('residual'): ax=1;break
-			for slot in self.axs[k].slot0:
-				if slot.startswith('residual'): ax=0;break
-		if k is None: return
-		nr1 = np.array([[t,r] for t,r,d in zip(self.largest_NR.R_time,self.largest_NR.R_data,self.largest_NR.R_type) if d == 1])
-		nr2 = np.array([[t,r] for t,r,d in zip(self.largest_NR.R_time,self.largest_NR.R_data,self.largest_NR.R_type) if d == 2])
-		nr3 = np.array([[t,r] for t,r,d in zip(self.largest_NR.R_time,self.largest_NR.R_data,self.largest_NR.R_type) if d == 3])
-		
-		if len(nr1) != 0: self.axs[k].largest_NR_plot1.set_data(nr1[:,0],nr1[:,1])
-		if len(nr2) != 0: self.axs[k].largest_NR_plot2.set_data(nr2[:,0],nr2[:,1])
-		if len(nr3) != 0: self.axs[k].largest_NR_plot3.set_data(nr3[:,0],nr3[:,1])
-		
-		self.axs[k].redraw()
-	def retext_largestNR(self):
-		pass
+		self.largest_NR.redraw()
+		self.largest_NR.retext()
 	def _get_axs(self): return dict(zip(['0','1','2','3'],[self.ax0,self.ax1,self.ax2,self.ax3]))
 	axs = property(_get_axs)
 	
