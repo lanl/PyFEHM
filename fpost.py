@@ -2456,14 +2456,14 @@ def fdiff( in1, in2, format='diff', times=[], variables=[]):
 		out._times = times
 		out._variables = variables
 		out._data = {}
-		for t,v in zip(times,variables):
+		for t in times:
 			if format is 'diff':
 				print t,v
-				out._data[t] = dict([(v,in1[t][v] - in2[t][v])])
+				out._data[t] = dict([(v,in1[t][v] - in2[t][v]) for v in variables])
 			elif format is 'relative':
-				out._data[t] = dict([(v,(in1[t][v] - in2[t][v])/np.abs(in2[t][v]))])
+				out._data[t] = dict([(v,(in1[t][v] - in2[t][v])/np.abs(in2[t][v])) for v in variables])
 			elif format is 'percent':
-				out._data[t] = dict([(v,100*np.abs((in1[t][v] - in2[t][v])/in2[t][v]))])
+				out._data[t] = dict([(v,100*np.abs((in1[t][v] - in2[t][v])/in2[t][v])) for v in variables])
 		return out
 
 
