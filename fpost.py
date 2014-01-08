@@ -2436,7 +2436,7 @@ def fdiff( in1, in2, format='diff', times=[], variables=[]):
 		if len(times) > 0:
 			times = np.intersect1d(times,t)
 			if len(times) == 0:
-				print "ERROR: provided times are not concident with fpost object times"
+				print "ERROR: provided times are not coincident with fpost object times"
 				return
 		else:
 			times = t
@@ -2448,7 +2448,7 @@ def fdiff( in1, in2, format='diff', times=[], variables=[]):
 		if len(variables) > 0:
 			variables = np.intersect1d(variables,v)
 			if len(variables) == 0:
-				print "ERROR: provided times are not concident with fpost object times"
+				print "ERROR: provided times are not coincident with fpost object times"
 				return
 		else:
 			variables = v
