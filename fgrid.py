@@ -1462,6 +1462,26 @@ class fgrid(object):				#Grid object.
 		if pdf: 
 			os.system('epstopdf ' + save_fname)
 			os.remove(save_fname)			
+	def geom_coef_hist(self,log=True,plot=True):
+		""" Plot histogram of geometric coefficients, sign is changed so they are positive
+
+			:param log: Log10 scale coefficients if True, coefficients less than or equal to zero will not be included
+			:type log: bool
+			:param plot: Show plot if True
+			:type plot: bool
+			:returns: (lst(int),lst(fl64)) - tuple of count array and bin array
+		"""
+		conns = np.array([-c.geom_coef for c in self.connlist])
+		if log: 
+			conns = conns[np.where(conns!=0)[0]]
+			conns = np.log10(conns)
+			plt.xlabel('Log10(geom_coef)')
+		else:
+			plt.xlabel('geom_coef')
+		h = plt.hist(conns)
+		plt.ylabel('Count')
+		plt.show()
+		return h
 	def add_nodetree(self,repair=False):
 		""" Constuct octree for node positions. Call to update if changes made to grid.
 		"""
