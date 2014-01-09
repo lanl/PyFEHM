@@ -1410,6 +1410,32 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 		else:
 			outdat = self[time][variable][nd]
 		return outdat
+	def paraview(self, grid, stor = None, exe = dflt.paraview_path,filename = 'temp.vtk',show=None,diff = False,zscale = 1.):
+		""" Launches an instance of Paraview that displays the contour object.
+		
+		:param grid: Path to grid file associated with FEHM simulation that produced the contour output.
+		:type grid: str
+		:param stor: Path to grid file associated with FEHM simulation that produced the contour output.
+		:type stor: str
+		:param exe: Path to Paraview executable.
+		:type exe: str
+		:param filename: Name of VTK file to be output.
+		:type filename: str
+		:param show: Variable to show when Paraview starts up (default = first available variable in contour object).
+		:type show: str
+		:param diff: Flag to request PyFEHM to also plot differences of contour variables (from initial state) with time.
+		:type diff: bool
+		:param zscale: Factor by which to scale z-axis. Useful for visualising laterally extensive flow systems.
+		:type zscale: fl64
+		"""
+		from fdata import fdata
+		dat = fdata()
+		dat.grid.read(grid,storfilename=stor)
+		if show is None: 
+			for var in self.variables:
+				if var not in ['x','y','z','n']: break
+			show = var
+		dat.paraview(exe=exe,filename=filename,contour=self,show=show,diff=diff,zscale=zscale)
 	def _get_variables(self): return self._variables
 	variables = property(_get_variables)#: (*lst[str]*) List of variables for which output data are available.
 	def _get_user_variables(self): return self._user_variables
@@ -2127,7 +2153,6 @@ class fvtk(object):
 		mat_vars = ['n','x','y','z','perm_x','perm_y','perm_z','porosity','density','cond_x','cond_y','cond_z']
 		if self.contour:
 			cont_vars = self.contour.variables
-		
 		# convert k* format to perm_*
 		if show == 'kx': show = 'perm_x'
 		elif show == 'ky': show = 'perm_y'
