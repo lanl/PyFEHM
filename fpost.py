@@ -657,11 +657,12 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 			fp.readline()
 			header = fp.readline()
 			for mat_prop in header.split(' "')[5:]:
-				if 'specific heat' not in mat_prop:
-					self._material_properties.append(mat_prop.split('"')[0].strip())
+				self._material_properties.append(mat_prop.split('"')[0].strip())
 			lns = fp.readlines()
+			if lns[0].startswith('ZONE'): lns = lns[1:]
 			fp.close()
-			data = np.array([[float(d) for d in ln.strip().split()[4:]] for ln in lns])
+			if nds: lns = lns[:nds] 		# truncate to remove connectivity information
+			data = np.array([[float(d) for d in ln.strip().split()[4:]] for ln in lns[:-1]])
 			self._material= dict([(var,data[:,icol]) for icol,var in enumerate(self._material_properties)])
 	def _check_inputs(self,variable, time, slice):	# assesses whether sufficient input information for slice plot
 		if not variable: 
@@ -2025,7 +2026,13 @@ class fvtk(object):
 		cns = [[nd.index-1 for nd in el.nodes] for el in self.parent.grid.elemlist]
 		
 		# make grid
-		self.data = fVtkData(pv.UnstructuredGrid(nds,hexahedron=cns),'PyFEHM VTK model output')
+		if len(cns[0]) == 4:
+			self.data = fVtkData(pv.UnstructuredGrid(nds,tetra=cns),'PyFEHM VTK model output')
+		elif len(cns[0]) == 8:
+			self.data = fVtkData(pv.UnstructuredGrid(nds,hexahedron=cns),'PyFEHM VTK model output')
+		else:
+			print "ERROR: Number of connections in connectivity not recognized: "+str(len(cns[0]))
+			return
 		
 		# grid information
 		dat = np.array([nd.position for nd in self.parent.grid.nodelist])
