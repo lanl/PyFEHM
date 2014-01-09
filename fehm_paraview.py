@@ -1,4 +1,5 @@
 
+import os
 from optparse import OptionParser
 
 usage = 'Usage: fehm_paraview.py [options] input grid'
@@ -13,10 +14,21 @@ parser.add_option('-d',action='store_true',dest='diff', default=False, help = 'P
 
 from fdata import*
 
-if options.inconname != None:
-	dat = fdata(args[0],args[1],options.inconname)
+if len(args) < 2:
+	# look for fehmn.files
+	if len(args) == 1: flname = args[0]
+	elif os.path.isfile('fehmn.files'): flname = 'fehmn.files'
+	
+	dat = fdata(flname)
+	# assess whether contour data should be loaded as well
+elif len(args) == 1:
+	# assume some form of fehmn.files - open it
 else:
-	dat = fdata(args[0],args[1])
+	# assume input and grid file have been provided
+	if options.inconname != None:
+		dat = fdata(args[0],args[1],options.inconname)
+	else:
+		dat = fdata(args[0],args[1])
 
 c = None
 if options.contname: c = fcontour(options.contname)

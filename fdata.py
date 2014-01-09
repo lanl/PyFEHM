@@ -2766,6 +2766,7 @@ class fdata(object):						#FEHM data file.
 		if inconfilename: self.incon._path.filename = filename
 		
 		# THERE WILL ALWAYS BE A GRID PATH TO READ - INPUT FILES CANNOT BE READ WITHOUT A GRID
+		print self.grid._path.full_path
 		self.grid.read(self.grid._path.full_path,full_connectivity=full_connectivity)
 		self.files.grid = self.grid._path.full_path
 		

@@ -2067,11 +2067,16 @@ class fvtk(object):
 		"""Assemble material properties in pyvtk objects."""
 		# permeabilities
 		perms = np.array([nd.permeability for nd in self.parent.grid.nodelist])
-		if np.mean(perms)>0.: perms = np.log10(perms)
-		
-		self.add_material('perm_x',perms[:,0])
-		self.add_material('perm_y',perms[:,1])
-		self.add_material('perm_z',perms[:,2])
+		if not all(v is None for v in perms):
+			if np.mean(perms)>0.: perms = np.log10(perms)
+			self.add_material('perm_x',perms[:,0])
+			self.add_material('perm_y',perms[:,1])
+			self.add_material('perm_z',perms[:,2])
+		else:
+			blank = [-1.e30 for nd in self.parent.grid.nodelist]
+			self.add_material('perm_x',blank)
+			self.add_material('perm_y',blank)
+			self.add_material('perm_z',blank)
 
 		props = np.array([[nd.density, nd.porosity, nd.specific_heat, nd.youngs_modulus,nd.poissons_ratio,nd.thermal_expansion,nd.pressure_coupling,nd.Ti,nd.Pi,nd.Si] 	for nd in self.parent.grid.nodelist])
 		names = ['density','porosity','specific_heat','youngs_modulus','poissons_ratio','thermal_expansion','pressure_coupling','Pi','Ti','Si']
@@ -2108,7 +2113,9 @@ class fvtk(object):
 		"""Call to write out vtk files."""
 		if self.parent.work_dir: wd = self.parent.work_dir
 		else: wd = self.parent._path.absolute_to_file
-		fls = self.data.tofile(wd+slash+self.path.filename)
+		if wd is None: wd = ''
+		else: wd += slash
+		fls = self.data.tofile(wd+self.path.filename)
 		# save file names for later use
 		self.material_file = fls[0]
 		self.contour_files = []
