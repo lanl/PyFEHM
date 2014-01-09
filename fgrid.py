@@ -734,7 +734,7 @@ class fgrid(object):				#Grid object.
 			 (len(np.unique([nd.position[2] for nd in self.nodelist])) == 1)):
 			self._dimensions = 2
 		else: self._dimensions = 3
-	def write(self,filename=None,format='fehm', remove_duplicates = True, recalculate_coefficients=True):
+	def write(self,filename=None,format='fehm', remove_duplicates = True, recalculate_coefficients=True,compress_eps=1.e-5):
 		"""Write grid object to a grid file (FEHM, AVS STOR file formats supported). Stor file support only for orthogonal hexahedral grids.
 
 		:param filename: name of FEHM grid file to write to, including path specification, e.g. c:\\path\\file_out.inp
@@ -780,7 +780,7 @@ class fgrid(object):				#Grid object.
 		
 		if format == 'fehm': self._write_fehm(outfile)
 		elif format == 'avs': self._write_avs(outfile)
-		elif format == 'stor': self._write_stor(outfile,remove_duplicates,recalculate_coefficients)
+		elif format == 'stor': self._write_stor(outfile,remove_duplicates,recalculate_coefficients,compress_eps=compress_eps)
 		else: pyfehm_print('ERROR: Unrecognized format '+format+'.');return
 		
 		if format == 'stor': 
@@ -841,7 +841,7 @@ class fgrid(object):				#Grid object.
 					outfile.write(str(nd)+'   ')
 				outfile.write('\n')
 		outfile.close()
-	def _write_stor(self,outfile,remove_duplicates,recalculate_coefficients):
+	def _write_stor(self,outfile,remove_duplicates,recalculate_coefficients,compress_eps=1.e-5):
 		# calculate volumes and geometric coefficients
 		if recalculate_coefficients:
 			for conn in self.connlist: conn._geom_coef = None
@@ -850,7 +850,7 @@ class fgrid(object):				#Grid object.
 				self._vorvol(nd) 		# calculate voronoi volume of node
 		
 		if remove_duplicates:
-			tol = 1.e-5
+			tol = compress_eps
 			indices1 = [] 			# for populating later
 			geom_coefs = [con.geom_coef for con in self.connlist] 	# all coefficients
 			gcU = np.ones((1,len(geom_coefs)))[0]*float('Inf')
@@ -1013,7 +1013,7 @@ class fgrid(object):				#Grid object.
 		:param tolerance: Relative tolerance below which connections will be removed (default = 1.e-8).
 		:type tolerance: fl64
 		:param keepcons: List of connections to keep in stor file ignoring tolerance.
-		:type keepcons: lst(connection keys)
+		:type keepcons: lst(connection keys) or lst(connections)
 		"""
 		
 		connlist = self.connlist # Save temporary connlist
@@ -1025,6 +1025,13 @@ class fgrid(object):				#Grid object.
 		pyfehm_print("Minimum coefficient value to keep:"+str(mincoef))
 		pyfehm_print("Number of connections (incl. zeros):"+str(len(geom_coefs)))
 		# Collect connections to keep (less than because coef are given negative sign)
+		for i,j in enumerate(keepcons):
+			if isinstance(j,fconn):
+				keepcons[i] = (j.nodes[0].index,j.nodes[1].index)
+			elif isinstance(j,tuple): pass
+			else:
+				print "ERROR: keepconns contains unknown connection type"
+				return
 		keepcoef = [c for c in connlist if (c.geom_coef < mincoef or (c.nodes[0].index,c.nodes[1].index) in keepcons)]
 		for con in keepcoef:
 				self.add_conn(con)
