@@ -4581,7 +4581,7 @@ class fdata(object):						#FEHM data file.
 		if tempRstoFlag: 
 			self.files.incon = ''
 			self.files.write()
-	def paraview(self,exe = 'paraview',filename = 'temp.vtk',contour = None,show='kx',zones = 'user',diff = False,zscale = 1.):
+	def paraview(self,exe = dflt.paraview_path,filename = 'temp.vtk',contour = None,show='kx',zones = 'user',diff = False,zscale = 1.):
 		'''Exports the model object to VTK and loads in paraview.
 		
 		:param exe: Path to Paraview executable.

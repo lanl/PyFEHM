@@ -69,6 +69,7 @@ class fdflt(object):
 
 		# set this to the fehm executable to be used if no default assigned
 		self.fehm_path 				=	'c:\\path\\to\\fehm\\fehm.exe'
+		self.paraview_path 			=	'paraview.exe'
 		self.lagrit_path			=	'c:\\path\\to\\lagrit\\lagrit.exe'
 		self.files 					=	['outp','hist','check']
 		self.co2_interp_path 		= 	'c:\\path\\to\\co2\\co2_interp_table.txt'
