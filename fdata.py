@@ -2698,16 +2698,24 @@ class fdata(object):						#FEHM data file.
 			with open(filename) as f:
 				for ln in f.readlines():
 					if ln.startswith('rsti:'): 
-						inconfilename = wd+ln.split('rsti:')[-1].strip()
+						#inconfilename = wd+ln.split('rsti:')[-1].strip()
+						inconfilename = ln.split('rsti:')[-1].strip()
 					if ln.startswith('grida:'): 
-						gridfilename = wd+ln.split('grida:')[-1].strip()
+						#gridfilename = wd+ln.split('grida:')[-1].strip()
+						gridfilename = ln.split('grida:')[-1].strip()
 					if ln.startswith('gridf:'): 
-						gridfilename = wd+ln.split('gridf:')[-1].strip()
+						#gridfilename = wd+ln.split('gridf:')[-1].strip()
+						gridfilename = ln.split('gridf:')[-1].strip()
 					if ln.startswith('input:'): 
-						filename = wd+ln.split('input:')[-1].strip()
+						#filename = wd+ln.split('input:')[-1].strip()
+						filename = ln.split('input:')[-1].strip()
 					if ln.startswith('stor:'): 
-						storfilename = wd+ln.split('stor:')[-1].strip()
+						#storfilename = wd+ln.split('stor:')[-1].strip()
+						storfilename = ln.split('stor:')[-1].strip()
 						self.files.stor = storfilename
+					if ln.startswith('root:'): 
+						#filename = wd+ln.split('input:')[-1].strip()
+						self.files.root = ln.split('root:')[-1].strip()
 			
 			# set up  path objects then pass to read function
 			self._path.filename = filename
@@ -2766,7 +2774,6 @@ class fdata(object):						#FEHM data file.
 		if inconfilename: self.incon._path.filename = filename
 		
 		# THERE WILL ALWAYS BE A GRID PATH TO READ - INPUT FILES CANNOT BE READ WITHOUT A GRID
-		print self.grid._path.full_path
 		self.grid.read(self.grid._path.full_path,full_connectivity=full_connectivity)
 		self.files.grid = self.grid._path.full_path
 		

@@ -21,8 +21,6 @@ if len(args) < 2:
 	
 	dat = fdata(flname)
 	# assess whether contour data should be loaded as well
-elif len(args) == 1:
-	# assume some form of fehmn.files - open it
 else:
 	# assume input and grid file have been provided
 	if options.inconname != None:
@@ -31,6 +29,17 @@ else:
 		dat = fdata(args[0],args[1])
 
 c = None
+
+if dat.cont.variables != []:
+	if dat.cont.format == 'surf':
+		c = fcontour(dat.files.root+'*.csv')
+	elif dat.cont.format == 'tec':
+		c = fcontour(dat.files.root+'*node*.dat')
+	elif dat.cont.format == 'avs':
+		c = fcontour(dat.files.root+'*node*.avs')
+	elif dat.cont.format == 'avs':
+		c = fcontour(dat.files.root+'*node*.avsx')
+		
 if options.contname: c = fcontour(options.contname)
 exe = 'paraview.exe'
 if options.exename: exe = options.exename
