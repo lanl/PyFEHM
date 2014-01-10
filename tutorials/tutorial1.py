@@ -70,7 +70,10 @@ dat.files.root = root
 dat.run(root+'_INPUT.dat', diagnostic = True) 		# note, because no executable path is specified, PyFEHM retrieves the executable specified in the default path
 
 # 7.1.7 Visualisation
-#c = fcontour(dat.work_dir+'\\*.csv')
+c = fcontour(dat.work_dir+'\\*.csv')
+
+dat.paraview(contour=c, diff=True, zscale = 20.)
+
 #c.slice_plot(save='Tslice.png',cbar=True,levels=11,slice=['x',5],variable='T',method='linear',title='temperature / degC',
 #xlabel='y / m', ylabel = 'z / m')
 #c.slice_plot(save='Pslice.png',cbar=True,levels=np.linspace(4,6,9),slice=['x',5],variable='P',method='linear',title='pressure / MPa',

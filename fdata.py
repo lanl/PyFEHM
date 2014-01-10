@@ -2733,7 +2733,7 @@ class fdata(object):						#FEHM data file.
 			self._path.filename = filename
 			self.grid._path.filename = gridfilename
 			if inconfilename:
-				self.incon._path.inconfilename
+				self.incon._path.filename
 			self.read(full_connectivity=full_connectivity,skip=skip)
 			
 		# 2. nothing passed - no path objects to set up, no reading required
@@ -6490,7 +6490,6 @@ class fdiagnostic(object):
 		self.ax3.slot0 = []
 		self.ax3.slot1 = []
 	def refresh_nodes(self):
-		print self.parent.hist.variables
 		ndN = len(self.parent.hist.nodelist)
 		varN = len(self.parent.hist.variables)
 		self.write_nd = False
@@ -6892,11 +6891,11 @@ class fdiagnostic(object):
 			self.file_nd.write('\n')
 			self.file_nd.flush()
 			os.fsync(self.file_nd)
-			
 	def update_timestep(self,ln):
 		""" Update the time step plot.
 		"""
 		check_string = 'Years  Days  Step Size'
+		if len(check_string.split()) > len(ln): return False
 		if not all([(lni == chk) for lni, chk in zip(check_string.split(),ln)]): return False
 		self.write_timestep()
 		line = self.stdout.readline()
@@ -6916,6 +6915,7 @@ class fdiagnostic(object):
 		return True
 	def update_mass(self,ln):
 		check_string = 'Net kg water discharge'
+		if len(check_string.split()) > len(ln): return False
 		if not all([(lni == chk) for lni, chk in zip(check_string.split(),ln)]): return False
 		self.total_mass.data.append(ln[-1])
 		if len(self.total_mass.data) == 1: return True
@@ -6925,6 +6925,7 @@ class fdiagnostic(object):
 		return True
 	def update_energy(self,ln):
 		check_string = 'Net MJ energy discharge'
+		if len(check_string.split()) > len(ln): return False
 		if not all([(lni == chk) for lni, chk in zip(check_string.split(),ln)]): return False
 		self.total_energy.data.append(ln[-1])
 		if len(self.total_energy.data) == 1: return True
@@ -6934,6 +6935,7 @@ class fdiagnostic(object):
 		return True
 	def update_mass_input(self,ln):
 		check_string = 'Water input this time step:'
+		if len(check_string.split()) > len(ln): return False
 		if not all([(lni == chk) for lni, chk in zip(check_string.split(),ln)]): return False
 		self.mass_input_rate.data.append(float(ln[-2][1:]))
 		
@@ -6942,6 +6944,7 @@ class fdiagnostic(object):
 		return True
 	def update_mass_output(self,ln):
 		check_string = 'Water discharge this time step:'
+		if len(check_string.split()) > len(ln): return False
 		if not all([(lni == chk) for lni, chk in zip(check_string.split(),ln)]): return False
 		self.mass_output_rate.data.append(float(ln[-2][1:]))
 		
@@ -6950,6 +6953,7 @@ class fdiagnostic(object):
 		return True		
 	def update_enthalpy_input(self,ln):
 		check_string = 'Enthalpy input this time step:'
+		if len(check_string.split()) > len(ln): return False
 		if not all([(lni == chk) for lni, chk in zip(check_string.split(),ln)]): return False
 		self.enthalpy_input_rate.data.append(float(ln[-2][1:]))
 		
@@ -6958,6 +6962,7 @@ class fdiagnostic(object):
 		return True
 	def update_enthalpy_output(self,ln):
 		check_string = 'Enthalpy discharge this time step:'
+		if len(check_string.split()) > len(ln): return False
 		if not all([(lni == chk) for lni, chk in zip(check_string.split(),ln)]): return False
 		self.enthalpy_output_rate.data.append(float(ln[-2][1:]))
 		
@@ -6966,6 +6971,7 @@ class fdiagnostic(object):
 		return True
 	def update_node(self,ln):
 		check_string = 'Nodal Information (Water)'
+		if len(check_string.split()) > len(ln): return False
 		if not all([(lni == chk) for lni, chk in zip(check_string.split(),ln)]): return False
 		print self.stdout.readline().rstrip()
 		print self.stdout.readline().rstrip()
@@ -7000,6 +7006,7 @@ class fdiagnostic(object):
 		return True
 	def update_errors(self,ln):
 		check_string = 'Conservation Errors:'
+		if len(check_string.split()) > len(ln): return False
 		if not all([(lni == chk) for lni, chk in zip(check_string.split(),ln)]): return False
 		self.mass_error.data.append(ln[2])
 		self.energy_error.data.append(ln[-2])
@@ -7012,6 +7019,7 @@ class fdiagnostic(object):
 		return True
 	def update_residuals(self,ln):
 		check_string = 'Largest Residuals'
+		if len(check_string.split()) > len(ln): return False
 		if not all([(lni == chk) for lni, chk in zip(check_string.split(),ln)]): return False
 		# get first residual
 		r = []
@@ -7056,6 +7064,7 @@ class fdiagnostic(object):
 		self.update_plot('residual3')
 	def update_largestNR(self,ln):
 		check_string = '#### largest N-R corrections, timestep'
+		if len(check_string.split()) > len(ln): return False
 		if not all([(lni == chk) for lni, chk in zip(check_string.split(),ln)]): return False
 		
 		self.largest_NR.timestep.append(int(ln[-2]))
