@@ -242,6 +242,18 @@ def _title_string(s,n): 						#prepends headers to sections of FEHM input file
 	ws+='\n'
 	return ws
 def _zone_ind(indStr): return abs(int(indStr))-(int(indStr)+abs(int(indStr)))/2
+def process_output(filename,input=None,grid=None,hide=False):
+	if input and grid: dat = fdata(filename=input,gridfilename=grid)
+	else: 
+		dat = fdata()
+		dat._path.filename=filename
+	dat.files.root = dat.filename.split('.')[0]
+	dat.hist.variables=list(flatten(dat.hist.variables))
+	dat._diagnostic.hide = hide
+	dat._diagnostic.refresh_nodes()
+	dat._diagnostic.stdout = open(filename)
+	dat._diagnostic.poll = True
+	dat._diagnostic.construct_viewer()	
 class fzone(object):						#FEHM zone object.
 	"""FEHM Zone object.
 	
@@ -6289,18 +6301,19 @@ class fdiagNR(object):
 		self.R3_node = []
 		
 		self.R_time = []
-		
 	def new_node(self,data,node,type):
+		try: node = self.parent.parent.grid.node[node]
+		except: pass
 		if type == 1:
 			self.R1_data.append(data)
-			self.R1_node.append(self.parent.parent.grid.node[node])		
+			self.R1_node.append(node)		
 			self.R_time.append(self.parent.time.data[-1])
 		elif type == 2:
 			self.R2_data.append(data)
-			self.R2_node.append(self.parent.parent.grid.node[node])			
+			self.R2_node.append(node)			
 		elif type == 3:
 			self.R3_data.append(data)
-			self.R3_node.append(self.parent.parent.grid.node[node])			
+			self.R3_node.append(node)			
 		else:
 			print 'Invalid type'
 	def redraw(self):
@@ -6430,6 +6443,8 @@ class fdiagnostic(object):
 		self.file_nr = None 		# write out information collected by diagnostic tool
 		self.file_nd = None 		# write out information collected by diagnostic tool
 		self.nds = []
+		self.nd_vars = ['pressure','temperature','flow']
+		self.hide = False
 		
 		self._job = True
 		
@@ -6475,6 +6490,7 @@ class fdiagnostic(object):
 		self.ax3.slot0 = []
 		self.ax3.slot1 = []
 	def refresh_nodes(self):
+		print self.parent.hist.variables
 		ndN = len(self.parent.hist.nodelist)
 		varN = len(self.parent.hist.variables)
 		self.write_nd = False
@@ -6537,7 +6553,11 @@ class fdiagnostic(object):
 		return ln2
 	def parse_line(self):
 		line = self.stdout.readline()
-		if not line and self.poll() is not None: return
+		if not line:
+			try:
+				if self.poll() is not None: return
+			except:
+				if self.poll == False: return
 		print line.rstrip() 
 		ln = self.split_line(line)
 		if ln is not None:
@@ -6655,9 +6675,10 @@ class fdiagnostic(object):
 					t.set_color(col)
 		
 			if k == '3': self.axs[k].make_legend()
-		self.canvas = FigureCanvasTkAgg(self.fig,master = self.root)
-		self.canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
-		self.canvas.show()
+		if not self.hide:
+			self.canvas = FigureCanvasTkAgg(self.fig,master = self.root)
+			self.canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+			self.canvas.show()
 		
 		for k in self.axs.keys():
 			self.axs[k].add_empty_plots()
@@ -6666,6 +6687,7 @@ class fdiagnostic(object):
 		self.root.after(0,self.parse_line)
 		self.root.mainloop()
 	def update_tlim(self):
+		if self.hide: return
 		if not self.time.data[-1]>self.time.lim[-1]: return
 		self.time.lim[1] = np.min([self.time.data[-1]*self.rel_frame,self.parent.tf])
 		for k in self.axs.keys():
@@ -6675,6 +6697,7 @@ class fdiagnostic(object):
 			self.axs[k].sub1.hold(True)
 	def update_lim(self,name):
 		""" Redraw vertical axes if necessary. """
+		if self.hide: return
 		# rescale axes
 		ax = None
 		for k in self.axs.keys():
@@ -6727,6 +6750,7 @@ class fdiagnostic(object):
 		
 		self.axs[k].reset_bg()
 	def update_plot(self,name):
+		if self.hide: return
 		ax = None
 		for k in self.axs.keys():
 			if name in self.axs[k].slot0: ax = 0; break
@@ -6745,13 +6769,16 @@ class fdiagnostic(object):
 		if all([(lni == chk) for lni, chk in zip(cs2.split(),ln)]): returnFlag = False
 		if returnFlag: return
 		
-		print 'hello'
-		
 		if self.file_cv: self.file_cv.close()
 		if self.file_nr: 
 			self.summarise_nr()
 			self.file_nr.close()
 		if self.file_nd: self.file_nd.close()
+		
+		if self.poll is True: self.poll = False
+		if self.hide: 
+			self.root.quit()
+			self.root.destroy()
 	def summarise_nr(self):
 		
 		self.file_nr.write('\n')
@@ -6799,11 +6826,11 @@ class fdiagnostic(object):
 		self.file_nr.write('MOST RECENT largest N-R correction\n')
 		txt = self.largest_NR.text_R(-1,True)		
 		self.file_nr.write(txt)
-		
 	def write_NR(self):
 		if self.file_nr is None:
 			# first time step, open file
 			if self.parent.work_dir: wd = self.parent.work_dir+slash
+			else: wd=''
 			self.file_nr = open(wd+self.parent.files.root+'_NR.dgs','w')
 		
 		self.file_nr.write('largest N-R correction, timestep %5i\n'%(len(self.timestep.data)+1))
@@ -6819,22 +6846,33 @@ class fdiagnostic(object):
 			'mass_output_rate','enthalpy_input_rate','enthalpy_output_rate','mass_error','energy_error']
 		if self.file_cv is None:
 			if self.parent.work_dir: wd = self.parent.work_dir+slash
+			else: wd=''
 			# first time step, open files
 			self.file_cv = open(wd+self.parent.files.root+'_convergence.dgs','w',1)
-#			if self.write_nd:
-#				self.file_nd = open(wd+self.parent.files.root+'_node.dgs','w')
 			# write headers			
 			self.file_cv.write('index   ')
 			N = 14
 			for h in headers:
 				if len(h)>N: h = h[:N]
 				self.file_cv.write('%14s'%h+'\t')
-			self.file_cv.write('\n')
-#			if self.file_nd:
-#				for nd in nds:					
+			self.file_cv.write('\n')				
 				
 			return
-			
+
+		if self.write_nd and not self.file_nd:
+			if self.parent.work_dir: wd = self.parent.work_dir+slash
+			else: wd=''
+			self.file_nd = open(wd+self.parent.files.root+'_node.dgs','w')
+			self.file_nd.write('index   ')
+			nm = 'time(days)'
+			self.file_nd.write('%16s'%nm+'  ')
+			for nd in self.nds:
+				for nm in self.nd_vars:
+					nm = 'nd_'+str(nd)+'_'+nm
+					if len(nm)>15: nm = nm[:15]
+					self.file_nd.write('%16s'%nm+'  ')
+			self.file_nd.write('\n')				
+				
 		# write time step
 		self.file_cv.write('%5i   '%len(self.timestep.data))
 		for h in headers:
@@ -6843,8 +6881,17 @@ class fdiagnostic(object):
 		self.file_cv.flush()
 		os.fsync(self.file_cv)
 		
-#		if self.file_nd:
-#			for nd in nds:
+		if self.file_nd:
+			self.file_nd.write('%5i   '%len(self.timestep.data))
+			self.file_nd.write('% 10.9e  '%self.time.data[-1])
+			for nd in self.nds:
+				for nm in self.nd_vars:
+					try: val=self.__getattribute__('nd'+str(nd)+'_'+nm).data[-1]
+					except: val=self.__getattribute__('nd'+str(nd)+'_'+nm)[-1]
+					self.file_nd.write('% 10.9e  '%(val))
+			self.file_nd.write('\n')
+			self.file_nd.flush()
+			os.fsync(self.file_nd)
 			
 	def update_timestep(self,ln):
 		""" Update the time step plot.
@@ -6922,6 +6969,7 @@ class fdiagnostic(object):
 		if not all([(lni == chk) for lni, chk in zip(check_string.split(),ln)]): return False
 		print self.stdout.readline().rstrip()
 		print self.stdout.readline().rstrip()
+		self.write_nd = True
 		
 		keepReading = True
 		updates = []
@@ -6934,20 +6982,16 @@ class fdiagnostic(object):
 			if ln == None: break
 			# parse line, store information
 			nd,ndP,ndE,ndL,ndT,ndQ,ndQE = ln
-			self.nds.append(int(nd))
+			if int(nd) not in self.nds: self.nds.append(int(nd))
 			nd = str(int(nd))
-			try: 
-				self.__getattribute__('nd'+nd+'_pressure').data.append(ndP)
-				updates.append('nd'+nd+'_pressure')
-			except: pass
-			try: 
-				self.__getattribute__('nd'+nd+'_temperature').data.append(ndT)
-				updates.append('nd'+nd+'_temperature')
-			except: pass
-			try: 
-				self.__getattribute__('nd'+nd+'_flow').data.append(ndQ)
-				updates.append('nd'+nd+'_flow')
-			except: pass
+			for nm,ndI in zip(self.nd_vars,[ndP,ndT,ndQ]):
+				nm = 'nd'+nd+'_'+nm
+				try: 
+					self.__getattribute__(nm).data.append(ndI)
+					updates.append(nm)
+				except:
+					try: self.__getattribute__(nm).append(ndI)
+					except: self.__setattr__(nm,[ndI])
 		
 		for update in updates:
 			self.update_lim(update)
@@ -7034,9 +7078,12 @@ class fdiagnostic(object):
 			self.largest_NR.R3_data.append(1.e-30)
 			self.largest_NR.R3_node.append([])
 		
-		self.write_NR()
-		self.largest_NR.redraw()
-		self.largest_NR.retext()
+		if len(self.parent.grid.nodelist) ==0:
+			pass
+		else:
+			self.write_NR()
+			self.largest_NR.redraw()
+			self.largest_NR.retext()
 	def _get_axs(self): return dict(zip(['0','1','2','3'],[self.ax0,self.ax1,self.ax2,self.ax3]))
 	axs = property(_get_axs)
 	
