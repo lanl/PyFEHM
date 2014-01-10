@@ -64,7 +64,7 @@ dat.hist.variables.append(['pressure','temperature'])
 dat.tf=100.
 #dat.time['max_time_TIMS']=10.
 
-#dat.iter['machine_tolerance_TMCH'] = -0.5e-5
+dat.iter['machine_tolerance_TMCH'] = -0.5e-5
 
 dat.files.root = root
 dat.run(root+'_INPUT.dat', diagnostic = True) 		# note, because no executable path is specified, PyFEHM retrieves the executable specified in the default path

@@ -6359,7 +6359,7 @@ class fdiagNR(object):
 		self.parent.texts[2].set_text(txt)
 		
 		self.parent.fig.canvas.draw()
-	def text_R(self,i):
+	def text_R(self,i,more=False):
 		nd = self.R_node[i]
 		txt =  'EQ'+str(self.R_type[i])+', '
 		txt += 'R = %3.2E, '%self.R_data[i]
@@ -6382,6 +6382,11 @@ class fdiagNR(object):
 			txt += 'Unzoned'
 		txt += '\n'		
 		
+		if more:
+			txt += 'Connected nodes: '
+			for ndi in nd.connected_nodes: txt += str(ndi.index)+', '
+			txt = txt[:-2]+'\n'
+			
 		if isinstance(nd.permeability,(float,int)):
 			k = [nd.permeability,nd.permeability,nd.permeability]
 		else: k = nd.permeability
@@ -6424,6 +6429,7 @@ class fdiagnostic(object):
 		self.file_cv = None         # write out information collected by diagnostic tool
 		self.file_nr = None 		# write out information collected by diagnostic tool
 		self.file_nd = None 		# write out information collected by diagnostic tool
+		self.nds = []
 		
 		self._job = True
 		
@@ -6546,6 +6552,7 @@ class fdiagnostic(object):
 			elif self.update_errors(ln): pass			
 			elif self.update_residuals(ln): pass			
 			elif self.update_largestNR(ln): pass			
+			elif self.close_files(ln): pass			
 		self._job = self.root.after(0,self.parse_line)
 	def handler(self):
 		self.root.quit()
@@ -6731,16 +6738,80 @@ class fdiagnostic(object):
 		
 		self.axs[k].redraw()
 	def close_files(self,ln):
-		check_string = 'total code time(timesteps)'
-		if not all([(lni == chk) for lni, chk in zip(check_string.split(),ln)]): return False
+		cs1 = 'total code time(timesteps)'
+		cs2 = 'timestep less than daymin'
+		returnFlag = True
+		if all([(lni == chk) for lni, chk in zip(cs1.split(),ln)]): returnFlag = False
+		if all([(lni == chk) for lni, chk in zip(cs2.split(),ln)]): returnFlag = False
+		if returnFlag: return
+		
+		print 'hello'
+		
 		if self.file_cv: self.file_cv.close()
-		if self.file_nr: self.file_nr.close()
+		if self.file_nr: 
+			self.summarise_nr()
+			self.file_nr.close()
 		if self.file_nd: self.file_nd.close()
-	def write_nr(self):
+	def summarise_nr(self):
+		
+		self.file_nr.write('\n')
+		self.file_nr.write('#############################################################################\n')
+		self.file_nr.write('#############################   SUMMARY   ###################################\n')
+		self.file_nr.write('#############################################################################\n')
+		self.file_nr.write('\n')
+		self.file_nr.write('FIRST largest N-R correction\n')
+		self.file_nr.write(self.largest_NR.text_R(0,True))
+		self.file_nr.write('\n')
+		self.file_nr.write('\n')
+		
+		self.file_nr.write('MOST FREQUENT largest N-R corrections\n')
+		c = Counter(np.array([nd.index for nd in self.largest_NR.R_node]))
+		cnts = c.most_common(2)
+		nd_max = cnts[0][0]
+		
+		for i,nd in enumerate(self.largest_NR.R_node):
+			if nd.index == nd_max: break
+				
+		txt = self.largest_NR.text_R(i,True)		
+		txt2 = '(1) '+str(cnts[0][1])+' appearance'
+		if cnts[0][1]>1: txt2 += 's'
+		txt2 += ':\n'
+		
+		txt = txt2+txt+'\n'
+		
+		if len(cnts)>1:
+			nd_max = cnts[1][0]
+			for i,nd in enumerate(self.largest_NR.R_node):
+				if nd.index == nd_max: break
+					
+			txt1 = self.largest_NR.text_R(i,True)		
+			txt2 = '(2) '+str(cnts[1][1])+' appearance'
+			if cnts[1][1]>1: txt2 += 's'
+			txt2 += ':\n'				
+		
+			txt += txt2+txt1
+		
+		self.file_nr.write(txt)
+		
+		self.file_nr.write('\n')
+		self.file_nr.write('\n')
+		
+		self.file_nr.write('MOST RECENT largest N-R correction\n')
+		txt = self.largest_NR.text_R(-1,True)		
+		self.file_nr.write(txt)
+		
+	def write_NR(self):
 		if self.file_nr is None:
 			# first time step, open file
 			if self.parent.work_dir: wd = self.parent.work_dir+slash
 			self.file_nr = open(wd+self.parent.files.root+'_NR.dgs','w')
+		
+		self.file_nr.write('largest N-R correction, timestep %5i\n'%(len(self.timestep.data)+1))
+		self.file_nr.write(self.largest_NR.text_R(-1,True))
+		self.file_nr.write('\n')
+		
+		self.file_nr.flush()
+		os.fsync(self.file_nr)
 	def write_timestep(self):
 		""" Writes data for a single time step to file.
 		"""
@@ -6963,6 +7034,7 @@ class fdiagnostic(object):
 			self.largest_NR.R3_data.append(1.e-30)
 			self.largest_NR.R3_node.append([])
 		
+		self.write_NR()
 		self.largest_NR.redraw()
 		self.largest_NR.retext()
 	def _get_axs(self): return dict(zip(['0','1','2','3'],[self.ax0,self.ax1,self.ax2,self.ax3]))
