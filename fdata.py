@@ -6421,6 +6421,9 @@ class fdiagnostic(object):
 	"""		
 	def __init__(self,parent):
 		self.parent = parent
+		self.file_cv = None         # write out information collected by diagnostic tool
+		self.file_nr = None 		# write out information collected by diagnostic tool
+		self.file_nd = None 		# write out information collected by diagnostic tool
 		
 		self._job = True
 		
@@ -6468,7 +6471,9 @@ class fdiagnostic(object):
 	def refresh_nodes(self):
 		ndN = len(self.parent.hist.nodelist)
 		varN = len(self.parent.hist.variables)
+		self.write_nd = False
 		if ndN == 0 or varN == 0: return
+		self.write_nd = True
 		if ndN > 0:
 			self.ax3.slot0.append('nd'+str(self.parent.hist.nodelist[0].index)+'_')
 			self.ax3.slot0[-1] += self.parent.hist.variables[0]
@@ -6725,11 +6730,57 @@ class fdiagnostic(object):
 		else: self.axs[k].plot0[name].set_data(self.__getattribute__(name).time,self.__getattribute__(name).data)
 		
 		self.axs[k].redraw()
+	def close_files(self,ln):
+		check_string = 'total code time(timesteps)'
+		if not all([(lni == chk) for lni, chk in zip(check_string.split(),ln)]): return False
+		if self.file_cv: self.file_cv.close()
+		if self.file_nr: self.file_nr.close()
+		if self.file_nd: self.file_nd.close()
+	def write_nr(self):
+		if self.file_nr is None:
+			# first time step, open file
+			if self.parent.work_dir: wd = self.parent.work_dir+slash
+			self.file_nr = open(wd+self.parent.files.root+'_NR.dgs','w')
+	def write_timestep(self):
+		""" Writes data for a single time step to file.
+		"""
+		headers = ['timestep','time','total_mass','total_energy','residual1','residual2','residual3','mass_input_rate',
+			'mass_output_rate','enthalpy_input_rate','enthalpy_output_rate','mass_error','energy_error']
+		if self.file_cv is None:
+			if self.parent.work_dir: wd = self.parent.work_dir+slash
+			# first time step, open files
+			self.file_cv = open(wd+self.parent.files.root+'_convergence.dgs','w',1)
+#			if self.write_nd:
+#				self.file_nd = open(wd+self.parent.files.root+'_node.dgs','w')
+			# write headers			
+			self.file_cv.write('index   ')
+			N = 14
+			for h in headers:
+				if len(h)>N: h = h[:N]
+				self.file_cv.write('%14s'%h+'\t')
+			self.file_cv.write('\n')
+#			if self.file_nd:
+#				for nd in nds:					
+				
+			return
+			
+		# write time step
+		self.file_cv.write('%5i   '%len(self.timestep.data))
+		for h in headers:
+			self.file_cv.write('% 8.7e  '%(self.__getattribute__(h).data[-1]))
+		self.file_cv.write('\n')
+		self.file_cv.flush()
+		os.fsync(self.file_cv)
+		
+#		if self.file_nd:
+#			for nd in nds:
+			
 	def update_timestep(self,ln):
 		""" Update the time step plot.
 		"""
 		check_string = 'Years  Days  Step Size'
 		if not all([(lni == chk) for lni, chk in zip(check_string.split(),ln)]): return False
+		self.write_timestep()
 		line = self.stdout.readline()
 		print line.rstrip() 
 		ln = self.split_line(line)
@@ -6812,6 +6863,7 @@ class fdiagnostic(object):
 			if ln == None: break
 			# parse line, store information
 			nd,ndP,ndE,ndL,ndT,ndQ,ndQE = ln
+			self.nds.append(int(nd))
 			nd = str(int(nd))
 			try: 
 				self.__getattribute__('nd'+nd+'_pressure').data.append(ndP)
