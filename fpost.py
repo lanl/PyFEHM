@@ -2462,7 +2462,9 @@ def fdiff( in1, in2, format='diff', times=[], variables=[]):
 	:type variables: lst(str)
 	:returns: fpost object of same type as in1 and in2
 	'''
-
+    # Copy in1 and in2 in case they get modified below
+	in1 = deepcopy(in1)
+	in2 = deepcopy(in2)
 	if type(in1) is not type(in2):
 		print "ERROR: fpost objects are not of the same type: "+str(type(in1))+" and "+str(type(in2))
 		return

@@ -9,5 +9,6 @@ setup(name='PyFEHM',
 	url='pyfehm.lanl.gov',
 	license='LGPL',
 	py_modules=['ftool','fgrid','fdata','fpost','fvars','fdflt','fhelp','ftemp'],
+	packages=['pyvtk'],
 	scripts = ['scripts/diagnose.py','scripts/fehm_paraview.py']
 	)
