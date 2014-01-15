@@ -2492,6 +2492,9 @@ def fdiff( in1, in2, format='diff', times=[], variables=[]):
 		else:
 			variables = v
 		out = deepcopy(in1)
+		# Copy in1 and in2 in case values get changed to avoid division by zero below
+		in1 = deepcopy(in1)
+		in2 = deepcopy(in2)
 		out._times = times
 		out._variables = variables
 		out._data = {}
@@ -2499,8 +2502,18 @@ def fdiff( in1, in2, format='diff', times=[], variables=[]):
 			if format is 'diff':
 				out._data[t] = dict([(v,in1[t][v] - in2[t][v]) for v in variables])
 			elif format is 'relative':
+				# Check for zeros in in2[t][v] to avoid division by zero
+				# If v2 is zero, make v1=2 and v2=1 so that relative diff is 1, as is should be
+				for v in variables:
+					in1[t][v] = np.array([v1 if v2!=0 else 2. for v1,v2 in zip(in1[t][v],in2[t][v])])
+					in2[t][v] = np.array([v2 if v2!=0 else 1. for v1,v2 in zip(in1[t][v],in2[t][v])])
 				out._data[t] = dict([(v,(in1[t][v] - in2[t][v])/np.abs(in2[t][v])) for v in variables])
 			elif format is 'percent':
+				# Check for zeros in in2[t][v] to avoid division by zero
+				# If v2 is zero, make v1=2 and v2=1 so that percent diff is 100, as it should be
+				for v in variables:
+					in1[t][v] = np.array([v1 if v2!=0 else 2. for v1,v2 in zip(in1[t][v],in2[t][v])])
+					in2[t][v] = np.array([v2 if v2!=0 else 1. for v1,v2 in zip(in1[t][v],in2[t][v])])
 				out._data[t] = dict([(v,100*np.abs((in1[t][v] - in2[t][v])/in2[t][v])) for v in variables])
 		return out
 
