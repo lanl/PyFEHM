@@ -353,11 +353,11 @@ class fzone(object):						#FEHM zone object.
 			return
 		self._parent.add(fmacro('hflx',zone=self,param=(('heat_flow',T),('multiplier',multiplier)),file=file))
 		self._fixedT = T
-	def fix_pressure(self,P, T=30., impedance=1.e6, file = None):
+	def fix_pressure(self,P=0, T=30., impedance=1.e6, file = None):
 		''' Fixes pressures at nodes within this zone. Pressures fixed by adding a FLOW macro with high
 			impedance.
 			
-			:param P: Pressure to fix.
+			:param P: Pressure to fix. Default is 0, corresponding to fixing initial pressure.
 			:type P: fl64
 			:param T: Temperature to fix (default = 30 degC).
 			:type T: fl64
@@ -1390,9 +1390,13 @@ class fincon(object): 						#FEHM restart object.
 		if inconfilename: 
 			self._path.filename = inconfilename
 		if self._parent.work_dir:
-			outfile = open(self._path.absolute_to_workdir+slash+self._path.filename,'w')
+			path = self._path.absolute_to_workdir+slash+self._path.filename
 		else:
-			outfile = open(self._path.full_path,'w')
+			path = self._path.full_path
+		outfile = open(path,'w')
+		self._parent.files.incon = path
+		self._path.filename = path
+		
 		pyfehm_print('Writing new INCON file '+inconfilename+'.')
 		# write headers
 		outfile.write('PyFEHM V1.0                      ')
@@ -2586,7 +2590,10 @@ class files(object):						#FEHM file constructor.
 			self._root = self._input.split('.')[0]
 	input = property(_get_input,_set_input) #: (*str*) Name of input file. This is set automatically when reading an input file in PyFEHM or when running a simulation.
 	def _get_root(self): return self._root
-	def _set_root(self,value):  self._root = value
+	def _set_root(self,value):  
+		self._root = value
+		self.outp = self.root +'.outp'
+		self.check = self.root +'.chk'
 	root = property(_get_root,_set_root)	#: (*str*) Default file name string. If not already specified, this is set automatically when running a simulation.
 	def _get_grid(self): return self._grid
 	def _set_grid(self,value):  self._grid = value
@@ -4427,6 +4434,7 @@ class fdata(object):						#FEHM data file.
 		:type diagnostic: bool
 		'''
 		
+		print self.files.incon
 		if verbose != None: self._verbose = verbose
 		
 		# set up and check path to executable
@@ -4601,7 +4609,7 @@ class fdata(object):						#FEHM data file.
 		if tempRstoFlag: 
 			self.files.incon = ''
 			self.files.write()
-	def paraview(self,exe = dflt.paraview_path,filename = 'temp.vtk',contour = None,show='kx',zones = 'user',diff = False,zscale = 1.):
+	def paraview(self,exe = dflt.paraview_path,filename = 'temp.vtk',contour = None,show='kx',zones = 'user',diff = True,zscale = 1.):
 		'''Exports the model object to VTK and loads in paraview.
 		
 		:param exe: Path to Paraview executable.
@@ -6048,6 +6056,7 @@ class fdata(object):						#FEHM data file.
 		if np.max(self._output_times)>self.tf:
 			_buildWarnings('WARNING: output requested for times after the simulation end time.')
 	output_times = property(_get_output_times, _set_output_times) #: (*lst*) List of times at which FEHM should produce output.
+
 class fdiagdata(object):
 	"""Class for diagnostic data object."""
 	def __init__(self,parent,name,label,data,lim=[-1.e-9,1.e-9],label_color='k',linestyle='ko-',markersize=4,log=False):
@@ -6579,6 +6588,14 @@ class fdiagnostic(object):
 	def construct_viewer(self):
 		""" Assembles axes on the screen.
 		"""
+		# set residual slots
+		if self.parent.carb.iprtype != 1:
+			self.ax2.slot0 = ['residual1','residual2','residual3']
+		elif self.parent.strs.param['ISTRS']==1:
+			self.ax2.slot0 = ['residual1','residual2','residual3']
+		else:
+			self.ax2.slot0 = ['residual1','residual2']
+		
 		# create figure window
 		self.root = tk.Tk()
 		self.root.wm_title('PyFEHM diagnostic window: '+self.parent.filename)
@@ -6756,9 +6773,10 @@ class fdiagnostic(object):
 			elif name in self.axs[k].slot1: ax = 1; break
 		if ax is None: return
 		
-		if ax: self.axs[k].plot1[name].set_data(self.__getattribute__(name).time,self.__getattribute__(name).data)
-		else: self.axs[k].plot0[name].set_data(self.__getattribute__(name).time,self.__getattribute__(name).data)
-		
+		if ax: 
+			self.axs[k].plot1[name].set_data(self.__getattribute__(name).time,self.__getattribute__(name).data)
+		else: 
+			self.axs[k].plot0[name].set_data(self.__getattribute__(name).time,self.__getattribute__(name).data)
 		self.axs[k].redraw()
 	def close_files(self,ln):
 		cs1 = 'total code time(timesteps)'
@@ -6825,6 +6843,10 @@ class fdiagnostic(object):
 		self.file_nr.write('MOST RECENT largest N-R correction\n')
 		txt = self.largest_NR.text_R(-1,True)		
 		self.file_nr.write(txt)
+		
+		# create a zone for largestNR nodes in case of export to paraview
+		if 980 not in self.parent.zone.keys():			
+			self.parent.new_zone(980,'largestNR',nodelist = self.largest_NR.R_node)
 	def write_NR(self):
 		if self.file_nr is None:
 			# first time step, open file
@@ -6875,7 +6897,10 @@ class fdiagnostic(object):
 		# write time step
 		self.file_cv.write('%5i   '%len(self.timestep.data))
 		for h in headers:
-			self.file_cv.write('% 8.7e  '%(self.__getattribute__(h).data[-1]))
+			try:
+				self.file_cv.write('% 8.7e  '%(self.__getattribute__(h).data[-1]))
+			except:
+				self.file_cv.write('% 8.7e  '%(0))
 		self.file_cv.write('\n')
 		self.file_cv.flush()
 		os.fsync(self.file_cv)
@@ -6987,7 +7012,10 @@ class fdiagnostic(object):
 			# check if line empty -> break
 			if ln == None: break
 			# parse line, store information
-			nd,ndP,ndE,ndL,ndT,ndQ,ndQE = ln
+			if len(ln) == 7:
+				nd,ndP,ndE,ndL,ndT,ndQ,ndQE = ln
+			elif len(ln) == 8:
+				nd,ndP,ndT,ndSw,ndSaq,ndS, ndQ,ndQE = ln
 			if int(nd) not in self.nds: self.nds.append(int(nd))
 			nd = str(int(nd))
 			for nm,ndI in zip(self.nd_vars,[ndP,ndT,ndQ]):
@@ -7027,7 +7055,7 @@ class fdiagnostic(object):
 		line = self.stdout.readline()
 		print line.rstrip() 
 		ln = self.split_line(line)
-		self.residual1.data.append(ln[2])
+		self.residual1.data.append(abs(ln[2]))
 		self.residual1.node.append(int(ln[4]))
 		if len(self.residual1.data) == 1: 
 			pt = self.residual1.data[0]
@@ -7036,7 +7064,7 @@ class fdiagnostic(object):
 		line = self.stdout.readline()
 		print line.rstrip() 
 		ln = self.split_line(line)
-		self.residual2.data.append(ln[2])
+		self.residual2.data.append(abs(ln[2]))
 		self.residual2.node.append(int(ln[4]))
 		if len(self.residual2.data) == 1: 
 			pt = self.residual2.data[0]
@@ -7045,14 +7073,13 @@ class fdiagnostic(object):
 		line = self.stdout.readline()
 		print line.rstrip() 
 		ln = self.split_line(line)
-		try:
-			self.residual3.data.append(ln[2])
+		if ln[0] == 'EQ3':
+			self.residual3.data.append(abs(ln[2]))
 			self.residual3.node.append(int(ln[4]))
 			if len(self.residual3.data) == 1: 
 				pt = self.residual3.data[0]
 				self.residual3.lim = [pt-1.e-30,pt+1.e-30]
-		except: pass
-		
+				
 		# plot residuals on log axes
 		self.update_lim('residual1')
 		self.update_plot('residual1')
@@ -7060,8 +7087,9 @@ class fdiagnostic(object):
 		self.update_lim('residual2')
 		self.update_plot('residual2')
 		
-		self.update_lim('residual3')
-		self.update_plot('residual3')
+		if ln[0] == 'EQ3':
+			self.update_lim('residual3')
+			self.update_plot('residual3')
 	def update_largestNR(self,ln):
 		check_string = '#### largest N-R corrections, timestep'
 		if len(check_string.split()) > len(ln): return False
