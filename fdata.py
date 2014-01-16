@@ -711,11 +711,9 @@ class fzone(object):						#FEHM zone object.
 				zmax,zmin = np.max(self.points[2]),np.min(self.points[2])
 			else:
 				zmax,zmin = self._parent._grid.zmax+.01,self._parent._grid.zmin-.01
-			for nd in self._parent._grid._nodelist:
-				x,y,z = nd._position
-				if (x<=xmax) and (x>=xmin) and (y<=ymax) and (y>=ymin) and (z<=zmax) and (z>=zmin):
-					nds.append(nd)
-			self._nodelist = nds
+			x,y,z = np.array([nd._position for nd in self._parent._grid._nodelist]).T
+			inds = np.where((x<=xmax)&(x>=xmin)&(y<=ymax)&(y>=ymin)&(z<=zmax)&(z>=zmin))
+			self._nodelist = [self._parent._grid._nodelist[i] for i in inds[0]]			
 		if self._index == 0: self._nodelist = self._parent._grid._nodelist
 		return self._nodelist
 	def _set_nodes(self,value):

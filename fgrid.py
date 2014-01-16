@@ -38,6 +38,8 @@ except ImportError:
 from fpost import*
 from ftool import*
 
+from itertools import izip
+
 dflt = fdflt()
 
 WINDOWS = platform.system()=='Windows'
@@ -84,7 +86,7 @@ class fnode(object):				#Node object.
 		'_permeability','_conductivity','_density','_specific_heat','_porosity','_youngs_modulus','_poissons_ratio','_thermal_expansion',
 		'_pressure_coupling','_Pi','_Ti','_Si','_S_co2gi','_S_co2li','_co2aqi','_strsi','_dispi','_P','_T','_S',
 		'_S_co2g','_S_co2l','_co2aq','_strs','_disp','_vol','_rlpmodel','_permmodel','_pormodel','_condmodel']
-	def __init__(self,index=None,position=None):		
+	def __init__(self,index,position):		
 		self._index = index			
 		self._position=position	
 		self._connected_nodes = []
@@ -122,7 +124,7 @@ class fnode(object):				#Node object.
 		self._permmodel = None
 		self._pormodel = None
 		self._condmodel = None
-	def __repr__(self): return 'nd'+str(self.index)
+	def __repr__(self): return 'nd'+str(self._index)
 	def __getstate__(self):
 		return dict((k, getattr(self, k)) for k in self.__slots__)
 	def __setstate__(self, data_dict):
@@ -288,13 +290,13 @@ class fconn(object):				#Connection object.
 
 	A connection is associated with a distance between the two nodes.
 	"""
-	def __init__(self,nodes=[fnode(),fnode()]):
+	def __init__(self,nodes):
 		self._nodes = nodes		
 		#pos1 = self.nodes[0].position; pos2 = self.nodes[1].position
 		#if pos1 == None and pos2 == None: self._distance = None
 		#else: self._distance = np.sqrt((pos1[0]-pos2[0])**2+(pos1[1]-pos2[1])**2+(pos1[2]-pos2[2])**2)
 		self._geom_coef = 0.
-	def __repr__(self):	return 'n'+str(self.nodes[0].index)+':n'+str(self.nodes[1].index)	
+	def __repr__(self):	return 'n'+str(self._nodes[0]._index)+':n'+str(self._nodes[1]._index)	
 	def _get_distance(self): return self._distance
 	distance = property(_get_distance)	#: (*fl64*) Distance between the two connected nodes.
 	def _get_nodes(self): return self._nodes
@@ -535,7 +537,7 @@ class fgrid(object):				#Grid object.
 			pyfehm_print('ERROR: Unrecognized grid format.')
 			
 		if octree: self.add_nodetree()
-		else: self._pos_matrix = np.array([nd.position for nd in self.nodelist])
+		else: self._pos_matrix = np.array([nd._position for nd in self._nodelist])
 		if self._parent: self._parent._add_boundary_zones()
 	def _read_fehm(self,storfilename=None): 		#Read in fehm meshfile for node,element data .
 		self._nodelist = []
@@ -550,7 +552,7 @@ class fgrid(object):				#Grid object.
 		self._nodelist = [None]*N
 		for i in range(N):
 			nd = infile.readline().strip().split()
-			new_node = fnode(index=int(nd[0]),position=np.array([float(nd[1]),float(nd[2]),float(nd[3])]))
+			new_node = fnode(int(nd[0]),np.array([float(nd[1]),float(nd[2]),float(nd[3])]))
 			self.add_node(new_node)	
 		
 		infile.readline()
@@ -560,9 +562,8 @@ class fgrid(object):				#Grid object.
 		N = int(N.strip().split()[1])
 		self._elemlist = [None]*N
 		
-		import time
-		tstart = time.time()
 		lns = infile.readlines()
+		
 		for i,ln in enumerate(lns[:N]):
 			el = [int(eli) for eli in ln.strip().split()]
 			
@@ -578,20 +579,17 @@ class fgrid(object):				#Grid object.
 				elif connectivity == 3:
 					nds1 = [el[1],el[2],el[3]]
 					nds2 = [el[2],el[3],el[1]]
-				else:
-					pyfehm_print('ERROR: unrecognized connectivity')
-					return
-				if storfilename is None:
-					for nd1,nd2 in zip(nds1,nds2):					
+				if storfilename is None:					
+					for ndi1,ndi2 in izip(nds1,nds2):					
 						# check if connection exists					
-						if nd1>nd2: ndi = nd2; nd2 = nd1; nd1 = ndi
-						nd1 = self._nodelist[nd1-1]; nd2 = self._nodelist[nd2-1]
+						if ndi1>ndi2: ndi = ndi2; ndi2 = ndi1; ndi1 = ndi
+						nd1 = self._nodelist[ndi1-1]; nd2 = self._nodelist[ndi2-1]
 						if nd2 in nd1._connected_nodes: continue
 						
 						nd1._connected_nodes.append(nd2)
 						nd2._connected_nodes.append(nd1)
 						
-						self.add_conn(fconn(nodes = [nd1,nd2]))
+						self.add_conn(fconn([nd1,nd2]))
 						nd1._connections.append(self.connlist[-1])
 						nd2._connections.append(self.connlist[-1])
 						
@@ -601,17 +599,14 @@ class fgrid(object):				#Grid object.
 			else:
 				self._elemlist[i] = el[1:]
 				self._elem[el[0]] = self.elemlist[i]
-				
-		print 'reading elems: ',time.time()-tstart
 		self._conn_dist()
 		infile.close()		
 		if not storfilename is None:
 			self._read_stor(storfilename)
-		if ((len(np.unique([nd.position[0] for nd in self.nodelist])) == 1) or
-			 (len(np.unique([nd.position[1] for nd in self.nodelist])) == 1) or
-			 (len(np.unique([nd.position[2] for nd in self.nodelist])) == 1)):
+		if ((len(np.unique([nd._position[0] for nd in self._nodelist])) == 1) or
+			 (len(np.unique([nd._position[1] for nd in self.nodelist])) == 1) or
+			 (len(np.unique([nd._position[2] for nd in self.nodelist])) == 1)):
 			self._dimensions = 2
-		else: self._dimensions = 3
 	def _read_stor(self,filename):
 		# Define function to parse values in file one at a time
 		self._full_connectivity = True
@@ -1227,19 +1222,19 @@ class fgrid(object):				#Grid object.
 			ndI = int(line[1])
 			ndV = float(line[i+1])
 			self.node[ndI]._vol = ndV
-	def add_node(self,node=fnode()):		#Add a node object.
+	def add_node(self,node):		#Add a node object.
 		self._nodelist[node._index-1] = node
 		self._node[node._index] = node
-	def add_conn(self,conn=fconn()):		#Add a connection object.
+	def add_conn(self,conn):		#Add a connection object.
 		self._connlist.append(conn)
 		self._conn[(conn._nodes[0]._index,conn._nodes[1]._index)] = self._connlist[-1]
 	def _conn_dist(self):
 		if not self._full_connectivity: return
 		# populate distance attribute for each conn object
-		dist = np.array([[c._nodes[0]._position, c._nodes[1]._position] for c in self._connlist])
-		dist = np.sqrt((dist[:,0,0]-dist[:,1,0])**2+(dist[:,0,1]-dist[:,1,1])**2+(dist[:,0,2]-dist[:,1,2])**2)
-		for i,c in enumerate(self.connlist): c._distance = dist[i]
-	def add_elem(self,elem=felem()):		#Add an element object.
+		dist = np.array([c._nodes[0]._position-c._nodes[1]._position for c in self._connlist])
+		dist = np.sqrt((dist[:,0])**2+(dist[:,1])**2+(dist[:,2])**2)			
+		for i,c in enumerate(self.connlist): c._distance = dist[i]			
+	def add_elem(self,elem):		#Add an element object.
 		self._elemlist[elem._index-1] = elem
 		self._elem[elem._index] = elem
 	def node_nearest_point(self,pos = []):
