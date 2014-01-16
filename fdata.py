@@ -707,16 +707,16 @@ class fzone(object):						#FEHM zone object.
 			if not self._parent.grid: self._nodelist = nds; return self._nodelist
 			xmax,xmin = np.max(self.points[0]),np.min(self.points[0])
 			ymax,ymin = np.max(self.points[1]),np.min(self.points[1])
-			if self._parent.grid.dimensions == 3:
+			if self._parent._grid.dimensions == 3:
 				zmax,zmin = np.max(self.points[2]),np.min(self.points[2])
 			else:
-				zmax,zmin = self._parent.grid.zmax+.01,self._parent.grid.zmin-.01
-			for nd in self._parent.grid.nodelist:
-				x,y,z = nd.position
+				zmax,zmin = self._parent._grid.zmax+.01,self._parent._grid.zmin-.01
+			for nd in self._parent._grid._nodelist:
+				x,y,z = nd._position
 				if (x<=xmax) and (x>=xmin) and (y<=ymax) and (y>=ymin) and (z<=zmax) and (z>=zmin):
 					nds.append(nd)
 			self._nodelist = nds
-		if self.index == 0: self._nodelist = self._parent.grid.nodelist
+		if self._index == 0: self._nodelist = self._parent._grid._nodelist
 		return self._nodelist
 	def _set_nodes(self,value):
 		if self.type == 'rect': 
@@ -2983,8 +2983,8 @@ class fdata(object):						#FEHM data file.
 	def _add_boundary_zones(self): 						#Automatically creates zones corresponding to x,y,z boundaries
 		x0,x1 = self.grid.xmin,self.grid.xmax
 		y0,y1 = self.grid.ymin,self.grid.ymax
-		x = np.sort(np.unique([nd.position[0] for nd in self.grid.nodelist]))
-		y = np.sort(np.unique([nd.position[1] for nd in self.grid.nodelist]))
+		x = np.sort(np.unique([nd._position[0] for nd in self.grid._nodelist]))
+		y = np.sort(np.unique([nd._position[1] for nd in self.grid._nodelist]))
 		if self.grid.dimensions == 2:
 			ks = [999,998,997,996,'XMIN','XMAX','YMIN','YMAX']
 			for k in ks:
@@ -4609,7 +4609,8 @@ class fdata(object):						#FEHM data file.
 		if tempRstoFlag: 
 			self.files.incon = ''
 			self.files.write()
-	def paraview(self,exe = dflt.paraview_path,filename = 'temp.vtk',contour = None,show='kx',zones = 'user',diff = True,zscale = 1.):
+	def paraview(self,exe = dflt.paraview_path,filename = 'temp.vtk',contour = None,show='kx',zones = 'user',diff = True,zscale = 1.,
+		spatial_derivatives = False, time_derivatives = False):
 		'''Exports the model object to VTK and loads in paraview.
 		
 		:param exe: Path to Paraview executable.
@@ -4626,8 +4627,12 @@ class fdata(object):						#FEHM data file.
 		:type diff: bool
 		:param zscale: Factor by which to scale z-axis. Useful for visualising laterally extensive flow systems.
 		:type zscale: fl64
+		:param spatial_derivatives: Calculate new fields for spatial derivatives of contour data.
+		:type spatial_derivatives: bool
+		:param time_derivatives: Calculate new fields for time derivatives of contour data.
+		:type time_derivatives: bool
 		'''
-		self._vtk = fvtk(parent=self,filename=filename,contour=contour,show_zones = zones,diff=diff,zscale = zscale)
+		self._vtk = fvtk(parent=self,filename=filename,contour=contour,show_zones = zones,diff=diff,zscale = zscale,spatial_derivatives = spatial_derivatives, time_derivatives = time_derivatives)
 		self._vtk.assemble()
 		fls = self._vtk.write()
 		self._vtk.initial_display(show)

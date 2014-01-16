@@ -2023,7 +2023,7 @@ class fVtkData(pv.VtkData):
 			written_files.append(filename_int)
 		return written_files
 class fvtk(object):
-	def __init__(self,parent,filename,contour,show_zones,diff,zscale):
+	def __init__(self,parent,filename,contour,show_zones,diff,zscale,spatial_derivatives,time_derivatives):
 		self.parent = parent
 		self.path = fpath(parent = self)
 		self.path.filename = filename
@@ -2034,6 +2034,8 @@ class fvtk(object):
 		self.zones = []
 		self.show_zones = show_zones
 		self.diff = diff
+		self.spatial_derivatives = spatial_derivatives
+		self.time_derivatives = time_derivatives
 		self.zscale = zscale
 	def assemble(self):		
 		"""Assemble all information in pyvtk objects."""			
@@ -2120,21 +2122,28 @@ class fvtk(object):
 		if self.diff: time0 = self.contour.times[0]
 		for time in self.contour.times:
 			do_lims = (time == self.contour.times[-1])
-			for var in self.contour.variables:
-				if time != self.contour.times[0] and var in ['x','y','z','n']: continue
+			for var in self.contour.variables+self.contour.user_variables:
+				# skip conditions
+				if var in self.contour.variables:
+					if time != self.contour.times[0] and var in ['x','y','z','n']: continue
+				else:
+					if var not in self.contour[time].keys(): continue
+					if diff:
+						if var not in self.contour[time0].keys(): continue
+				
+				# field for contour variable
 				if var not in self.variables: self.variables.append(var)
 				self.data.contour[time].append(pv.Scalars(self.contour[time][var],name=var,lookup_table='default'))
+				if do_lims: self.__setattr__(var+'_lim',[np.min(self.contour[time][var]),np.max(self.contour[time][var])])
+				
+				# differences from initial value
 				if self.diff:
 					self.data.contour[time].append(pv.Scalars(self.contour[time][var]-self.contour[time0][var],name='diff_'+var,lookup_table='default'))
-				if do_lims: self.__setattr__(var+'_lim',[np.min(self.contour[time][var]),np.max(self.contour[time][var])])
-			for var in self.contour.user_variables:
-				if var not in self.variables: self.variables.append(var)
-				if var not in self.contour[time].keys(): continue
-				self.data.contour[time].append(pv.Scalars(self.contour[time][var],name=var,lookup_table='default'))
-				if self.diff:
-					if var not in self.contour[time0].keys(): continue
-					self.data.contour[time].append(pv.Scalars(self.contour[time][var]-self.contour[time0][var],name='diff_'+var,lookup_table='default'))
-				if do_lims: self.__setattr__(var+'_lim',[np.min(self.contour[time][var]),np.max(self.contour[time][var])])
+				
+				# time derivatives
+				if self.time_derivative:
+					pass
+		
 	def write(self):	
 		"""Call to write out vtk files."""
 		if self.parent.work_dir: wd = self.parent.work_dir

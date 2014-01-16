@@ -80,13 +80,14 @@ def repair_grid(gridfilename):
 class fnode(object):				#Node object.
 	""" FEHM grid node object.
 	"""
-	__slots__ = ['_index','_position','_connections','_elements','_generator','_zone',
+	__slots__ = ['_index','_position','_connections','_elements','_generator','_zone','_connected_nodes',
 		'_permeability','_conductivity','_density','_specific_heat','_porosity','_youngs_modulus','_poissons_ratio','_thermal_expansion',
 		'_pressure_coupling','_Pi','_Ti','_Si','_S_co2gi','_S_co2li','_co2aqi','_strsi','_dispi','_P','_T','_S',
 		'_S_co2g','_S_co2l','_co2aq','_strs','_disp','_vol','_rlpmodel','_permmodel','_pormodel','_condmodel']
 	def __init__(self,index=None,position=None):		
 		self._index = index			
 		self._position=position	
+		self._connected_nodes = []
 		self._connections = []	
 		self._elements = []	
 		self._generator = {}
@@ -209,6 +210,7 @@ class fnode(object):				#Node object.
 		print prntStr
 	what = property(_get_info)							#: Print to screen information about the node.
 	def _get_connected_nodes(self):
+		return self._connected_nodes
 		ndlist = []
 		for con in self.connections:
 			for nd in con.nodes:
@@ -288,9 +290,9 @@ class fconn(object):				#Connection object.
 	"""
 	def __init__(self,nodes=[fnode(),fnode()]):
 		self._nodes = nodes		
-		pos1 = self.nodes[0].position; pos2 = self.nodes[1].position
-		if pos1 == None and pos2 == None: self._distance = None
-		else: self._distance = np.sqrt((pos1[0]-pos2[0])**2+(pos1[1]-pos2[1])**2+(pos1[2]-pos2[2])**2)
+		#pos1 = self.nodes[0].position; pos2 = self.nodes[1].position
+		#if pos1 == None and pos2 == None: self._distance = None
+		#else: self._distance = np.sqrt((pos1[0]-pos2[0])**2+(pos1[1]-pos2[1])**2+(pos1[2]-pos2[2])**2)
 		self._geom_coef = 0.
 	def __repr__(self):	return 'n'+str(self.nodes[0].index)+':n'+str(self.nodes[1].index)	
 	def _get_distance(self): return self._distance
@@ -545,6 +547,7 @@ class fgrid(object):				#Grid object.
 			
 		ln = infile.readline()
 		N = int(infile.readline())
+		self._nodelist = [None]*N
 		for i in range(N):
 			nd = infile.readline().strip().split()
 			new_node = fnode(index=int(nd[0]),position=np.array([float(nd[1]),float(nd[2]),float(nd[3])]))
@@ -555,11 +558,16 @@ class fgrid(object):				#Grid object.
 		N = infile.readline()
 		connectivity = int(N.strip().split()[0])
 		N = int(N.strip().split()[1])
-		for i in range(N):
-			el = [int(eli) for eli in infile.readline().strip().split()]
+		self._elemlist = [None]*N
+		
+		import time
+		tstart = time.time()
+		lns = infile.readlines()
+		for i,ln in enumerate(lns[:N]):
+			el = [int(eli) for eli in ln.strip().split()]
 			
 			if self._full_connectivity:
-				new_elem = felem(index = el[0], nodes = [self.node[eli] for eli in el[1:]])
+				new_elem = felem(index = el[0], nodes = [self._nodelist[eli-1] for eli in el[1:]])
 				self.add_elem(new_elem)
 				if connectivity == 8:
 					nds1 = [el[1],el[1],el[1],el[7],el[7],el[7],el[4],el[4],el[6],el[6],el[2],el[5]]
@@ -574,26 +582,28 @@ class fgrid(object):				#Grid object.
 					pyfehm_print('ERROR: unrecognized connectivity')
 					return
 				if storfilename is None:
-					for nd1,nd2 in zip(nds1,nds2):
+					for nd1,nd2 in zip(nds1,nds2):					
+						# check if connection exists					
 						if nd1>nd2: ndi = nd2; nd2 = nd1; nd1 = ndi
-						nd1 = self.node[nd1]; nd2 = self.node[nd2]
-						new_conn = fconn(nodes = [nd1,nd2])
+						nd1 = self._nodelist[nd1-1]; nd2 = self._nodelist[nd2-1]
+						if nd2 in nd1._connected_nodes: continue
 						
-						nd1inds = []
-						for con in nd1.connections:
-						    for nd in con.nodes: nd1inds.append(nd.index)
+						nd1._connected_nodes.append(nd2)
+						nd2._connected_nodes.append(nd1)
 						
-						if nd2.index in nd1inds: continue
+						self.add_conn(fconn(nodes = [nd1,nd2]))
+						nd1._connections.append(self.connlist[-1])
+						nd2._connections.append(self.connlist[-1])
 						
-						self.add_conn(new_conn)
-						nd1.connections.append(new_conn)
-						nd2.connections.append(new_conn)
 				# associate element nodes with element
-				for nd in self.elemlist[-1].nodes: 
-					self._node[nd.index].elements.append(self.elemlist[-1])		
+				for nd in self._elemlist[i]._nodes: 
+					self._nodelist[nd._index-1]._elements.append(self._elemlist[i])		
 			else:
-				self._elemlist.append(el[1:])
-				self._elem[el[0]] = self.elemlist[-1]
+				self._elemlist[i] = el[1:]
+				self._elem[el[0]] = self.elemlist[i]
+				
+		print 'reading elems: ',time.time()-tstart
+		self._conn_dist()
 		infile.close()		
 		if not storfilename is None:
 			self._read_stor(storfilename)
@@ -1218,14 +1228,20 @@ class fgrid(object):				#Grid object.
 			ndV = float(line[i+1])
 			self.node[ndI]._vol = ndV
 	def add_node(self,node=fnode()):		#Add a node object.
-		self._nodelist.append(node)
-		self._node[node.index] = self._nodelist[-1]
+		self._nodelist[node._index-1] = node
+		self._node[node._index] = node
 	def add_conn(self,conn=fconn()):		#Add a connection object.
 		self._connlist.append(conn)
-		self._conn[(conn.nodes[0].index,conn.nodes[1].index)] = self.connlist[-1]
+		self._conn[(conn._nodes[0]._index,conn._nodes[1]._index)] = self._connlist[-1]
+	def _conn_dist(self):
+		if not self._full_connectivity: return
+		# populate distance attribute for each conn object
+		dist = np.array([[c._nodes[0]._position, c._nodes[1]._position] for c in self._connlist])
+		dist = np.sqrt((dist[:,0,0]-dist[:,1,0])**2+(dist[:,0,1]-dist[:,1,1])**2+(dist[:,0,2]-dist[:,1,2])**2)
+		for i,c in enumerate(self.connlist): c._distance = dist[i]
 	def add_elem(self,elem=felem()):		#Add an element object.
-		self._elemlist.append(elem)
-		self._elem[elem.index] = self.elemlist[-1]
+		self._elemlist[elem._index-1] = elem
+		self._elem[elem._index] = elem
 	def node_nearest_point(self,pos = []):
 		"""Return node object nearest to position in space. Method uses octree structure for speed up if available.
 
@@ -1602,17 +1618,17 @@ class fgrid(object):				#Grid object.
 	connlist = property(_get_connlist)#: (*lst[fconn]*) List of all connection objects in the grid.
 	def _get_dimensions(self): return self._dimensions
 	dimensions = property(_get_dimensions) #: (*int*) Dimensions of the grid.
-	def get_xmin(self): return np.min([nd.position[0] for nd in self.nodelist])
+	def get_xmin(self): return np.min([nd._position[0] for nd in self._nodelist])
 	xmin = property(get_xmin) 				#: Minimum x-coordinate for all nodes.
-	def get_xmax(self): return np.max([nd.position[0] for nd in self.nodelist])
+	def get_xmax(self): return np.max([nd._position[0] for nd in self._nodelist])
 	xmax = property(get_xmax)				#: Maximum x-coordinate for all nodes.
-	def get_ymin(self): return np.min([nd.position[1] for nd in self.nodelist])
+	def get_ymin(self): return np.min([nd._position[1] for nd in self._nodelist])
 	ymin = property(get_ymin)				#: Minimum y-coordinate for all nodes.
-	def get_ymax(self): return np.max([nd.position[1] for nd in self.nodelist])
+	def get_ymax(self): return np.max([nd._position[1] for nd in self._nodelist])
 	ymax = property(get_ymax)				#: Maximum y-coordinate for all nodes.
-	def get_zmin(self): return np.min([nd.position[2] for nd in self.nodelist])
+	def get_zmin(self): return np.min([nd._position[2] for nd in self._nodelist])
 	zmin = property(get_zmin)				#: Minimum z-coordinate for all nodes.
-	def get_zmax(self): return np.max([nd.position[2] for nd in self.nodelist])
+	def get_zmax(self): return np.max([nd._position[2] for nd in self._nodelist])
 	zmax = property(get_zmax)				#: Maximum z-coordinate for all nodes.
 	def get_node_number(self): return len(self.nodelist)
 	number_nodes = property(get_node_number)#: Number of nodes in grid.
