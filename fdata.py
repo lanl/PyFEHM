@@ -4166,7 +4166,7 @@ class fdata(object):						#FEHM data file.
 	def _write_vapl(self,outfile):								#Writes VAPL macro.
 		if self.vapl:
 			outfile.write('vapl\n')
-	def new_zone(self,index,name=None,rect=None,nodelist=None,file=None,permeability=None,conductivity=None,density=None,
+	def new_zone(self,index=None,name=None,rect=None,nodelist=None,file=None,from_file = None,permeability=None,conductivity=None,density=None,
 		specific_heat=None,porosity=None,youngs_modulus=None,poissons_ratio=None,thermal_expansion=None,pressure_coupling=None,
 		Pi=None,Ti=None,Si=None,overwrite=False):
 		''' Create and assign a new zone. Material properties are optionally specified, new macros will be created if required.
@@ -4181,6 +4181,8 @@ class fdata(object):						#FEHM data file.
 		:type nodelist: lst
 		:param file: Name of auxiliary file for zone
 		:type file: str
+		:param from_file: Name of auxiliary file in which to find zone information.
+		:type from_file: str
 		:param permeability: Permeability of zone. One float for isotropic, three item list [x,y,z] for anisotropic.
 		:type permeability: fl64, list
 		:param conductivity: Conductivity of zone. One float for isotropic, three item list [x,y,z] for anisotropic.
@@ -4208,7 +4210,13 @@ class fdata(object):						#FEHM data file.
 		:param overwrite: If zone already exists, delete it and create the new one.
 		:type overwrite: bool
 		'''
-		
+		if index is None and from_file is None: return
+		# from file zones
+		if from_file:
+			if not os.path.isfile(from_file):
+				print 'ERROR: no such zone file '+from_file
+				return
+			self._read_zonn_file(from_file)		
 		# if neither rect nor nodelist specified, not enough information to create the zone
 		if not rect and not nodelist:
 			pyfehm_print('ERROR: either rect or nodelist must be specified')
