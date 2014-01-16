@@ -1,0 +1,171 @@
+Introduction
+============
+
+Python is an open-source, object-oriented scripting language with extensive functionality, a large, active 
+development community and extensive online resources for troubleshooting. PyFEHM is a set of classes and 
+methods to enable use of FEHM and auxiliary tasks within the Python scripting environment. Briefly, PyFEHM functionality includes
+
+1. Unstructured/structure grid parsing, structured grid generation and manipulation (see Chapter :ref:`2 <fgrid-chapter>`).
+
+2. FEHM input file construction. Support for many macros, restart files, stress and carbon dioxide modules
+   (see Chapter :ref:`3 <fdata-chapter>`).
+
+3. Post-processing of output (see Chapter :ref:`4 <fpost-chapter>`).
+
+4. Scripting tools that supports Python's built-in multi-processing capabilities for batch simulations.
+
+Some Python basics
+------------------
+
+This section provides a brief introduction to some basic Python functionality and modules that are particularly useful
+in writing PyFEHM scripts. It is in no way intended as a comprehensive introduction to Python scripting.
+
+Basic Python classes
+^^^^^^^^^^^^^^^^^^^^
+
+The common Python types are integers, floats and strings. Higher level structures include
+lists, denoted by square brackets, e.g., ``[2,3.6,'hi']``, the items of which can contain
+a variety of types. Lists can be added,
+
+``['a','b']+['c','d','e'] = ['a','b','c','d','e']``
+
+appended to,
+
+``list1 = ['a',2]; list1.append(6.8)``
+
+Tuples are similar to lists, denoted by round brackets, e.g., ``('a',.4,-3)``, but 
+cannot be appended or extended.
+
+Indexing of lists, tuples and arrays in Python follows the c/c++ convention, with the first index being 0. 
+One can use reverse-indexing, e.g., ``a[-1]`` will take the last element in the list ``a``.
+
+Installing and importing Python modules
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+There are certain Python modules that need to be installed for the proper operation of 
+PyFEHM: numpy, scipy and matplotlib. For windows users, 32- and 64-bit installers (for several
+Python versions) of these modules can be obtained from http://www.lfd.uci.edu/~gohlke/pythonlibs/.
+
+In writing Python scripts, it is often useful to import these modules an others. Common syntax for
+importing modules is as follows
+
+``import os, sys``
+
+``from matplotlib import pyplot as plt``
+
+``from fdata import*``
+
+Numpy
+^^^^^
+
+``import numpy as np``
+
+Numpy, short for numerical Python, contains much of the basic functionality available in Matlab. Traditionally
+the module is imported as ``np``. The user can define vectors and matrices as in Matlab and perform numerical operations, e.g.,
+
+``v1 = np.array([2,4,6.8])``
+
+``v2 = np.linspace(3.1,10.8,3)``
+
+``v3 = (v1*v2)/(v1+v2)``
+
+One useful function is the ability to load in external data using ``loadtxt()`` or ``genfromtxt()`` methods, e.g.,
+read a text file containing to columns of comma-delimited information - depth is contained in the first column and 
+temperature in the second.
+
+``data = np.loadtxt('temperatureProfile.txt',delimiter=',')``
+
+``z = data[:,0]``
+
+``T = data[:,1]``
+
+Matplotlib
+^^^^^^^^^^
+
+``from matplotlib import pyplot as plt``
+
+Matplotlib is a plot generation library. Pyplot contains methods for axes generation, and line and contour plotting. E.g., a 
+simple line plot, saved as 'plot.png'.
+
+``plt.clf()``
+
+``fig = plt.figure(figsize=[8.275,11.7])``
+
+``x=np.linspace(0,2*3.141,100)``
+
+``y = np.sin(x)``
+
+``ax = plt.axes([0.15,0.5,0.7,0.4])``
+
+``ax.plot(x,y,'bx--')``
+
+``ax.set_xlabel('x',size = 'small')``
+
+``ax.set_ylabel('f(x) = sin(x)', size = 12)``
+
+``ax.set_title('A simple plot')``
+
+``plt.savefig('plot.png', dpi=300, facecolor='w', edgecolor = 'w', orientation='portrait', format='png', transparent=True)``
+
+Creating and running scripts
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Python scripts are text files, ending with the suffix '.py', containing a series of Python
+commands to be executed. There are two ways to execute Python scripts - at the command line or 
+within a Python environment.
+
+Executing a script at the command line is as simple as navigating to the containing folder and 
+typing ``python myscript.py``.
+
+The Python environment is opened by simply typing ``python`` at the command line. The user is then
+presented with the ``>>>`` indicating Python commands can now be executed, e.g., 
+
+``>>> a = [2,3.6,'what_up_son']``
+
+``>>> import numpy as np``
+
+``>>> c = np.array([2,3,4,5,5])``
+
+Within the interactive environment, Python scripts are executed using the ``execfile()`` command, e.g.,
+
+``>>> execfile('myscript.py')``
+
+The Python environment has the added advantage that if the script terminates with an error, 
+variables created during its execution are available for inspection, providing a form
+of debugging.
+
+Using PyFEHM
+------------
+
+PyFEHM consists of six Python library files, fgrid.py, fdata.py, fpost.py, fvars.py, ftemp.py, ftool.py. These should
+be placed in a root PyFEHM directory pointed to by each Python script. For example, the following should be placed at the top of PyFEHM scripts
+
+``import os,sys``
+
+``sys.path.append('c:\\python\\pyfehm')   # path to PyFEHM files``
+
+``from fdata import*``
+
+The root Python directory can also be pointed to by an environment variable called PYTHONPATH containing the
+directory path. In Windows, environment variables can be created by accessing Control Panel > System > 
+Advanced System Settings > Environment variables. 
+
+In Linux, this can be done by adding the following line to the .cshrc file
+
+``setenv PYTHONPATH '/path/to/pyfehm'``
+
+PyFEHM itself contains an environment file, fdflt.py, with default values for various material properties, solver
+parameters and executable paths.
+
+Some notational conventions
+---------------------------
+
+When documenting class attributes or method inputs, variable type is first identified in brackets. 
+Where the attribute or input is a list, tuple or dictionary of some other object, the following 
+convention is used.
+
+* *lst[int]* - A list of integers.
+
+* *dict[fnode]* - A dictionary of ``fnode`` objects.
+
+* *tuple[fl64]* - A tuple of floats.

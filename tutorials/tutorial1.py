@@ -58,26 +58,19 @@ dat.cont.format = 'surf'
 #dat.cont.time_interval = 2.
 
 dat.hist.nodelist.append([100,400,800])
-#dat.hist.nodelist.append([100])
 dat.hist.variables.append(['pressure','temperature'])
 
-dat.tf=100.
+dat.tf=10.
 #dat.time['max_time_TIMS']=10.
 
-#dat.iter['machine_tolerance_TMCH'] = -0.5e-5
-
-dat.output_times = np.linspace(0,dat.tf,11)
-
 dat.files.root = root
-dat.run(root+'_INPUT.dat', diagnostic = False) 		# note, because no executable path is specified, PyFEHM retrieves the executable specified in the default path
+dat.run(root+'_INPUT.dat') 		# note, because no executable path is specified, PyFEHM retrieves the executable specified in the default path
 
 # 7.1.7 Visualisation
 c = fcontour(dat.work_dir+'\\*.csv')
 
-dat.paraview(contour=c, diff=True, time_derivatives=True)
-
-#c.slice_plot(save='Tslice.png',cbar=True,levels=11,slice=['x',5],variable='T',method='linear',title='temperature / degC',
-#xlabel='y / m', ylabel = 'z / m')
-#c.slice_plot(save='Pslice.png',cbar=True,levels=np.linspace(4,6,9),slice=['x',5],variable='P',method='linear',title='pressure / MPa',
-#xlabel='y / m', ylabel = 'z / m')
+c.slice_plot(save='Tslice.png',cbar=True,levels=11,slice=['x',5],variable='T',method='linear',title='temperature / degC',
+xlabel='y / m', ylabel = 'z / m')
+c.slice_plot(save='Pslice.png',cbar=True,levels=np.linspace(4,6,9),slice=['x',5],variable='P',method='linear',title='pressure / MPa',
+xlabel='y / m', ylabel = 'z / m')
 
