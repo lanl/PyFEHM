@@ -4631,8 +4631,6 @@ class fdata(object):						#FEHM data file.
 		:type diff: bool
 		:param zscale: Factor by which to scale z-axis. Useful for visualising laterally extensive flow systems.
 		:type zscale: fl64
-		:param spatial_derivatives: Calculate new fields for spatial derivatives of contour data. Per meter derivatives calculated.
-		:type spatial_derivatives: bool
 		:param time_derivatives: Calculate new fields for time derivatives of contour data. For precision reasons, derivatives are calculated with units of 'per day'.
 		:type time_derivatives: bool
 		'''

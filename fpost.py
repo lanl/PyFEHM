@@ -1410,7 +1410,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 		else:
 			outdat = self[time][variable][nd]
 		return outdat
-	def paraview(self, grid, stor = None, exe = dflt.paraview_path,filename = 'temp.vtk',show=None,diff = False,zscale = 1.):
+	def paraview(self, grid, stor = None, exe = dflt.paraview_path,filename = 'temp.vtk',show=None,diff = False,zscale = 1., time_derivatives = False):
 		""" Launches an instance of Paraview that displays the contour object.
 		
 		:param grid: Path to grid file associated with FEHM simulation that produced the contour output.
@@ -1427,6 +1427,8 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 		:type diff: bool
 		:param zscale: Factor by which to scale z-axis. Useful for visualising laterally extensive flow systems.
 		:type zscale: fl64
+		:param time_derivatives: Calculate new fields for time derivatives of contour data. For precision reasons, derivatives are calculated with units of 'per day'.
+		:type time_derivatives: bool
 		"""
 		from fdata import fdata
 		dat = fdata()
@@ -1435,7 +1437,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 			for var in self.variables:
 				if var not in ['x','y','z','n']: break
 			show = var
-		dat.paraview(exe=exe,filename=filename,contour=self,show=show,diff=diff,zscale=zscale)
+		dat.paraview(exe=exe,filename=filename,contour=self,show=show,diff=diff,zscale=zscale,time_derivatives=time_derivatives)
 	def _get_variables(self): return self._variables
 	variables = property(_get_variables)#: (*lst[str]*) List of variables for which output data are available.
 	def _get_user_variables(self): return self._user_variables
@@ -2165,7 +2167,7 @@ class fvtk(object):
 						f2 = self.contour[self.contour.times[ind+1]][var]
 						dat = -dt2/(dt1*(dt1+dt2))*f0 + (dt2-dt1)/(dt1*dt2)*f1 + dt1/(dt2*(dt1+dt2))*f2
 					self.data.contour[time].append(pv.Scalars(dat,name='d_'+var+'_dt',lookup_table='default'))
-		
+				
 	def write(self):	
 		"""Call to write out vtk files."""
 		if self.parent.work_dir: wd = self.parent.work_dir
