@@ -2142,7 +2142,29 @@ class fvtk(object):
 				
 				# time derivatives
 				if self.time_derivatives:
-					pass
+					# find position, determines type of differencing
+					ind = np.where(time==self.contour.times)[0][0]
+					if ind == 0: 
+						# forward difference
+						dt = self.contour.times[1]-time
+						f0 = self.contour[time][var]
+						f1 = self.contour[self.contour.times[1]][var]
+						dat = (f1-f0)/dt
+					elif ind == (len(self.contour.times)-1): 
+						# backward difference
+						dt = time-self.contour.times[-2]
+						f0 = self.contour[self.contour.times[-2]][var]
+						f1 = self.contour[time][var]
+						dat = (f1-f0)/dt
+					else:
+						# central difference
+						dt1 = time - self.contour.times[ind-1]
+						dt2 = self.contour.times[ind+1] - time
+						f0 = self.contour[self.contour.times[ind-1]][var]
+						f1 = self.contour[time][var]
+						f2 = self.contour[self.contour.times[ind+1]][var]
+						dat = -dt2/(dt1*(dt1+dt2))*f0 + (dt2-dt1)/(dt1*dt2)*f1 + dt1/(dt2*(dt1+dt2))*f2
+					self.data.contour[time].append(pv.Scalars(dat,name='d_'+var+'_dt',lookup_table='default'))
 		
 	def write(self):	
 		"""Call to write out vtk files."""

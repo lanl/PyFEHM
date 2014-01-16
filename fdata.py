@@ -4631,9 +4631,9 @@ class fdata(object):						#FEHM data file.
 		:type diff: bool
 		:param zscale: Factor by which to scale z-axis. Useful for visualising laterally extensive flow systems.
 		:type zscale: fl64
-		:param spatial_derivatives: Calculate new fields for spatial derivatives of contour data.
+		:param spatial_derivatives: Calculate new fields for spatial derivatives of contour data. Per meter derivatives calculated.
 		:type spatial_derivatives: bool
-		:param time_derivatives: Calculate new fields for time derivatives of contour data.
+		:param time_derivatives: Calculate new fields for time derivatives of contour data. For precision reasons, derivatives are calculated with units of 'per day'.
 		:type time_derivatives: bool
 		'''
 		self._vtk = fvtk(parent=self,filename=filename,contour=contour,show_zones = zones,diff=diff,zscale = zscale,spatial_derivatives = spatial_derivatives, time_derivatives = time_derivatives)
@@ -4881,7 +4881,6 @@ class fdata(object):						#FEHM data file.
 			self._read_zonn_file(line)
 		else:
 			more = True
-			
 			while more:
 				new_zone = fzone()
 				if file: new_zone.file=file
