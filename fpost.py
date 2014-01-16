@@ -2141,7 +2141,7 @@ class fvtk(object):
 					self.data.contour[time].append(pv.Scalars(self.contour[time][var]-self.contour[time0][var],name='diff_'+var,lookup_table='default'))
 				
 				# time derivatives
-				if self.time_derivative:
+				if self.time_derivatives:
 					pass
 		
 	def write(self):	
