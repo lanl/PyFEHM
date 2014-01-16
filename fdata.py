@@ -4881,6 +4881,7 @@ class fdata(object):						#FEHM data file.
 			self._read_zonn_file(line)
 		else:
 			more = True
+			
 			while more:
 				new_zone = fzone()
 				if file: new_zone.file=file
@@ -4900,10 +4901,14 @@ class fdata(object):						#FEHM data file.
 						else: new_zone.nodelist.append(self.grid.node_nearest_point([float(pt) for pt in pts]))
 				elif line[0:4] == 'nnum':
 					new_zone.type='nnum'
+					#nextval = valgen(infile)
+					#N = int(nextval.next())
+					
 					line=infile.readline().strip()#; block.append(line+'\n')		
 					nums = line.split()
 					number_nodes = int(nums[0])		
-					new_zone.nodelist = list(np.zeros((1,number_nodes))[0])
+					#new_zone.nodelist = [self._grid._nodelist[int(nextval.next())-1] for i in range(N)]
+					new_zone.nodelist = [None]*number_nodes
 					i = 0
 					for num in nums[1:]: 
 						new_zone.nodelist[i] = self.grid.node[int(num)]
@@ -4953,17 +4958,10 @@ class fdata(object):						#FEHM data file.
 						if (x0n != x0o) or (x1n != x1o) or (y0n != y0o) or (y1n != y1o) or (z0n != z0o) or (z1n != z1o):
 							_buildWarnings('WARNING: zone '+str(zind)+' was defined earlier in the input file. PyFEHM assumes unique zone definitions. This zone will be ignored.')
 					else:
-						nds_old = zn_old.nodelist
-						nds_new = new_zone.nodelist
 						different_zone = False
-						for nd in nds_old:
-							if nd not in nds_new:
-								different_zone = True
-								break
-						for nd in nds_new:
-							if nd not in nds_old:
-								different_zone = True
-								break
+						if len(set(zn_old.nodelist).symmetric_difference(new_zone.nodelist)) != 0:
+							different_zone = True
+						
 						if different_zone:
 							_buildWarnings('WARNING: zone '+str(zind)+' was defined earlier in the input file. PyFEHM assumes unique zone definitions. This zone will be ignored.')
 				

@@ -441,4 +441,8 @@ def make_directory(fname):
 	dirname = ''
 	for f in fname: dirname += f
 	if not os.path.isdir(dirname): os.system('mkdir '+dirname)
+def valgen(fhandle):
+	for line in fhandle:
+		for v in line.split():
+			yield v
 	
