@@ -52,8 +52,6 @@ from fhelp import*
 dflt = fdflt()
 
 WINDOWS = platform.system()=='Windows'
-if WINDOWS: copyStr = 'copy'; delStr = 'del'; slash = '\\'
-else: copyStr = 'cp'; delStr = 'rm'; slash = '/'
 
 # list of macros that might be encountered
 fdata_sections = ['cont','pres','zonn','zone','cond','time','ctrl','iter','rock','perm',
@@ -1388,7 +1386,7 @@ class fincon(object): 						#FEHM restart object.
 		if inconfilename: 
 			self._path.filename = inconfilename
 		if self._parent.work_dir:
-			path = self._path.absolute_to_workdir+slash+self._path.filename
+			path = self._path.absolute_to_workdir+os.sep+self._path.filename
 		else:
 			path = self._path.full_path
 		outfile = open(path,'w')
@@ -2512,7 +2510,7 @@ class files(object):						#FEHM file constructor.
 		'''		
 		
 		if self._parent.work_dir:
-			outfile = open(self._parent.work_dir+slash+'fehmn.files','w')
+			outfile = open(self._parent.work_dir+os.sep+'fehmn.files','w')
 		else:
 			outfile = open('fehmn.files','w')
 			
@@ -2573,7 +2571,7 @@ class files(object):						#FEHM file constructor.
 				outfile.write('999\n')
 
 				if self._parent.work_dir:
-					co2_inj_file = open(self._parent.work_dir+slash+'co2_inj.txt','w')
+					co2_inj_file = open(self._parent.work_dir+os.sep+'co2_inj.txt','w')
 				else: 
 					outfile = open('co2_inj.txt','w')
 
@@ -2710,7 +2708,7 @@ class fdata(object):						#FEHM data file.
 			if temp_path.absolute_to_file != os.getcwd():
 				self.work_dir = temp_path.absolute_to_file
 			
-			wd = temp_path.absolute_to_file+slash
+			wd = temp_path.absolute_to_file+os.sep
 			inconfilename = None
 			with open(filename) as f:
 				for ln in f.readlines():
@@ -2907,7 +2905,7 @@ class fdata(object):						#FEHM data file.
 		except:
 			pass
 		# open file
-		outfile = open(wd+slash+self._path.filename,'w')
+		outfile = open(wd+os.sep+self._path.filename,'w')
 		outfile.write('# '+self.filename+'\n')
 		self._write_unparsed(outfile,'start')
 		if self.text: self._write_text(outfile); self._write_unparsed(outfile,'text')
@@ -3109,14 +3107,14 @@ class fdata(object):						#FEHM data file.
 			line=infile.readline().strip()
 			if not os.path.isfile(line):
 				# check if in subdirectory with input file
-				fname = self.filename.split(slash)
+				fname = self.filename.split(os.sep)
 				if len(fname)>0:
 					fn0 = ''
 					for fn in fname[:-1]: fn0 += fn
-					if not os.path.isfile(fn0+slash+line):
+					if not os.path.isfile(fn0+os.sep+line):
 						pyfehm_print('ERROR: cannot find macro file '+line)
 					else:
-						macrofile = open(fn0+slash+line)
+						macrofile = open(fn0+os.sep+line)
 						line = macrofile.readline().strip()
 						self._read_boun(macrofile)
 						macrofile.close()
@@ -4465,8 +4463,8 @@ class fdata(object):						#FEHM data file.
 		if incon: self.incon._path.filename = incon
 		
 		# ASSEMBLE FILES IN CORRECT DIRECTORIES
-		if self.work_dir: wd = self.work_dir + slash
-		else: wd = os.getcwd() + slash
+		if self.work_dir: wd = self.work_dir + os.sep
+		else: wd = os.getcwd() + os.sep
 		returnFlag = self.write(wd+self._path.filename) 				# ALWAYS write input file
 		if not returnFlag: 
 			pyfehm_print('ERROR: writing files')
@@ -4654,9 +4652,9 @@ class fdata(object):						#FEHM data file.
 		if self.work_dir: wd = self.work_dir
 		else: wd = self._path.absolute_to_file		
 		if len(fls)>1:
-			p = Popen(exe+' -o '+wd+slash+self._vtk.path.filename[:-4]+'*.vtk',shell=(not WINDOWS))		
+			p = Popen(exe+' -o '+wd+os.sep+self._vtk.path.filename[:-4]+'*.vtk',shell=(not WINDOWS))		
 		else:
-			p = Popen(exe+' -o '+wd+slash+self._vtk.path.filename,shell=(not WINDOWS))		
+			p = Popen(exe+' -o '+wd+os.sep+self._vtk.path.filename,shell=(not WINDOWS))		
 	def _summary(self):		
 		L = 62
 		s = ['']
@@ -4793,7 +4791,7 @@ class fdata(object):						#FEHM data file.
 						s+= stri+'!!!!\n'
 						stri = ' !!!!   '
 			s+= ' !!!!---------------------------------------------------------!!!!\n'
-			if self.work_dir: fp = open(self.work_dir+slash+'pyfehm.err','w')
+			if self.work_dir: fp = open(self.work_dir+os.sep+'pyfehm.err','w')
 			else: fp = open('pyfehm.err','w')
 			fp.write(s)
 			fp.close()
@@ -5034,9 +5032,9 @@ class fdata(object):						#FEHM data file.
 				outfile.write('file\n')
 				outfile.write(file_nm+'\n')		
 				# if filename does not exist, write file
-				if not os.path.isfile(self.work_dir+slash+file_nm) or self._writeSubFiles:
+				if not os.path.isfile(self.work_dir+os.sep+file_nm) or self._writeSubFiles:
 					if self.work_dir:
-						zonefile = open(self.work_dir+slash+file_nm,'w')
+						zonefile = open(self.work_dir+os.sep+file_nm,'w')
 					else:
 						zonefile = open(file_nm,'w')
 					zns = [zn for zn in self.zonelist if zn.file==file_nm]
@@ -5338,14 +5336,14 @@ class fdata(object):						#FEHM data file.
 			line=infile.readline().strip()
 			if not os.path.isfile(line):
 				# check if in subdirectory with input file
-				fname = self._path.split(slash)
+				fname = self._path.split(os.sep)
 				if len(fname)>0:
 					fn0 = ''
 					for fn in fname[:-1]: fn0 += fn
-					if not os.path.isfile(fn0+slash+line):
+					if not os.path.isfile(fn0+os.sep+line):
 						pyfehm_print('ERROR: cannot find macro file '+line)
 					else:
-						macrofile = open(fn0+slash+line)
+						macrofile = open(fn0+os.sep+line)
 						line = macrofile.readline().strip()
 						self._read_macro(macrofile,macroName,second = True)
 						macrofile.close()
@@ -5605,9 +5603,9 @@ class fdata(object):						#FEHM data file.
 				outfile.write('file\n')
 				outfile.write(file_nm+'\n')	
 				# if filename does not exist, write file
-				file_nm = file_nm.split(slash)[-1]
-				if not os.path.isfile(self.work_dir+slash+file_nm) or self._writeSubFiles:
-					if self.work_dir: macrofile = open(self.work_dir+slash+file_nm,'w')
+				file_nm = file_nm.split(os.sep)[-1]
+				if not os.path.isfile(self.work_dir+os.sep+file_nm) or self._writeSubFiles:
+					if self.work_dir: macrofile = open(self.work_dir+os.sep+file_nm,'w')
 					else: macrofile = open(file_nm,'w')
 					macros = [macro for macro in self._allMacro[macroName] if macro.file==file_nm]
 					for macro in macros: macro.file = -1
@@ -6853,7 +6851,7 @@ class fdiagnostic(object):
 	def write_NR(self):
 		if self.file_nr is None:
 			# first time step, open file
-			if self.parent.work_dir: wd = self.parent.work_dir+slash
+			if self.parent.work_dir: wd = self.parent.work_dir+os.sep
 			else: wd=''
 			self.file_nr = open(wd+self.parent.files.root+'_NR.dgs','w')
 		
@@ -6869,7 +6867,7 @@ class fdiagnostic(object):
 		headers = ['timestep','time','total_mass','total_energy','residual1','residual2','residual3','mass_input_rate',
 			'mass_output_rate','enthalpy_input_rate','enthalpy_output_rate','mass_error','energy_error']
 		if self.file_cv is None:
-			if self.parent.work_dir: wd = self.parent.work_dir+slash
+			if self.parent.work_dir: wd = self.parent.work_dir+os.sep
 			else: wd=''
 			# first time step, open files
 			self.file_cv = open(wd+self.parent.files.root+'_convergence.dgs','w',1)
@@ -6884,7 +6882,7 @@ class fdiagnostic(object):
 			return
 
 		if self.write_nd and not self.file_nd:
-			if self.parent.work_dir: wd = self.parent.work_dir+slash
+			if self.parent.work_dir: wd = self.parent.work_dir+os.sep
 			else: wd=''
 			self.file_nd = open(wd+self.parent.files.root+'_node.dgs','w')
 			self.file_nd.write('index   ')

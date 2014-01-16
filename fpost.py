@@ -2149,7 +2149,7 @@ class fvtk(object):
 		if self.parent.work_dir: wd = self.parent.work_dir
 		else: wd = self.parent._path.absolute_to_file
 		if wd is None: wd = ''
-		else: wd += slash
+		else: wd += os.sep
 		fls = self.data.tofile(wd+self.path.filename)
 		# save file names for later use
 		self.material_file = fls[0]
@@ -2453,7 +2453,7 @@ class fvtk(object):
 					]			
 		f.writelines('\n'.join(lns))
 		f.close()
-	def _get_filename(self): return self.path.absolute_to_file+slash+self.path.filename
+	def _get_filename(self): return self.path.absolute_to_file+os.sep+self.path.filename
 	filename = property(_get_filename) #: (**)
 
 def fdiff( in1, in2, format='diff', times=[], variables=[]):

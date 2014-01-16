@@ -42,10 +42,6 @@ from itertools import izip
 
 dflt = fdflt()
 
-WINDOWS = platform.system()=='Windows'
-if WINDOWS: slash = '\\'
-else: slash = '/'
-
 node_props = ('kx','ky','kz','cond_x','cond_y','cond_z','density','specific_heat','porosity','thermal_expansion','pressure_coupling',
 'youngs_modulus','poissons_ratio')
 
@@ -779,7 +775,7 @@ class fgrid(object):				#Grid object.
 			if self._parent.work_dir:
 				try: os.makedirs(self._path.absolute_to_workdir)
 				except:	pass
-				path = self._path.absolute_to_workdir+slash+temp_path.filename
+				path = self._path.absolute_to_workdir+os.sep+temp_path.filename
 				
 		outfile = open(path,'w')
 		
@@ -1075,7 +1071,7 @@ class fgrid(object):				#Grid object.
 		path = temp_path.full_path
 		if self._parent:
 			if self._parent.work_dir:
-				path = self._path.absolute_to_workdir+slash+temp_path.filename
+				path = self._path.absolute_to_workdir+os.sep+temp_path.filename
 		
 		fm = fmake(path,x,y,z)
 		fm.write()		
@@ -1191,7 +1187,7 @@ class fgrid(object):				#Grid object.
 			if self._parent.work_dir:
 				try: os.makedirs(self._path.absolute_to_workdir)
 				except:	pass
-				stor = self._path.absolute_to_workdir+slash+temp_path.filename
+				stor = self._path.absolute_to_workdir+os.sep+temp_path.filename
 		
 		shutil.move('lagrit_out.stor',stor)
 		if self._parent:
@@ -1469,7 +1465,7 @@ class fgrid(object):				#Grid object.
 			if self._parent.work_dir and not os.path.isdir(self._parent.work_dir): 
 				os.makedirs(self._parent.work_dir)
 			if self._parent.work_dir:
-				plt.savefig(self._parent.work_dir+slash+save_fname, dpi=200, facecolor='w', edgecolor='w',orientation='portrait', 
+				plt.savefig(self._parent.work_dir+os.sep+save_fname, dpi=200, facecolor='w', edgecolor='w',orientation='portrait', 
 					format=extension,transparent=True, bbox_inches=None, pad_inches=0.1)
 			else:
 				plt.savefig(save_fname, dpi=200, facecolor='w', edgecolor='w',orientation='portrait', 
