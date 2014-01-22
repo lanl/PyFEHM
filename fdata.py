@@ -6162,9 +6162,9 @@ class fdiagax(object):
 		
 		# re add data
 		for slot in self.slot0:
-			self.plot0[slot].set_data(self.parent.__getattribute__(slot).time,self.parent.__getattribute__(slot).data)
+			self.plot0[slot].set_data(copy(self.parent.__getattribute__(slot).time),copy(self.parent.__getattribute__(slot).data))
 		for slot in self.slot1:
-			self.plot1[slot].set_data(self.parent.__getattribute__(slot).time,self.parent.__getattribute__(slot).data)
+			self.plot1[slot].set_data(copy(self.parent.__getattribute__(slot).time),copy(self.parent.__getattribute__(slot).data))
 			
 		if replotResidual:
 			tol = self.parent.parent.ctrl['newton_cycle_tolerance_EPM']
@@ -6227,7 +6227,6 @@ class fdiagax(object):
 			self.legend_plts.append(self.sub1.plot([x1,x1+ln_len*dx],[y1,y1],entry[1],zorder=300)[0])
 			self.legend_txts.append(self.sub1.text(x1+(ln_len+txt_gap)*dx,y1,entry[0],size=text_size,ha='left',va='center',zorder=300))
 			y1 = y1 + dyi
-			
 	def redraw_legend(self):
 		x,y = self.sub1.get_xlim()[0], self.sub1.get_ylim()[0]
 		dx,dy = np.diff(self.sub1.get_xlim()),np.diff(self.sub1.get_ylim())
@@ -6778,9 +6777,10 @@ class fdiagnostic(object):
 		if ax is None: return
 		
 		if ax: 
-			self.axs[k].plot1[name].set_data(self.__getattribute__(name).time,self.__getattribute__(name).data)
+			self.axs[k].plot1[name].set_data(copy(self.__getattribute__(name).time),copy(self.__getattribute__(name).data))
 		else: 
-			self.axs[k].plot0[name].set_data(self.__getattribute__(name).time,self.__getattribute__(name).data)
+			self.axs[k].plot0[name].set_data(copy(self.__getattribute__(name).time),copy(self.__getattribute__(name).data))
+		
 		self.axs[k].redraw()
 	def close_files(self,ln):
 		cs1 = 'total code time(timesteps)'
