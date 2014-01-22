@@ -1,5 +1,7 @@
-fvars: FEHM thermodynamic variable calculations
-===============================================
+.. _fvars-chapter:
+
+fvars: FEHM thermodynamic calculations
+======================================
 
 It is occasionally useful to be able to calculate thermodynamic properties of the fluids that FEHM simulates. 
 For convenience, the functions that calculate these properties, for two-phase water and CO2, are supplied here. Density 

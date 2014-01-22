@@ -2,7 +2,7 @@ Introduction
 ============
 
 Python is an open-source, object-oriented scripting language with extensive functionality, a large, active 
-development community and extensive online resources for troubleshooting. PyFEHM is a set of classes and 
+development community and loads of online resources for troubleshooting. PyFEHM is a set of classes and 
 methods to enable use of FEHM and auxiliary tasks within the Python scripting environment. Briefly, PyFEHM functionality includes
 
 1. Unstructured/structure grid parsing, structured grid generation and manipulation (see Chapter :ref:`2 <fgrid-chapter>`).
@@ -10,162 +10,98 @@ methods to enable use of FEHM and auxiliary tasks within the Python scripting en
 2. FEHM input file construction. Support for many macros, restart files, stress and carbon dioxide modules
    (see Chapter :ref:`3 <fdata-chapter>`).
 
-3. Post-processing of output (see Chapter :ref:`4 <fpost-chapter>`).
+3. Post-processing of output (see Chapter :ref:`4 <fpost-chapter>`), including visualisation in Paraview.
 
 4. Scripting tools that supports Python's built-in multi-processing capabilities for batch simulations.
 
-Some Python basics
-------------------
+Introductory :ref:`tutorials <ftutorial-chapter>` to PyFEHM are also provided.
 
-This section provides a brief introduction to some basic Python functionality and modules that are particularly useful
-in writing PyFEHM scripts. It is in no way intended as a comprehensive introduction to Python scripting.
+Installation
+------------
 
-Basic Python classes
-^^^^^^^^^^^^^^^^^^^^
+Python 
+^^^^^^
 
-The common Python types are integers, floats and strings. Higher level structures include
-lists, denoted by square brackets, e.g., ``[2,3.6,'hi']``, the items of which can contain
-a variety of types. Lists can be added,
+PyFEHM is supported on Python 2.6 and 2.7, but NOT 3.x. Instructions for downloading and installing Python can be
+found at www.python.org
 
-``['a','b']+['c','d','e'] = ['a','b','c','d','e']``
+PyFEHM requires the following Python modules to be installed: NumPy, SciPy, Matplotlib. For windows users, 32- and 64-bit installers (for several
+Python versions) of these modules can be obtained from http://www.lfd.uci.edu/~gohlke/pythonlibs/
 
-appended to,
+PyFEHM
+^^^^^^
 
-``list1 = ['a',2]; list1.append(6.8)``
+A download link for the latest release version of PyFEHM_ can be found at `pyfehm.lanl.gov`__
 
-Tuples are similar to lists, denoted by round brackets, e.g., ``('a',.4,-3)``, but 
-cannot be appended or extended.
+.. _PyFEHM: pyfehm.lanl.gov
 
-Indexing of lists, tuples and arrays in Python follows the c/c++ convention, with the first index being 0. 
-One can use reverse-indexing, e.g., ``a[-1]`` will take the last element in the list ``a``.
+__ PyFEHM_
 
-Installing and importing Python modules
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+To install, download and extract the zip file, and run the setup script at the command line: ``python setup.py install``
 
-There are certain Python modules that need to be installed for the proper operation of 
-PyFEHM: numpy, scipy and matplotlib. For windows users, 32- and 64-bit installers (for several
-Python versions) of these modules can be obtained from http://www.lfd.uci.edu/~gohlke/pythonlibs/.
+FEHM
+^^^^
 
-In writing Python scripts, it is often useful to import these modules an others. Common syntax for
-importing modules is as follows
+The purpose of PyFEHM is construction of input and grid files for running FEHM simulations. Therefore, if the user does
+not have a copy of FEHM, their experience with PyFEHM is likely to be short and unsatisfactory.
 
-``import os, sys``
+Downloading PyFEHM does not provide the user with an FEHM executable. FEHM_ is free, but controlled, software and must
+be obtained by registering as a user at `fehm.lanl.gov`__ 
 
-``from matplotlib import pyplot as plt``
+.. _FEHM: https://fehm.lanl.gov/
 
-``from fdata import*``
+__ FEHM_
 
-Numpy
-^^^^^
+Paraview
+^^^^^^^^
 
-``import numpy as np``
+Paraview is a parallel, open-source visualisation software. PyFEHM supports a bridge with Paraview; information about the grid,
+model, and output data can be automatically exported and viewed in this program.
 
-Numpy, short for numerical Python, contains much of the basic functionality available in Matlab. Traditionally
-the module is imported as ``np``. The user can define vectors and matrices as in Matlab and perform numerical operations, e.g.,
+Instructions for downloading and installing Paraview_ can be found at `www.paraview.org`__ 
 
-``v1 = np.array([2,4,6.8])``
+.. _Paraview: www.paraview.org
 
-``v2 = np.linspace(3.1,10.8,3)``
+__ Paraview_
 
-``v3 = (v1*v2)/(v1+v2)``
+After installation, make sure to include the path to paraview.exe in you PATH environment variable. This will ensure
+PyFEHM can find Paraview and make full use of its capabilities.
 
-One useful function is the ability to load in external data using ``loadtxt()`` or ``genfromtxt()`` methods, e.g.,
-read a text file containing to columns of comma-delimited information - depth is contained in the first column and 
-temperature in the second.
+LaGriT
+^^^^^^
 
-``data = np.loadtxt('temperatureProfile.txt',delimiter=',')``
+LaGriT is a mesh generation package, developed at Los Alamos, with a variety of tools for creating and modifying tetrahedral
+meshes. PyFEHM requires an executable of LaGriT to perform some specialised tasks. For more information on obtaining a LaGriT_ 
+executable, visit `lagrit.lanl.gov`__ 
 
-``z = data[:,0]``
+.. _LaGriT: https://lagrit.lanl.gov/
 
-``T = data[:,1]``
-
-Matplotlib
-^^^^^^^^^^
-
-``from matplotlib import pyplot as plt``
-
-Matplotlib is a plot generation library. Pyplot contains methods for axes generation, and line and contour plotting. E.g., a 
-simple line plot, saved as 'plot.png'.
-
-``plt.clf()``
-
-``fig = plt.figure(figsize=[8.275,11.7])``
-
-``x=np.linspace(0,2*3.141,100)``
-
-``y = np.sin(x)``
-
-``ax = plt.axes([0.15,0.5,0.7,0.4])``
-
-``ax.plot(x,y,'bx--')``
-
-``ax.set_xlabel('x',size = 'small')``
-
-``ax.set_ylabel('f(x) = sin(x)', size = 12)``
-
-``ax.set_title('A simple plot')``
-
-``plt.savefig('plot.png', dpi=300, facecolor='w', edgecolor = 'w', orientation='portrait', format='png', transparent=True)``
-
-Creating and running scripts
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Python scripts are text files, ending with the suffix '.py', containing a series of Python
-commands to be executed. There are two ways to execute Python scripts - at the command line or 
-within a Python environment.
-
-Executing a script at the command line is as simple as navigating to the containing folder and 
-typing ``python myscript.py``.
-
-The Python environment is opened by simply typing ``python`` at the command line. The user is then
-presented with the ``>>>`` indicating Python commands can now be executed, e.g., 
-
-``>>> a = [2,3.6,'what_up_son']``
-
-``>>> import numpy as np``
-
-``>>> c = np.array([2,3,4,5,5])``
-
-Within the interactive environment, Python scripts are executed using the ``execfile()`` command, e.g.,
-
-``>>> execfile('myscript.py')``
-
-The Python environment has the added advantage that if the script terminates with an error, 
-variables created during its execution are available for inspection, providing a form
-of debugging.
+__ LaGriT_
 
 Using PyFEHM
 ------------
 
-PyFEHM consists of six Python library files, fgrid.py, fdata.py, fpost.py, fvars.py, ftemp.py, ftool.py. These should
-be placed in a root PyFEHM directory pointed to by each Python script. For example, the following should be placed at the top of PyFEHM scripts
-
-``import os,sys``
-
-``sys.path.append('c:\\python\\pyfehm')   # path to PyFEHM files``
+PyFEHM consists of several Python modules. To access their functionality, the user must include the following line at the 
+top of any Python script
 
 ``from fdata import*``
 
-The root Python directory can also be pointed to by an environment variable called PYTHONPATH containing the
-directory path. In Windows, environment variables can be created by accessing Control Panel > System > 
-Advanced System Settings > Environment variables. 
+A configuration file, pyfehmrc, can be used to customise your installation of PyFEHM. For instance, default paths to FEHM or Paraview
+can be defined in the config file to avoid having to write these out in scripts. Other default behaviour in PyFEHM can also 
+be modified by making changes to the config file.
 
-In Linux, this can be done by adding the following line to the .cshrc file
+A sample configuration file, pyfehmrc_example, is included with the PyFEHM download. Copy this file to the 
+site-packages folder in your Python installation, rename it to 'pyfehmrc' or '.pyfehmrc', and modify according to the 
+instructions inside.
 
-``setenv PYTHONPATH '/path/to/pyfehm'``
+Using this manual
+-----------------
 
-PyFEHM itself contains an environment file, fdflt.py, with default values for various material properties, solver
-parameters and executable paths.
+This manual comprises sections for each of the important PyFEHM modules: :ref:`fgrid <fgrid-chapter>`, 
+:ref:`fdata <fdata-chapter>`, :ref:`fpost <fpost-chapter>`, and :ref:`fvars <fvars-chapter>`. In these, the important
+classes and their methods are documented, and example usage provided.
 
-Some notational conventions
----------------------------
+One way to get acquainted with PyFEHM is to work through the :ref:`tutorials <ftutorial-chapter>` provided. These provide an
+introduction to the basic workflow of creating, running and visualising an FEHM simulation. They also document some of the more
+specialised capabilities of PyFEHM.
 
-When documenting class attributes or method inputs, variable type is first identified in brackets. 
-Where the attribute or input is a list, tuple or dictionary of some other object, the following 
-convention is used.
-
-* *lst[int]* - A list of integers.
-
-* *dict[fnode]* - A dictionary of ``fnode`` objects.
-
-* *tuple[fl64]* - A tuple of floats.

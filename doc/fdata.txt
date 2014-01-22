@@ -1,4 +1,5 @@
 .. _fdata-chapter:
+
 fdata: FEHM input file manipulation
 ===================================
 
@@ -765,6 +766,7 @@ Methods
 .. automethod:: fdata.fdata.change_timestepping
 .. automethod:: fdata.fdata.new_zone
 .. automethod:: fdata.fdata.temperature_gradient
+.. automethod:: fdata.fdata.paraview
 
 .. autoattribute:: fdata.fdata.what
 .. automethod:: fdata.fdata.print_ctrl
@@ -1141,7 +1143,7 @@ Species transport module
 ------------------------
 
 Support of FEHM's trac macro is currently at 'stupid' level. The user supplies a list of zones required by the 
-macro and a file path to an auxilliary text file which contains the macro definition verbatim.
+macro and a file path to an auxiliary text file which contains the macro definition verbatim.
 
 Full support is in development.
 
@@ -1151,7 +1153,7 @@ ftrac attributes
 ^^^^^^^^^^^^^^^^
 
 .. autoattribute:: fdata.ftrac.zonelist
-.. autoattribute:: fdata.ftrac.filename
+.. autoattribute:: fdata.ftrac.file
 .. .. autoattribute:: fdata.ftrac.ldsp
 .. .. autoattribute:: fdata.ftrac.transport_porosity
 .. .. autoattribute:: fdata.ftrac.param

@@ -924,7 +924,11 @@ Now run the simulation with the modified :meth:`run <.fdata.run>`\ ``()`` method
 This simulation now finishes after 5 time steps or approximately 13 days, instead of the 20 days specified as the end
 of the simulation.
 
+Paraview visualisation
+----------------------
 
+Diagnostic window
+-----------------
 
 
 

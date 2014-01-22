@@ -4,7 +4,7 @@ fgrid: FEHM grid manipulation
 =============================
 
 This module contains classes and methods for the manipulation of FEHM grid 
-files. Typically usage will be limited to reading and writing of grid files, 
+files. Typically, usage will be limited to reading and writing of grid files, 
 and the use of the spatial and connectivity information provided. 
 
 PyFEHM can parse unstructured or structured grids in FEHM format. PyFEHM can construct orthogonal grids of arbitrary complexity using the
@@ -124,7 +124,7 @@ The :class:`.fgrid` object contains all information about the finite element gri
 The grid object corresponds to an FEHM grid file and comprises an assembly of :class:`.fnode`, 
 :class:`.fconn` and :class:`.felem` objects. This assembly is constructed by reading an 
 existing FEHM grid files (:meth:`.fgrid.read`) or by creating an empty :class:`.fgrid` object and creating 
-a new mesh using the :meth:`.fgrid.make` command.
+a new mesh using the :meth:`.fgrid.make` command. Read and write support for FEHM stor files is supported.
 
 .. autoclass:: fgrid.fgrid
 
@@ -161,6 +161,7 @@ Methods
 .. automethod:: fgrid.fgrid.make
 .. automethod:: fgrid.fgrid.lagrit_stor
 .. automethod:: fgrid.fgrid.volumes
+.. automethod:: fgrid.fgrid.remove_zeros
 .. autoattribute:: fgrid.fgrid.what
 
 Examples
@@ -207,44 +208,6 @@ Examples
 
   ``geo.``\ :meth:`lagrit_stor <.fgrid.lagrit_stor>`\ ``(overwrite=True, stor='stor\\geo.stor', exe='c:\\bin\\lagrit.exe')``
  
-Grid constructor
-----------------
-
-.. autoclass:: fgrid.fmake  
-
-Attributes:
-^^^^^^^^^^^
-
-.. autoattribute:: fgrid.fmake.x
-.. autoattribute:: fgrid.fmake.y
-.. autoattribute:: fgrid.fmake.z
-.. autoattribute:: fgrid.fmake.meshname
-.. autoattribute:: fgrid.fmake.nodelist
-.. autoattribute:: fgrid.fmake.elemlist
-
-Methods
-^^^^^^^
-
-.. automethod:: fgrid.fmake.write
-
-Examples
-^^^^^^^^
-  
-1. Create a new grid with horizontal spacing given by a power law. Read in the grid and plot a picture.
-
-  ``z = list(np.linspace(-1000,-500,10))+list(np.linspace(-500,-300,20))``
-		
-  ``base = 3``
-  
-  ``x = powspace(0,250,12,base)``
-
-  ``fm=``\ :class:`.fmake`\ ``('mygrid.inp', x=x, y=x, z=z)``
-  
-  ``fm.``\ :meth:`~.fmake.write`
-  
-  ``geo.``\ :meth:`read <.fgrid.read>`\ ``('mygrid.inp')``
-  
-  ``geo.``\ :meth:`plot <.fgrid.plot>`\ ``('mygrid.png')``
   
   
   

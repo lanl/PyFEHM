@@ -23,10 +23,6 @@ Public License for more details.
 
 import os,platform,pkgutil
 
-WINDOWS = platform.system()=='Windows'
-if WINDOWS: copyStr = 'copy'; delStr = 'del'; slash = '\\'
-else: copyStr = 'cp'; delStr = 'rm'; slash = '/'
-
 from types import*
 
 floatKeys = ['linear_converge_NRmult_G1','quadratic_converge_NRmult_G2','stop_criteria_NRmult_G3',
@@ -167,11 +163,11 @@ class fdflt(object):
 		self._check_rc()
 	def _check_rc(self):
 		# check if pyfehmrc file exists		
-		rc_lib = pkgutil.get_loader('fdflt').filename.split(slash)
-		rc_lib1 = slash.join(rc_lib[:-1])+slash+'.pyfehmrc'
-		rc_lib2 = slash.join(rc_lib[:-1])+slash+'pyfehmrc'
-		rc_home1 = os.path.expanduser('~')+slash+'.pyfehmrc'
-		rc_home2 = os.path.expanduser('~')+slash+'pyfehmrc'
+		rc_lib = pkgutil.get_loader('fdflt').filename.split(os.sep)
+		rc_lib1 = os.sep.join(rc_lib[:-1])+os.sep+'.pyfehmrc'
+		rc_lib2 = os.sep.join(rc_lib[:-1])+os.sep+'pyfehmrc'
+		rc_home1 = os.path.expanduser('~')+os.sep+'.pyfehmrc'
+		rc_home2 = os.path.expanduser('~')+os.sep+'pyfehmrc'
 		if os.path.isfile(rc_lib1): fp = open(rc_lib1)
 		elif os.path.isfile(rc_lib2): fp = open(rc_lib2)
 		elif os.path.isfile(rc_home1): fp = open(rc_home1)
