@@ -52,7 +52,7 @@ from fhelp import*
 dflt = fdflt()
 
 WINDOWS = platform.system()=='Windows'
-
+if not WINDOWS: has_ctypes = False
 # list of macros that might be encountered
 fdata_sections = ['cont','pres','zonn','zone','cond','time','ctrl','iter','rock','perm',
 					'boun','flow','strs','text','sol','nfin','hist','node','carb','rlp','grad','nobr',
