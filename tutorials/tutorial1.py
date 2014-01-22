@@ -69,6 +69,8 @@ dat.run(root+'_INPUT.dat') 		# note, because no executable path is specified, Py
 # 7.1.7 Visualisation
 c = fcontour(dat.work_dir+'\\*.csv')
 
+dat.paraview(contour = c, diff=True, time_derivatives=True)
+
 c.slice_plot(save='Tslice.png',cbar=True,levels=11,slice=['x',5],variable='T',method='linear',title='temperature / degC',
 xlabel='y / m', ylabel = 'z / m')
 c.slice_plot(save='Pslice.png',cbar=True,levels=np.linspace(4,6,9),slice=['x',5],variable='P',method='linear',title='pressure / MPa',

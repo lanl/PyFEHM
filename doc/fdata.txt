@@ -761,12 +761,12 @@ Methods
 .. automethod:: fdata.fdata.read
 .. automethod:: fdata.fdata.write
 .. automethod:: fdata.fdata.run
+.. automethod:: fdata.fdata.paraview
 .. automethod:: fdata.fdata.add
 .. automethod:: fdata.fdata.delete
 .. automethod:: fdata.fdata.change_timestepping
 .. automethod:: fdata.fdata.new_zone
 .. automethod:: fdata.fdata.temperature_gradient
-.. automethod:: fdata.fdata.paraview
 
 .. autoattribute:: fdata.fdata.what
 .. automethod:: fdata.fdata.print_ctrl
