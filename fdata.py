@@ -4438,8 +4438,8 @@ class fdata(object):						#FEHM data file.
 		:type diagnostic: bool
 		'''
 		
-		print self.files.incon
 		if verbose != None: self._verbose = verbose
+		if diagnostic: self._verbose = True
 		
 		# set up and check path to executable
 		exe_path = fpath()
