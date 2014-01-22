@@ -1,4 +1,5 @@
 .. _ftutorial-chapter:
+
 Tutorials
 =========
 
@@ -70,7 +71,7 @@ command to generate a visualisation (see Figure :ref:`7.1 <tut0_fig1>`).
 .. _tut0_fig1:
 
 .. figure:: tut0_grid.png
-   :scale: 100 %
+   :scale: 70 %
    
    View of grid, as produced by :meth:`.fgrid.plot`. 
     
@@ -927,6 +928,126 @@ of the simulation.
 Paraview visualisation
 ----------------------
 
+PyFEHM supports 3-D visualisation of model and output data in the software Paraview (www.paraview.org). Paraview must be installed
+ahead of time before For instance, the
+user can visualise various information on the model grid, e.g., material properties like permeability or porosity, zone information, 
+or output data such as temperatures and pressures. Once loaded in Paraview, these data can be sliced, contoured and otherwise
+manipulated using Paraview's built-in tools.
+
+An instance of Paraview is initialised by calling the :meth:`paraview <.fdata.paraview>`\ ``()`` method, 
+either from an :class:`~.fdata` or :class:`~.fcontour` object. Behind the scenes, PyFEHM formats and writes out
+grid, model and output data in the VTK format, and then subsequently loads these files into Paraview. 
+
+If a sequence of contour output data files are loaded in, then the user can optionally request two derived variables types. By
+passing the :meth:`paraview <.fdata.paraview>`\ ``()`` method ``diff=True``, variable differences are created, e.g., the 
+new variable ``T_diff`` will plot the change in temperature from its initial simulation value. By passing 
+``time_derivative=True``, time derivatives for each variable will be calculated.
+
+PyFEHM will assume that ``paraview.exe`` is available for command line execution. The user can ensure this is the case by 
+including the folder containing the paraview executable in their PATH environment variable. Alternatively, the user can
+pass ``exe='/path/to/paraview.exe'`` directly to the :meth:`paraview <.fdata.paraview>`\ ``()`` method, or set this path
+in the config file.
+
+Using the Paraview method
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To get started, in tutorial1.py, uncomment the paraview command near the end of the script
+
+  ``dat.``\ :meth:`paraview <.fdata.paraview>`\ ``(contour=``\ :class:`c <.fcontour>`\ ``, diff=True, time_derivatives=True)``
+  
+Note that we have omitted the ``exe`` argument as it is expected that ``paraview.exe`` is available at the command line or
+otherwise defined in the config file. Because :meth:`paraview <.fdata.paraview>` is a method of :class:`~.fdata`, it has
+access to all the zone, permeability, etc. information defined in that object. However, it has no knowledge of simulation output that
+is encapsulated in the :class:`~.fcontour` object ``c`` defined in the previous command. Therefore, this object has to be
+explicitly passed to :meth:`paraview <.fdata.paraview>` via ``contour=c``.
+
+Running the script tutorial1.py, you should now see an instance of Paraview opened automatically (once the simulation 
+has concluded). There is a short period of activity after Paraview has been opened that it is busy loading files, creating 
+layers etc. - after this has finished you should see something like the figure below.
+
+.. figure:: paraview1.png
+   :scale: 70 %
+   
+Model information
+^^^^^^^^^^^^^^^^^
+
+In the centre panel, a visualisation of the model is displayed, in this case contouring ``x`` permeability. A
+low permeability zone in the centre of the model, defined on the line
+
+``dat.``\ :attr:`~.fdata.zone`\ ``[2].``\ :attr:`~.fzone.permeability`\ ``=kmid``
+
+is evident, as well as the regular grid spacing, defined on the lines 
+
+``x=np.linspace(0,10,11)``
+
+``dat.``\ :attr:`~.fdata.grid`\ ``.``\ :meth:`make <.fgrid.make>`\ ``(root+'_GRID.inp',x=x,y=x,z=x)``
+
+The top left panel contains a branching structure with members ``model`` and ``contour_output``; these allow us to switch in and 
+out various model information. For instance, with ``model`` selected use the drop-down menu to select ``zone_996_YMAX``
+and note how the colouration changes to highlight the location of this zone.
+
+.. figure:: paraview2.png
+   :scale: 70 %
+
+This type of visualisation can be a quick means of checking that zones a user has defined in a PyFEHM script (and are consequently 
+represented in FEHM) actually correspond to the region of the model they have in mind. The :meth:`paraview <.fdata.paraview>` method
+does not require a simulation to have actually been executed before the model can be visualised; the method can be called
+on any \'half-finished\' :class:`~.fdata` object.
+   
+Within the ``model`` branch, you can choose to switch on node visualisation (by toggling the 'eye' symbol next to ``nodes``) or just certain zones. 
+By default, only user-defined zones are included here; however, visualisations for the boundary zones can be obtained by passing
+``zones='all'`` when calling the :meth:`paraview <.fdata.paraview>` method. 
+
+Below we show the ``upper`` zone and nodes superimposed on a distribution of ``y`` permeability. In this way, it is evident that
+permeability is in some way linked to the definition of the ``upper`` zone (well obviously!) - in more complex simulations, this can 
+be a good way to keep track of what material properties are being assigned where.
+
+.. figure:: paraview3.png
+   :scale: 70 %
+   
+Contour output
+^^^^^^^^^^^^^^
+
+The branch ``contour_output`` contains information from the contour object that we passed to :meth:`paraview <.fdata.paraview>`. This includes
+differenced or time derivative variables that may have been created by passing the relevant arguments to :meth:`paraview <.fdata.paraview>`. The ``model`` 
+and ``contour_output`` branches are not mutually exclusive. For example, one could superimpose a zone or node visualisation from ``model``
+on, say, temperature distributions in ``contour_output`` to get a sense of any correspondence between these items.
+
+Turning off the ``model`` branch, and turning on ``contour_output`` (again using the 'eye' toggles), we are presented with 
+a view of model pressures at the end of the simulation.
+
+.. figure:: paraview4.png
+   :scale: 70 %
+   
+In this view, it is clear that the horizontal pressure gradient has been perturbed by the presence of the low 
+permeability zone in the centre of the model. 
+
+We can look at other variables by selecting the ``model`` branch and using the same drop-down menu we earlier used
+to inspect material properties. Note that, in this menu, are the additional differenced and time derivative variables
+we requested to be defined.
+   
+Some additional Paraview tools
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Here we briefly list several of Paraview's useful visualisation features.
+
+  1. Slices can be taken through a model to view material properties or output variables in the interior. Access this 
+  feature through ``Filters\ >\ Common\ >\ Clip`` or ``Slice``.
+  
+  2. Isosurfaces can be defined that follow a specific zone.
+  
+  3. If multiple contour output files have been imported (corresponding to different output times), an animation can be 
+  played using the green animation buttons at the top of the screen.
+  
+  4. Save a visualisation via ``File\ >\ Save Screenshot``.
+
+For example, the figure below shows a vertical slice that clips away half the model. Grid lines are superimposed upon 
+the solid section that remains, with the colouration corresponding to permeability. An isosurface has been constructed for 
+the base of the reservoir zone and contours of pressure have been plotted on this isosurface.
+  
+.. figure:: paraview5.png
+   :scale: 70 %
+   
 Diagnostic window
 -----------------
 
