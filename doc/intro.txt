@@ -37,7 +37,9 @@ A download link for the latest release version of PyFEHM_ can be found at `pyfeh
 
 __ PyFEHM_
 
-To install, download and extract the zip file, and run the setup script at the command line: ``python setup.py install``
+To install, download and extract the zip file, and run the setup script at the command line: 
+
+``python setup.py install``
 
 FEHM
 ^^^^

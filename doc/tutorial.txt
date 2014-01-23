@@ -1149,9 +1149,9 @@ would be started by typing
 ``tutorials\tut1>fehm.exe``
 
 at the command line (presuming that \'fehm.exe\' is in the PATH). To perform the same simulation with a diagnostic window, simply precede
-the executable with \'diagnostic.py\'
+the executable with \'diagnose.py\'
 
-``tutorials\tut1>diagnostic.py fehm.exe``
+``tutorials\tut1>diagnose.py fehm.exe``
 
 This will cause the simulation to be run through PyFEHM and a diagnostic window to be opened. 
 
