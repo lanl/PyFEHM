@@ -4648,7 +4648,8 @@ class fdata(object):						#FEHM data file.
 		:type time_derivatives: bool
 		'''
 		# check for empty contour object
-		if len(contour.variables) == 0: contour = None		
+		if contour is not None:
+			if len(contour.variables) == 0: contour = None		
 		self._vtk = fvtk(parent=self,filename=filename,contour=contour,show_zones = zones,diff=diff,zscale = zscale,spatial_derivatives = spatial_derivatives, time_derivatives = time_derivatives)
 		self._vtk.assemble()
 		fls = self._vtk.write()
