@@ -793,139 +793,67 @@ class fzone(object):						#FEHM zone object.
 				if not (nd.conductivity is not None and self.index == 0): 
 					nd._conductivity = np.array([kx,ky,kz])
 	conductivity = property(_get_conductivity, _set_conductivity) #: (*fl64*,*lst*) Conductivity properties of zone.
-	def _get_density(self): return self._density
-	def _set_density(self,value): 
-		self._density = value
-		# set commands
+	def _set_property(self,value,prop0,props,macro):
+		self.__setattr__(prop0,value)
+				
 		if not self._parent: 
 			pyfehm_print('Zone not associated with input file, no macro changes made.')
 			return
-		if self.index in self._parent.rock.keys():
+		
+		# macro creation/modification
+		ks = self._parent.__getattribute__(macro).keys()
+		if self.index in ks:
 			if self._updateFlag:
-				self._parent.rock[self.index].param['density']=value
+				self._parent.__getattribute__(macro)[self.index].param[prop0[1:]]=value
 		else:
-			self._parent.add(fmacro('rock',zone=self.index,param=(('density',value),('specific_heat',dflt.specific_heat),('porosity',dflt.porosity))))
-			_buildWarnings('WARNING: Assigning default specific heat (%6.1f'%dflt.specific_heat+' kJ/kg/K) and porosity (%4.3f'%dflt.porosity+') to zone '+str(self.index)+'.')
-			self.specific_heat = dflt.specific_heat
-			self.porosity = dflt.porosity
+			params = [(prop0[1:],value)]
+			for prop in props:
+				params.append((prop[1:],dflt.__getattribute__(prop[1:])))
+			self._parent.add(fmacro(macro,zone=self.index,param=tuple(params)))
+			warn_string = 'WARNING: Assigning default '
+			for prop in props:
+				warn_string += prop[1:]+' (%6.1f'%dflt.__getattribute__(prop[1:])+'), '
+			warn_string = warn_string[:-2] + ' to zone '+str(self.index)+'.'
+			_buildWarnings(warn_string)
+			for prop in props:
+				self.__setattr__(prop[1:],dflt.__getattribute__(prop[1:]))
+		
+		# node association
 		if self._parent:
-			for nd in self.nodelist:
-				if not (nd.density is not None and self.index == 0): 
-					nd._density = value
+			for nd in self._nodelist:
+				if len(set([zn.index for zn in nd.zonelist])-set([994,995,996,997,998,999]))==0:
+					nd.__setattr__(prop0,value)		
+				elif len([zn.index for zn in nd.zonelist if zn.index in ks])==0:				
+					nd.__setattr__(prop0,value)			
+				elif self.index == np.max([zn.index for zn in nd.zonelist if zn.index in ks]):
+					nd.__setattr__(prop0,value)
+	def _get_density(self): return self._density
+	def _set_density(self,value): 
+		self._set_property(value,'_density',['_specific_heat','_porosity'],'rock')
 	density = property(_get_density, _set_density) #: (*fl64*) 	Density of zone.
 	def _get_specific_heat(self): return self._specific_heat
 	def _set_specific_heat(self,value): 
-		self._specific_heat = value
-		# set commands
-		if not self._parent: 
-			pyfehm_print('Zone not associated with input file, no macro changes made.')
-			return
-		if self.index in self._parent.rock.keys():
-			if self._updateFlag:
-				self._parent.rock[self.index].param['specific_heat']=value			
-		else:
-			self._parent.add(fmacro('rock',zone=self.index,param=(('density',dflt.density),('specific_heat',value),('porosity',dflt.porosity))))
-			_buildWarnings('WARNING: Assigning default density (%6.1f'%dflt.density+' kg/m^3) and porosity (%4.3f'%dflt.porosity+') to zone '+str(self.index)+'.')
-			self.density = dflt.density
-			self.porosity = dflt.porosity
-		if self._parent:
-			for nd in self.nodelist:
-				if not (nd.specific_heat is not None and self.index == 0): 
-					nd._specific_heat = value
+		self._set_property(value,'_specific_heat',['_density','_porosity'],'rock')
 	specific_heat = property(_get_specific_heat, _set_specific_heat) #: (*fl64*) Specific heat of zone.
 	def _get_porosity(self): return self._porosity
 	def _set_porosity(self,value): 
-		self._porosity = value
-		# set commands
-		if not self._parent: 
-			pyfehm_print('Zone not associated with input file, no macro changes made.')
-			return
-		if self.index in self._parent.rock.keys():
-			if self._updateFlag:
-				self._parent.rock[self.index].param['porosity']=value
-		else:
-			self._parent.add(fmacro('rock',zone=self.index,param=(('density',dflt.density),('specific_heat',dflt.specific_heat),('porosity',value))))
-			_buildWarnings('WARNING: Assigning default density (%6.1f'%dflt.density+' kg/m^3) and specific heat (%6.1f'%dflt.specific_heat+' kJ/kg/K) to zone '+str(self.index)+'.')
-			self.specific_heat = dflt.specific_heat
-			self.density = dflt.density
-		if self._parent:
-			for nd in self.nodelist:
-				if not (nd.porosity is not None and self.index == 0): 
-					nd._porosity = value
+		self._set_property(value,'_porosity',['_density','_specific_heat'],'rock')
 	porosity = property(_get_porosity, _set_porosity) #: (*fl64*) Porosity of zone.
 	def _get_youngs_modulus(self): return self._youngs_modulus
 	def _set_youngs_modulus(self,value): 
-		self._youngs_modulus = value
-		# set commands
-		if not self._parent: 
-			pyfehm_print('Zone not associated with input file, no macro changes made.')
-			return
-		if self.index in self._parent.elastic.keys():
-			if self._updateFlag:
-				self._parent.elastic[self.index].param['youngs_modulus']=value
-		else:
-			self._parent.add(fmacro('elastic',zone=self.index,param=(('youngs_modulus',value),('poissons_ratio',dflt.poissons_ratio))))
-			_buildWarnings('WARNING: Assigning default Poissons ratio (%4.3f'%dflt.poissons_ratio+') to zone '+str(self.index)+'.')
-			self.poissons_ratio = dflt.poissons_ratio
-		if self._parent:
-			for nd in self.nodelist:
-				if not (nd.youngs_modulus is not None and self.index == 0): 
-					nd._youngs_modulus = value
+		self._set_property(value,'_youngs_modulus',['_poissons_ratio'],'elastic')
 	youngs_modulus = property(_get_youngs_modulus, _set_youngs_modulus) #: (*fl64*) Young's modulus of zone.
 	def _get_poissons_ratio(self): return self._poissons_ratio
 	def _set_poissons_ratio(self,value): 
-		self._poissons_ratio = value
-		# set commands
-		if not self._parent: 
-			pyfehm_print('Zone not associated with input file, no macro changes made.')
-			return
-		if self.index in self._parent.elastic.keys():
-			if self._updateFlag:
-				self._parent.elastic[self.index].param['poissons_ratio']=value
-		else:
-			self._parent.add(fmacro('elastic',zone=self.index,param=(('youngs_modulus',dflt.youngs_modulus),('poissons_ratio',value))))
-			_buildWarnings('WARNING: Assigning default Youngs modulus (%5.1f'%dflt.youngs_modulus+' MPa) to zone '+str(self.index)+'.')
-			self.youngs_modulus = dflt.youngs_modulus
-		if self._parent:
-			for nd in self.nodelist:
-				if not (nd.poissons_ratio is not None and self.index == 0): 
-					nd._poissons_ratio = value
+		self._set_property(value,'_poissons_ratio',['_youngs_modulus'],'elastic')
 	poissons_ratio = property(_get_poissons_ratio, _set_poissons_ratio) #: (*fl64*) Poisson's ratio of zone.
 	def _get_thermal_expansion(self): return self._thermal_expansion
 	def _set_thermal_expansion(self,value): 
-		self._thermal_expansion = value
-		# set commands
-		if not self._parent: 
-			pyfehm_print('Zone not associated with input file, no macro changes made.')
-			return
-		if self.index in self._parent.biot.keys():
-			if self._updateFlag:
-				self._parent.biot[self.index].param['thermal_expansion']=value
-		else:
-			self._parent.add(fmacro('biot',zone=self.index,param=(('thermal_expansion',value),('pressure_coupling',dflt.pressure_coupling))))
-			_buildWarnings('WARNING: Assigning default pressure coupling (%4.3f'%dflt.pressure_coupling+') to zone '+str(self.index)+'.')
-			self.pressure_coupling = dflt.pressure_coupling
-		if self._parent:
-			for nd in self.nodelist:
-				if not (nd.thermal_expansion is not None and self.index == 0): 
-					nd._thermal_expansion = value
+		self._set_property(value,'_thermal_expansion',['_pressure_coupling'],'biot')
 	thermal_expansion = property(_get_thermal_expansion, _set_thermal_expansion) #: (*fl64*) Coefficient of thermal expansion of zone.
 	def _get_pressure_coupling(self): return self._pressure_coupling
 	def _set_pressure_coupling(self,value): 
-		self._pressure_coupling = value
-		# set commands
-		if not self._parent: _buildWarnings('Zone not associated with input file, no macro changes made.'); return
-		if self.index in self._parent.biot.keys():
-			if self._updateFlag:
-				self._parent.biot[self.index].param['pressure_coupling']=value
-		else:
-			self._parent.add(fmacro('biot',zone=self.index,param=(('thermal_expansion',dflt.thermal_expansion),('pressure_coupling',value))))
-			_buildWarnings('WARNING: Assigning default thermal expansion (%4.3e'%dflt.thermal_expansion+' K^-1) to zone '+str(self.index)+'.')
-			self.thermal_expansion = dflt.thermal_expansion
-		if self._parent:
-			for nd in self.nodelist:
-				if not (nd.pressure_coupling is not None and self.index == 0): 
-					nd._pressure_coupling = value
+		self._set_property(value,'_pressure_coupling',['_thermal_expansion'],'biot')
 	pressure_coupling = property(_get_pressure_coupling, _set_pressure_coupling) #: (*fl64*) Pressure coupling term of zone.
 	def _get_Pi(self): return self._Pi
 	def _set_Pi(self,value): 
@@ -3071,11 +2999,13 @@ class fdata(object):						#FEHM data file.
 			if self._running:
 				if strs2D: nd._strs = [self.incon.strs_xx[i],self.incon.strs_yy[i],self.incon.strs_xy[i]]
 				elif strs3D: nd._strs = [self.incon.strs_xx[i],self.incon.strs_yy[i],self.incon.strs_zz[i],self.incon.strs_xy[i],self.incon.strs_yz[i],self.incon.strs_xz[i]]
+				if len(self.incon.disp_x) == 0: continue
 				if strs2D: nd._disp = [self.incon.disp_x[i],self.incon.disp_y[i]]
 				elif strs3D: nd._disp = [self.incon.disp_x[i],self.incon.disp_y[i],self.incon.disp_z[i]]
 			else:
 				if strs2D: nd._strsi = [self.incon.strs_xx[i],self.incon.strs_yy[i],self.incon.strs_xy[i]]
 				elif strs3D: nd._strsi = [self.incon.strs_xx[i],self.incon.strs_yy[i],self.incon.strs_zz[i],self.incon.strs_xy[i],self.incon.strs_yz[i],self.incon.strs_xz[i]]
+				if len(self.incon.disp_x) == 0: continue
 				if strs2D: nd._dispi = [self.incon.disp_x[i],self.incon.disp_y[i]]
 				elif strs3D: nd._dispi = [self.incon.disp_x[i],self.incon.disp_y[i],self.incon.disp_z[i]]
 	def _write_unparsed(self,outfile,key):
