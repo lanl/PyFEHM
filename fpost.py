@@ -639,14 +639,13 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 			j = 0
 			for var in self.variables:
 				if var == 'x': 
-					x0 = self._data[self.times[0]]['x']
-					data2.append(x0)
+					data2.append(self._data[self.times[0]]['x'])
 				elif var == 'y': 
-					y0 = self._data[self.times[0]]['y']
-					data2.append(y0)
+					data2.append(self._data[self.times[0]]['y'])
 				elif var == 'z': 
-					z0 = self._data[self.times[0]]['z']
-					data2.append(z0)
+					data2.append(self._data[self.times[0]]['z'])
+				elif var == 'zone': 
+					data2.append(self._data[self.times[0]]['zone'])
 				else: 
 					data2.append(data[:,j]); j +=1
 			data = np.transpose(np.array(data2))
