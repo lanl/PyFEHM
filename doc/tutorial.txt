@@ -133,7 +133,7 @@ Finally, attach the macro to the :class:`.fdata` object.
 
 Note that, if ROCK properties are omitted, FEHM does not generally behave well. Therefore, if PyFEHM notes that no
 global rock properties have been assigned, it will add its own default values before running the simulation (and print
-a warning to to notify the user). The applies for thermal conductivity properties assigned through COND.
+a warning to notify the user). This applies for thermal conductivity properties assigned through COND.
 
 Now we assign different permeability properties to each of the three zones defined in the previous section.
 
@@ -1031,15 +1031,15 @@ Some additional Paraview tools
 
 Here we briefly list several of Paraview's useful visualisation features.
 
-  1. Slices can be taken through a model to view material properties or output variables in the interior. Access this 
-  feature through ``Filters\ >\ Common\ >\ Clip`` or ``Slice``.
-  
-  2. Isosurfaces can be defined that follow a specific zone.
-  
-  3. If multiple contour output files have been imported (corresponding to different output times), an animation can be 
-  played using the green animation buttons at the top of the screen.
-  
-  4. Save a visualisation via ``File\ >\ Save Screenshot``.
+1. Slices can be taken through a model to view material properties or output variables in the interior. Access this 
+   feature through ``Filters > Common > Clip`` or ``Slice``.
+
+2. Isosurfaces can be defined that follow a specific zone: ``Filters > Common > Contour``
+
+3. If multiple contour output files have been imported (corresponding to different output times), an animation can be 
+   played using the green animation buttons at the top of the screen.
+
+4. Save a visualisation via ``File > Save Screenshot``.
 
 For example, the figure below shows a vertical slice that clips away half the model. Grid lines are superimposed upon 
 the solid section that remains, with the colouration corresponding to permeability. An isosurface has been constructed for 
@@ -1048,8 +1048,112 @@ the base of the reservoir zone and contours of pressure have been plotted on thi
 .. figure:: paraview5.png
    :scale: 70 %
    
+Paraview script
+^^^^^^^^^^^^^^^
+
+Installation of PyFEHM provides access to the python script \'fehm_paraview.py\'. This script operates as an executable
+that accepts command line arguments and opens a Paraview visualisation of a particular FEHM simulation.
+
+fehm_paraview.py resides in the /Scripts folder of your Python installation. If /Scripts is included in the PATH environment variable, and the default
+program for \*.py files is Python (on Windows), then this script can be called as an executable.
+
+In its simplest use, fehm_paraview.py can be called without arguments in any directory containing an \'fehmn.files\' FEHM
+control file. For example, in running the script \'tutorial1.py\', we created the subdirectory /tut1, which contains various
+simulation files, including \'fehmn.files\' for that simulation. Navigate to this directory and at the command line execute
+
+``..\\pyfehm\\tutorials\\tut1>fehm_paraview.py``
+
+this will cause an instance of Paraview to be opened and initialised with all model, grid and contour output data. For more
+options on command line use of fehm_paraview.py, call this script with the ``--help`` argument
+
+``fehm_paraview.py --help``
+
 Diagnostic window
 -----------------
 
+FEHM supplies a stream of information to the terminal when a simulation is running. For instance, time step size, 
+number, elapsed time, mass and energy balances, residuals and some nodal information can all be reported. Often
+it may be useful to track and plot these information in time, particularly for long simulations with many time steps.
 
+PyFEHM provides a diagnostic tool that both plots these data in real time and dumps the output information in column format
+to several auxiliary \*.dgs files. Additional information is provided about \'Largest N-R\' corrections that occur before
+time step cutbacks and provide and indication of which regions of the model FEHM is struggling to achieve convergence.
 
+As for the previous section, the PyFEHM diagnostic tool will be demonstrated by modifying and running tutorial1.py. In
+this script, uncomment two lines before the :meth:`run <.fdata.run>` method
+
+``dat.``\ :attr:`~.fdata.tf`\ ``=100.``
+
+``dat.``\ :attr:`~.fdata.iter`\ ``['machine_tolerance_TMCH']=-0.5e-5``
+
+The increased run time provides a better demo and the lower tolerance allows us to demonstrate time step cutbacks.
+
+As in tutorial 1, the simulation is performed by calling the :meth:`run <.fdata.run>` method, but this time modified
+to pass ``diagnostic=True``
+
+``dat.``\ :meth:`run <.fdata.run>`\ ``(root+'_INPUT.dat',diagnostic=True)``
+
+As the simulation executes, a dialogue window will open with several empty ploting axes. These are populated as the 
+simulation proceeds with information taken from the output stream. 
+
+.. figure:: diagnostic1.png
+   :scale: 70 %
+
+In the figure above, there are five boxes, numbered 1 through 5, containing different information. Each of these is
+explained below:
+
+1. Time step size on a log-plot. Both the x and y axes will readjust dynamically depending on the range of data. If
+   this curve starts trending down, it is an indication of time step cutbacks and convergence issues.
+   
+2. Net water (black) and energy (red) discharge. Appropriate y-scale is in the corresponding color. 
+
+3. Residuals on a log-scale for the each governing equation: mass (blue) and energy (red) balance, and, if running 
+   with the stress or CO2 modules, the static-force or CO2 balance (black). A dotted line shows the residual tolerance; 
+   if the residual exceeds this line, FEHM will cutback the time step to achieve better convergence. 
+   
+   Where Largest N-R corrections occur and the time-step is cutback, star symbols in the appropriate color are plotted, e.g.,
+   in the figure above, cutbacks occurred when the energy balance (red) residual exceeded the tolerance, hence red stars
+   are plotted.
+
+4. Node properties. FEHM outputs temperature, pressure and flow information to the screen for history nodes in 
+   ``dat.``\ :attr:`~.fdata.hist`\ ``.``\ :attr:`~.fhist.nodelist`\ . Up to the first four of these are plotted using 
+   different line styles (see legend). The first two variables defined in ``dat.``\ :attr:`~.fdata.hist`\ ``.``\ :attr:`~.fhist.variables`\ 
+   are plotted on the two axes.
+
+5. When Largest N-R corrections occur, it is useful to know what node they occurred at, what its material properties are, 
+   what zone it belongs in etc. This information is provided in Box 5, including (i) the first node to produce a Largest N-R
+   cutback, (ii) the two most-frequent nodes that produced cutbacks, and (iii) the most-recent node to produce a cutback. The final 
+   two update as the simulation proceeds.
+   
+The diagnostic window has several interactive properties. It can be maximised/minimised, resized and moved around the screen. It can also be
+closed without interrupting the simulation. However, :meth:`run <.fdata.run>` method that produces the diagnostic window will
+not return until the window is closed; scripts will pause at the end of a simulation until the user intervenes.
+
+Output files
+^^^^^^^^^^^^
+
+In addition to visualising this information in the diagnostic window, PyFEHM writes the information in delimited format to three output
+files, named \`\*_convergence.dgs\', \`\*_NR.dgs\' and \`\*_node.dgs\'. Alternatively, these output files can be produced
+by reading an FEHM \'\*.outp\' file (which contains the same terminal stream) using the :func:`process_output <.fdata.process_output>` function.
+
+.. autofunction:: fdata.process_output
+
+Diagnostic script
+^^^^^^^^^^^^^^^^^
+
+Similar to Paraview visualisation, a script is supplied on installation for command line execution of the diagnostic tool. This
+script should precede an FEHM executable call that would otherwise execute an FEHM simulation. For example, if the user has prepared
+a directory containing the control file \'fehmn.files\', with directions to an FEHM input and grid file, then an FEHM simulation 
+would be started by typing 
+
+``tutorials\tut1>fehm.exe``
+
+at the command line (presuming that \'fehm.exe\' is in the PATH). To perform the same simulation with a diagnostic window, simply precede
+the executable with \'diagnostic.py\'
+
+``tutorials\tut1>diagnostic.py fehm.exe``
+
+This will cause the simulation to be run through PyFEHM and a diagnostic window to be opened. 
+
+Additional instructions on making installed Python scripts available at the command line can be found in the previous section
+on Paraview visualisation.

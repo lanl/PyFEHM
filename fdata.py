@@ -241,6 +241,19 @@ def _title_string(s,n): 						#prepends headers to sections of FEHM input file
 	return ws
 def _zone_ind(indStr): return abs(int(indStr))-(int(indStr)+abs(int(indStr)))/2
 def process_output(filename,input=None,grid=None,hide=False):
+	"""Runs an FEHM \*.outp file through the diagnostic tool. Writes output files containing simulation balance, 
+	   convergence, time stepping information.
+	   
+	   :param filename: Path to the \*.outp file.
+	   :type filename: str
+	   :param input: Path to corresponding FEHM input file .
+	   :type input: str
+	   :param grid: Path to corresponding FEHM grid file.
+	   :type grid: str
+	   :param hide: If True, suppresses the diagnostic window and just produces the output files.
+	   :type hide: bool
+	"""
+	
 	if input and grid: dat = fdata(filename=input,gridfilename=grid)
 	else: 
 		dat = fdata()
