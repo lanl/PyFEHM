@@ -340,7 +340,8 @@ class fzone(object):						#FEHM zone object.
 			ymax,ymin = np.max([p1[1],p2[1]]),np.min([p1[1],p2[1]])
 			self.points=[[xmin,xmax,xmax,xmin,xmin,xmax,xmax,xmin],
 						 [ymax,ymax,ymin,ymin,ymax,ymax,ymin,ymin],
-						 [0., 0., 0., 0., 0., 0., 0., 0.]]
+						 #[0., 0., 0., 0., 0., 0., 0., 0.]
+						 ]
 		elif len(p1) == 3:
 			xmax,xmin = np.max([p1[0],p2[0]]),np.min([p1[0],p2[0]])
 			ymax,ymin = np.max([p1[1],p2[1]]),np.min([p1[1],p2[1]])
@@ -937,6 +938,7 @@ class fmacro(object): 						#FEHM macro object
 	def __init__(self,type='',zone=[],param=[],subtype='',file = None,write_one_macro=False):
 		self._type = type 		
 		if type == 'stressboun' and not subtype: subtype = 'fixed'
+		if type == 'stressboun': write_one_macro = True
 		self._param = None 		
 		self._check_type()
 		self._assign_param()
@@ -3035,13 +3037,20 @@ class fdata(object):						#FEHM data file.
 			new_boun.type = line
 			line=infile.readline().strip()
 			nums = line.split()
+			N = int(nums[0])
 			new_boun.times = [float(num) for num in nums[1:]]
+			while len(new_boun.times) != N:
+				line=infile.readline().strip()
+				nums = line.split()
+				for num in nums: new_boun.times.append(float(num))
 			line=infile.readline().strip() 			# read next model
 			while not (line.startswith('model') or not line or line.startswith('end')):
 				var = [line,]
-				line=infile.readline().strip()
-				nums = line.split()
-				for num in nums: var.append(float(num))
+				while len(var) != (len(new_boun.times)+1):
+					line=infile.readline().strip()
+					nums = line.split()
+					for num in nums: 
+						var.append(float(num))
 				new_boun.variable.append(var)
 				line=infile.readline().strip() 			# read next model
 			new_bouns.append(new_boun)
@@ -3130,7 +3139,7 @@ class fdata(object):						#FEHM data file.
 		outfile.write('\n')
 	def _add_boun(self,boun=fboun()):							#Adds a BOUN model.
 		boun._parent = self
-		if isinstance(boun.zone,(int,tuple)): boun.zone = [boun.zone]
+		if isinstance(boun.zone,(int,tuple,str)): boun.zone = [boun.zone]
 		zns = []
 		for zn in boun.zone:
 			if isinstance(zn,tuple): 

@@ -1041,7 +1041,7 @@ class fgrid(object):				#Grid object.
 			con.nodes[0].connections.append(con)
 			con.nodes[1].connections.append(con)
 		pyfehm_print("Number of connections (zeros removed):"+str(len(self.connlist)))
-	def make(self,gridfilename,x,y,z,full_connectivity=True,octree=False):
+	def make(self,gridfilename,x,y,z,full_connectivity=True,octree=False,radial=False):
 		""" Generates an orthogonal mesh for input node positions. 
 		
 		The mesh is constructed using the ``fgrid.``\ **fmake** object and an FEHM grid file is written for the mesh.
@@ -1056,6 +1056,8 @@ class fgrid(object):				#Grid object.
 		:type z: list[fl64]
 		:param full_connectivity: read element and connection data and construct corresponding objects. Defaults to False. Use if access to connectivity information will be useful.
 		:type full_connectivity: bool
+		:param radial: Creates a radial grid (ignores z coordinate)
+		:type radial: bool
 		"""
 		# ASSUMPTIONS FOR MAKE
 		# if no parent - interpret string literally
@@ -1074,7 +1076,7 @@ class fgrid(object):				#Grid object.
 				path = self._path.absolute_to_workdir+os.sep+temp_path.filename
 		
 		fm = fmake(path,x,y,z)
-		fm.write()		
+		fm.write(radial=radial)		
 		self.read(path,full_connectivity,octree)
 	def lagrit_stor(self, grid = None, stor = None, exe = dflt.lagrit_path, overwrite = False):
 		"""Uses LaGriT to create a stor file for the simulation, this will be used in subsequent runs.
@@ -1649,7 +1651,7 @@ class fmake(object): 				#Rectilinear grid constructor.
 		self._dimension = None
 		self._meshname = ''
 		if meshname: self._meshname = meshname
-	def write(self,meshname=''):
+	def write(self,meshname='',radial=False):
 		"""Write out the grid file.
 		
 		:param meshname: Name of the grid file.
@@ -1677,19 +1679,11 @@ class fmake(object): 				#Rectilinear grid constructor.
 			outfile.write('\n')
 		outfile.write('\t0\n')
 		outfile.write('elem\n')
-		#if self._full_connectivity:
-		#	outfile.write(str(len(self.elemlist[0].nodes))+' '+str(len(self.elemlist))+'\n')		
-		#	for el in self.elemlist:
-		#		outfile.write(str(int(el.index))+'   ')
-		#		for nd in el.nodes:
-		#			outfile.write(str(nd.index)+'   ')
-		#		outfile.write('\n')
-		#else:
 		outfile.write(str(len(self.elemlist[0]))+' '+str(len(self.elemlist))+'\n')		
 		for i,el in enumerate(self.elemlist):
 			outfile.write(str(i+1)+'   ')
 			for nd in el:
-				outfile.write(str(nd.index)+'   ')
+				outfile.write(str(nd._index)+'   ')
 			outfile.write('\n')
 		outfile.write('\nstop\n')
 		outfile.close()
@@ -1697,15 +1691,37 @@ class fmake(object): 				#Rectilinear grid constructor.
 		"""Generate grid node and element objects corresponding to x y and z seeds.
 		"""
 		# first determine dimension of grid
-		xF = self.x != None; yF = self.y != None; zF = self.z != None
+		xF = len(self.x) > 1; yF = len(self.y) > 1; zF = len(self.z) > 1
 		if xF and yF and zF: self.dimension = 3
 		elif (xF and yF and not zF) or (xF and zF and not yF) or (zF and yF and not xF): self.dimension = 2
 		else: 
 			pyfehm_print('ERROR: not enough dimensions specified')
 			return
 		if self.dimension == 2: 
-			pyfehm_print('ERROR: two dimensional grids not supported')
-			return
+			# create nodes
+			self._nodelist = []
+			ind = 1
+			self._z = 0.
+			self._x = list(np.sort(self._x))
+			self._y = list(np.sort(self._y))
+			for yi in self._y:
+				for xi in self._x:
+					self._nodelist.append(fnode(index=ind,position=[xi,yi,0.]))
+					ind +=1
+			
+			# create elements
+			self._elemlist = []
+			ind = 1
+			xL = len(self._x); yL = len(self._y)
+			for j in range(1,len(self._y)):
+				for k in range(1,len(self._x)):
+					nodes=[
+						self._nodelist[(j-1)*xL + k-1],
+						self._nodelist[(j-1)*xL + k],
+						self._nodelist[j*xL + k],
+						self._nodelist[j*xL + k-1],
+						]
+					self._elemlist.append(nodes)
 		if self.dimension == 3:
 			# create nodes
 			self._nodelist = []
@@ -1736,10 +1752,6 @@ class fmake(object): 				#Rectilinear grid constructor.
 							self._nodelist[(i-1)*xL*yL + j*xL + k],
 							self._nodelist[(i-1)*xL*yL + j*xL + k-1],
 							]
-						#if self._full_connectivity:
-						#	self._elemlist.append(felem(index=ind,nodes=nodes))
-						#	ind +=1
-						#else:
 						self._elemlist.append(nodes)
 	def _get_x(self): return self._x
 	def _set_x(self,value): self._x = value
