@@ -240,7 +240,7 @@ def _title_string(s,n): 						#prepends headers to sections of FEHM input file
 	ws+='\n'
 	return ws
 def _zone_ind(indStr): return abs(int(indStr))-(int(indStr)+abs(int(indStr)))/2
-def process_output(filename,input=None,grid=None,hide=False):
+def process_output(filename,input=None,grid=None,hide=False,silent=False,write=True):
 	"""Runs an FEHM \*.outp file through the diagnostic tool. Writes output files containing simulation balance, 
 	   convergence, time stepping information.
 	   
@@ -250,8 +250,12 @@ def process_output(filename,input=None,grid=None,hide=False):
 	   :type input: str
 	   :param grid: Path to corresponding FEHM grid file.
 	   :type grid: str
-	   :param hide: If True, suppresses the diagnostic window and just produces the output files.
+	   :param hide: Suppress diagnostic window (default False).
 	   :type hide: bool
+	   :param silent: Suppress output to the screen (default False).
+	   :type silent: bool
+	   :param write: Write output files (default True).
+	   :type write: bool
 	"""
 	
 	if input and grid: dat = fdata(filename=input,gridfilename=grid)
@@ -261,6 +265,8 @@ def process_output(filename,input=None,grid=None,hide=False):
 	dat.files.root = dat.filename.split('.')[0]
 	dat.hist.variables=list(flatten(dat.hist.variables))
 	dat._diagnostic.hide = hide
+	dat._diagnostic.write = write
+	dat._diagnostic.silent = silent
 	dat._diagnostic.refresh_nodes()
 	dat._diagnostic.stdout = open(filename)
 	dat._diagnostic.poll = True
@@ -6520,6 +6526,8 @@ class fdiagnostic(object):
 		if len(ln2) == 0: return None
 		
 		return ln2
+	def printout(self,ln):
+		if not self.silent: print ln
 	def parse_line(self):
 		line = self.stdout.readline()
 		if not line:
@@ -6527,7 +6535,7 @@ class fdiagnostic(object):
 				if self.poll() is not None: return
 			except:
 				if self.poll == False: return
-		print line.rstrip() 
+		self.printout(line.rstrip())
 		ln = self.split_line(line)
 		if ln is not None:
 			if self.update_timestep(ln): pass
@@ -6885,9 +6893,9 @@ class fdiagnostic(object):
 		check_string = 'Years  Days  Step Size'
 		if len(check_string.split()) > len(ln): return False
 		if not all([(lni == chk) for lni, chk in zip(check_string.split(),ln)]): return False
-		self.write_timestep()
+		if self.write: self.write_timestep()
 		line = self.stdout.readline()
-		print line.rstrip() 
+		self.printout(line.rstrip())
 		ln = self.split_line(line)
 		
 		yr, day, dt = ln
@@ -6961,8 +6969,8 @@ class fdiagnostic(object):
 		check_string = 'Nodal Information (Water)'
 		if len(check_string.split()) > len(ln): return False
 		if not all([(lni == chk) for lni, chk in zip(check_string.split(),ln)]): return False
-		print self.stdout.readline().rstrip()
-		print self.stdout.readline().rstrip()
+		self.printout(self.stdout.readline().rstrip())
+		self.printout(self.stdout.readline().rstrip())
 		self.write_nd = True
 		
 		keepReading = True
@@ -6970,7 +6978,7 @@ class fdiagnostic(object):
 		while keepReading:
 			# get line to process
 			line = self.stdout.readline()
-			print line.rstrip() 
+			self.printout(line.rstrip() )
 			ln = self.split_line(line)
 			# check if line empty -> break
 			if ln == None: break
@@ -6996,7 +7004,7 @@ class fdiagnostic(object):
 		
 		return True
 	def update_node2(self,ln):
-		check_string = 'Nodal Information (Water)'
+		check_string = 'Nodal Information'
 		if len(check_string.split()) > len(ln): return False
 		if not all([(lni == chk) for lni, chk in zip(check_string.split(),ln)]): return False
 		
@@ -7004,33 +7012,48 @@ class fdiagnostic(object):
 		node_type = ln[-1]
 		if node_type == '(Water)': self.update_node_general('water')
 		elif node_type == '(Gas)': self.update_node_general('gas')
-		elif node_type == '(Tracer)': self.update_node_general('tracer')
+		elif node_type == '(Tracer)': 
+			ln = self.stdout.readline().rstrip()
+			self.printout(ln)
+			ln = ln.split()[-1]
+			self.update_node_general('tracer'+ln)
 	def update_node_general(self,type):
-		if not self.node[type]:
+		if self.node[type] == None:
 			self.node[type]={}
 		lns = [self.stdout.readline().rstrip()]
 		while lns[-1].split()[0] != 'Node': lns.append(self.stdout.readline().rstrip())
-		for ln in lns: print ln
-		if type == 'water': keys = ['P (MPa)','E (MJ)','L sat','Temp (C)','(kg/s)','(MJ/s)','perm (m2)','porosity','Kx W/(m K)','Pwv (MPa)','D*wv (m2/s)','ps_delta_rxn','density (kg/m3)']
-		elif type == 'gas': keys = ['Gas (MPa)','Pres (MPa)','(kg/s)','Residual']; keys2 = ['Capillary','Liquid']
-		elif type == 'tracer': keys = ['an','anl','anw','mol/s','residual']; keys2 = ['sinkint']
+		for ln in lns: self.printout(ln)
+		if type == 'water': 
+			keys_read = ['P (MPa)','E (MJ)','L sat','Temp (C)','(kg/s)','(MJ/s)','perm (m2)','porosity','Kx W/(m K)','Pwv (MPa)','D*wv (m2/s)','ps_delta_rxn','density (kg/m3)']
+			keys_save = ['P','E','sat','T','Qm','Qe','perm','por','Kx','Pwv','D*wv','ps_delta','dens']
+		elif type == 'gas': 
+			keys_read = ['Gas (MPa)','Pres (MPa)','(kg/s)','Residual'] 
+			keys_read2 = ['Capillary','Liquid']
+			
+			keys_save = ['P_gas','Pres (MPa)','Qgas','residual'] 
+			keys_save2 = ['P_cap','P_liq']
+		elif type.startswith('tracer'): 
+			keys_read = ['an','anl','anw','mol/s','residual']
+			keys_read2 = ['sinkint']
+			keys_save = ['an','anl','anw','Q','residual']
+			keys_save2 = ['sinkint']
 		key_pos = []
-		for k in keys:
-			if k in lns[-1]: 
-				if k == 'Pres (MPa)':
-					for k2 in keys2:
-						if k2 in lns[0]: 
-							key_pos.append((k2,len(lns[-1].split(k2)[0])))
+		for kr,ks in zip(keys_read,keys_save):
+			if kr in lns[-1]: 
+				if kr == 'Pres (MPa)':
+					for kr2,ks2 in zip(keys_read2,keys_save2):
+						if kr2 in lns[0]: 
+							key_pos.append((ks2,len(lns[-1].split(kr2)[0])))
 				else:
-					key_pos.append((k,len(lns[-1].split(k)[0])))
-		if type == 'tracer':
-			for k2 in keys2:
-				if k2 in lns[0]: 
-					key_pos.append((k2,len(lns[-1].split(k2)[0])))
+					key_pos.append((ks,len(lns[-1].split(kr)[0])))
+		if type.startswith('tracer'):
+			for kr2,ks2 in zip(keys_read2,keys_save2):
+				if kr2 in lns[0]: 
+					key_pos.append((ks2,len(lns[-1].split(kr2)[0])))
 		key_pos.sort(key=lambda x: x[1])
 		
 		ln = self.stdout.readline().rstrip()
-		print ln
+		self.printout(ln)
 		ln = ln.split()
 		while ln[0] != '-':
 			nd = int(ln[0])
@@ -7041,11 +7064,17 @@ class fdiagnostic(object):
 				if k[0] not in self.node[type][nd].keys(): self.node[type][nd][k[0]] = []
 				self.node[type][nd][k[0]] = val
 			ln = self.stdout.readline().rstrip()
-			print ln
+			self.printout(ln)
 			ln = ln.split()
 			if len(ln) == 0: break
-			if ln[0]=='-':
+			if not ln[0].isdigit():
+				while not ln[0]=='-':
+					ln = self.stdout.readline().rstrip()
+					self.printout(ln)
+					ln = ln.split()
+					
 				self.update_node_general(type)
+				return
 		return
 	def update_errors(self,ln):
 		check_string = 'Conservation Errors:'
@@ -7068,7 +7097,7 @@ class fdiagnostic(object):
 		r = []
 		nd = []
 		line = self.stdout.readline()
-		print line.rstrip() 
+		self.printout(line.rstrip())
 		ln = self.split_line(line)
 		self.residual1.data.append(abs(ln[2]))
 		self.residual1.node.append(int(ln[4]))
@@ -7077,7 +7106,7 @@ class fdiagnostic(object):
 			self.residual1.lim = [pt-1.e-30,pt+1.e-30]
 		# get second residual
 		line = self.stdout.readline()
-		print line.rstrip() 
+		self.printout(line.rstrip())
 		ln = self.split_line(line)
 		self.residual2.data.append(abs(ln[2]))
 		self.residual2.node.append(int(ln[4]))
@@ -7086,7 +7115,7 @@ class fdiagnostic(object):
 			self.residual2.lim = [pt-1.e-30,pt+1.e-30]
 		# get third residual
 		line = self.stdout.readline()
-		print line.rstrip() 
+		self.printout(line.rstrip())
 		ln = self.split_line(line)
 		if ln[0] == 'EQ3':
 			self.residual3.data.append(abs(ln[2]))
@@ -7112,17 +7141,17 @@ class fdiagnostic(object):
 		
 		self.largest_NR.timestep.append(int(ln[-2]))
 		line = self.stdout.readline()
-		print line.rstrip() 
+		self.printout(line.rstrip())
 		ln = self.split_line(line)
 		self.largest_NR.new_node(ln[2],int(ln[4]),1)
 		
 		line = self.stdout.readline()
-		print line.rstrip() 
+		self.printout(line.rstrip())
 		ln = self.split_line(line)
 		self.largest_NR.new_node(ln[2],int(ln[4]),2)
 		
 		line = self.stdout.readline()
-		print line.rstrip() 
+		self.printout(line.rstrip())
 		ln = self.split_line(line)
 		try:
 			self.largest_NR.new_node(ln[2],int(ln[4]),3)
@@ -7133,22 +7162,52 @@ class fdiagnostic(object):
 		if len(self.parent.grid.nodelist) ==0:
 			pass
 		else:
-			self.write_NR()
+			if self.write: self.write_NR()
 			self.largest_NR.redraw()
 			self.largest_NR.retext()
 	def _get_axs(self): return dict(zip(['0','1','2','3'],[self.ax0,self.ax1,self.ax2,self.ax3]))
 	axs = property(_get_axs)
 class foutput(object):
-	def __init__(self,filename = None, input=None, grid = None, hide = True):
+	def __init__(self,filename = None, input=None, grid = None, hide = True, silent=True, write = False):
 		self._filename = filename
 		if self._filename:
 			if input and grid:
-				diag = process_output(filename, hide = hide,input=input,grid=grid)
+				diag = process_output(filename, hide = hide,silent = silent,input=input,grid=grid,write=write)
 			else:
-				diag = process_output(filename, hide = hide)		
+				diag = process_output(filename, hide = hide,silent=silent,write=write)		
 		self._node = diag.node
-	
-	
+		self._times = diag.time.data[1:]
+	def _get_node(self): return self._node
+	node = property(_get_node) #: (*dict*) Dictionary of node output, keyed first on component ('water','gas','tracer1'), then on node number, then on variable.
+	def _get_nodes(self): 
+		for type in ['water','gas','tracer1']:
+			if self._node[type] == None: continue
+			nds = self._node[type].keys()
+			nds.sort()
+			return nds
+		return None
+	nodes = property(_get_nodes) #: (*lst*) List of node indices for which node output available
+	def _get_components(self): 
+		cpts = []
+		for type in ['water','gas','tracer1','tracer2']:		
+			if self._node[type] != None: cpts.append(type)
+		return cpts
+	components = property(_get_components) #: (**) List of component names for which nodal information available
+	def _get_times(self): return self._times
+	times = property(_get_times) #: (*ndarray*) Vector of output times.
+	def _get_filename(self): return self._filename
+	def _set_filename(self,value): self._filename = value
+	filename = property(_get_filename, _set_filename) #: (*str*) Name of output file
+	def _get_information(self):
+		print 'FEHM output file \''+self.filename+'\''
+		print '    call format: foutput[component][node][variable]'
+		prntStr =  '    components: '
+		for cpt in self.components: prntStr += str(cpt)+', '
+		print prntStr[:-2]
+		prntStr = '    nodes: '
+		for nd in self.nodes: prntStr += str(nd)+', '
+		print prntStr[:-2]
+	what = property(_get_information) #:(*str*) Print out information about the fcontour object.
 	
 	
 	
