@@ -7062,7 +7062,7 @@ class fdiagnostic(object):
 				self.node[type][nd] = dict([(k[0],[]) for k in key_pos])
 			for k,val in zip(key_pos,vals):
 				if k[0] not in self.node[type][nd].keys(): self.node[type][nd][k[0]] = []
-				self.node[type][nd][k[0]] = val
+				self.node[type][nd][k[0]].append(val)
 			ln = self.stdout.readline().rstrip()
 			self.printout(ln)
 			ln = ln.split()
