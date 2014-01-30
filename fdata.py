@@ -1214,6 +1214,9 @@ class fincon(object): 						#FEHM restart object.
 	Reading one of these files associates the temperature, pressure, saturation etc. data with grid nodes
 	and sets up fehmn.files to use the file for restarting.
 	'''
+	__slots__ = ['_source','_parent','_time','_changeTime','_writeOut','_stressgradCalled','_T','_P','_S',
+		'_co2aq','_eos','_co2_eos','_dc_eos','_S_co2l','_strs_xx','_strs_yy','_strs_zz','_strs_xy',
+		'_strs_yz','_strs_xz','_disp_x','_disp_y','_disp_z','_path']
 	def __init__(self,inconfilename=''):
 		self._source = ''
 		self._parent = None
@@ -1247,6 +1250,11 @@ class fincon(object): 						#FEHM restart object.
 			return 'no initial conditions'
 		else:
 			return self.filename			#Print out details
+	def __getstate__(self):
+		return dict((k, getattr(self, k)) for k in self.__slots__)
+	def __setstate__(self, data_dict):
+		for (name, value) in data_dict.iteritems():
+			setattr(self, name, value)
 	def read(self,inconfilename='',if_new = False):
 		'''Parse a restart file for variable information.
 		
@@ -1642,6 +1650,7 @@ class fstrs(object):						#FEHM stress module.
 	"""Stress module object, sets properties for execution of FEHM stress module (see macro **STRS**).
 	
 	"""
+	__slots__ = ['_initcalc','_fem','_parent','_bodyforce','_tolerance','_param','_excess_she']
 	def __init__(self,initcalc=True,fem=True,bodyforce=True,tolerance=-0.01,param={},parent=None):
 		self._initcalc=initcalc 			
 		self._fem=fem					
@@ -1659,6 +1668,11 @@ class fstrs(object):						#FEHM stress module.
 	def __repr__(self): 
 		if not self.param['ISTRS']: return 'stress module inactive'
 		else: return 'stress module active'
+	def __getstate__(self):
+		return dict((k, getattr(self, k)) for k in self.__slots__)
+	def __setstate__(self, data_dict):
+		for (name, value) in data_dict.iteritems():
+			setattr(self, name, value)
 	def on(self):
 		"""Set parameters to turn stress calculations ON.
 		
@@ -1749,6 +1763,7 @@ class fcarb(object):						#FEHM CO2 module.
 	"""CO2 module object, sets properties for execution of FEHM CO2 module (see macro **CARB**).
 	
 	"""
+	__slots__ = ['_iprtype','_brine','_parent']
 	def __init__(self,iprtype=1,brine=False,parent=None):
 		self._iprtype = iprtype 		
 		self._brine = brine			
@@ -1756,6 +1771,11 @@ class fcarb(object):						#FEHM CO2 module.
 	def __repr__(self): 
 		if self.iprtype==1: return 'CO2 module inactive'
 		else: return 'CO2 module active'
+	def __getstate__(self):
+		return dict((k, getattr(self, k)) for k in self.__slots__)
+	def __setstate__(self, data_dict):
+		for (name, value) in data_dict.iteritems():
+			setattr(self, name, value)
 	def on(self,iprtype=3):
 		"""Set parameters to turn CO2 calculations ON.
 		
@@ -2926,6 +2946,15 @@ class fdata(object):						#FEHM data file.
 				elif isinstance(obji,fboun): self._delete_boun(obji)
 				elif isinstance(obji,frlpm): self._delete_rlpm(obji)
 				elif isinstance(obji,frlpm_table): self._delete_rlpm(obji)
+	def picklable(self):
+		"""Call before multi-processing simulations in Windows to ensure fdata is picklable.
+		"""
+		for zn in self.zonelist:
+			zn._nodelist = [nd._index for nd in zn._nodelist]
+		for nd in self.grid.nodelist:
+			nd._connected_nodes = [ndi._index for ndi in nd._connected_nodes]
+			nd._elements = [el._index for el in nd._elements]
+			nd._connections = [(c._nodes[0]._index,c._nodes[1]._index) for c in nd._connections]
 	def _add_boundary_zones(self): 						#Automatically creates zones corresponding to x,y,z boundaries
 		x0,x1 = self.grid.xmin,self.grid.xmax
 		y0,y1 = self.grid.ymin,self.grid.ymax
@@ -6411,6 +6440,10 @@ class fdiagnostic(object):
 	"""Class for FEHM real-time diagnosis 
 	
 	"""		
+#	__slots__ = ['parent','file_cv','file_nr','file_nd','nds','nd_vars','hide','_job','time','timestep','total_mass',
+#		'total_energy','residual1','residual2','residual3','largest_NR','mass_input_rate','mass_output_rate',
+#		'enthalpy_input_rate','enthalpy_output_rate','mass_error','energy_error','rel_frame','ax0','ax1',
+#		'ax2','ax3','node','write','silent','write_nd','stdout','poll','root','fig','txt','texts']
 	def __init__(self,parent):
 		self.parent = parent
 		self.file_cv = None         # write out information collected by diagnostic tool
@@ -6465,6 +6498,11 @@ class fdiagnostic(object):
 		self.ax3.slot1 = []
 		
 		self.node = dict([('water',None),('gas',None),('tracer1',None),('tracer2',None)])
+#	def __getstate__(self):
+#		return dict((k, getattr(self, k)) for k in self.__slots__)
+#	def __setstate__(self, data_dict):
+#		for (name, value) in data_dict.iteritems():
+#			setattr(self, name, value)
 	def refresh_nodes(self):
 		ndN = len(self.parent.hist.nodelist)
 		varN = len(self.parent.hist.variables)
@@ -7139,9 +7177,12 @@ class fdiagnostic(object):
 		if len(check_string.split()) > len(ln): return False
 		if not all([(lni == chk) for lni, chk in zip(check_string.split(),ln)]): return False
 		
-		self.largest_NR.timestep.append(int(ln[-2]))
 		line = self.stdout.readline()
 		self.printout(line.rstrip())
+		try: self.split_line(line)[2]
+		except: return
+		
+		self.largest_NR.timestep.append(int(ln[-2]))
 		ln = self.split_line(line)
 		self.largest_NR.new_node(ln[2],int(ln[4]),1)
 		

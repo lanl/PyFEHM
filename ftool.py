@@ -259,11 +259,17 @@ def pyfehm_print(s):
 #------------------------------ FUNCTIONS AND CLASSES FOR INTERNAL USE -------------------------------
 #-----------------------------------------------------------------------------------------------------
 class fpath(object):
+	__slots__ = ['_filename','absolute_to_file','absolute_to_workdir','parent']
 	def __init__(self,filename = None,work_dir = None,parent = None):
 		self._filename = filename
 		self.absolute_to_file = None		# location where originally read DOES NOT CHANGE
 		self.absolute_to_workdir = None	# working directory CAN CHANGE
 		self.parent = parent
+	def __getstate__(self):
+		return dict((k, getattr(self, k)) for k in self.__slots__)
+	def __setstate__(self, data_dict):
+		for (name, value) in data_dict.iteritems():
+			setattr(self, name, value)
 	def update(self, wd):
 		'''called when work_dir is updated'''		
 		if wd == None: 

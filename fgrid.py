@@ -209,11 +209,6 @@ class fnode(object):				#Node object.
 	what = property(_get_info)							#: Print to screen information about the node.
 	def _get_connected_nodes(self):
 		return self._connected_nodes
-		ndlist = []
-		for con in self.connections:
-			for nd in con.nodes:
-				if nd != self: ndlist.append(nd)
-		return ndlist
 	connected_nodes = property(_get_connected_nodes)		#: (*lst[fnode]*) List of node objects connected to this node. This information only available if full_connectivity=True passed to fgrid.read()
 	def _get_connections(self): return self._connections
 	connections = property(_get_connections)#: (*lst[fconn]*) List of connection objects of which the node is a member.
@@ -286,13 +281,16 @@ class fconn(object):				#Connection object.
 
 	A connection is associated with a distance between the two nodes.
 	"""
+	__slots__=['_nodes','_distance','_geom_coef']
 	def __init__(self,nodes):
 		self._nodes = nodes		
-		#pos1 = self.nodes[0].position; pos2 = self.nodes[1].position
-		#if pos1 == None and pos2 == None: self._distance = None
-		#else: self._distance = np.sqrt((pos1[0]-pos2[0])**2+(pos1[1]-pos2[1])**2+(pos1[2]-pos2[2])**2)
 		self._geom_coef = 0.
 	def __repr__(self):	return 'n'+str(self._nodes[0]._index)+':n'+str(self._nodes[1]._index)	
+	def __getstate__(self):
+		return dict((k, getattr(self, k)) for k in self.__slots__)
+	def __setstate__(self, data_dict):
+		for (name, value) in data_dict.iteritems():
+			setattr(self, name, value)
 	def _get_distance(self): return self._distance
 	distance = property(_get_distance)	#: (*fl64*) Distance between the two connected nodes.
 	def _get_nodes(self): return self._nodes
@@ -304,6 +302,7 @@ class felem(object):				#Element object.
 	
 	A finite element is associated with an element centre and an element volume.
 	"""
+	__slots__=['_index','_nodes']
 	def __init__(self,index=None,nodes = []):
 		self._index = index			
 		self._nodes = nodes			
@@ -311,6 +310,11 @@ class felem(object):				#Element object.
 		retStr = 'el'+str(self.index)+': '
 		for nd in self.nodes: retStr+='nd'+str(nd.index)+', '
 		return retStr
+	def __getstate__(self):
+		return dict((k, getattr(self, k)) for k in self.__slots__)
+	def __setstate__(self, data_dict):
+		for (name, value) in data_dict.iteritems():
+			setattr(self, name, value)
 	def _get_index(self): return self._index
 	index = property(_get_index)#: (*int*) Integer number denoting the element.		
 	def _get_centre(self):
@@ -468,6 +472,8 @@ class fgrid(object):				#Grid object.
 	""" FEHM grid object.
 	
 	"""
+	__slots__ = ['_nodelist','_node','_connlist','_conn','_elemlist','_elem','_octree','_dimensions','_parent',
+		'_full_connectivity','_path','_stor','_pos_matrix']
 	def __init__(self,full_connectivity=True):
 		self._nodelist=[]			
 		self._node={}				
@@ -487,6 +493,11 @@ class fgrid(object):				#Grid object.
 			return 'no grid'
 		else:
 			return self.filename			#Print out details
+	def __getstate__(self):
+		return dict((k, getattr(self, k)) for k in self.__slots__)
+	def __setstate__(self, data_dict):
+		for (name, value) in data_dict.iteritems():
+			setattr(self, name, value)
 	def read(self,gridfilename,full_connectivity=True,octree=False,storfilename=None): 
 		"""Read data from an FEHM or AVS grid file. If an AVS grid is specified, PyFEHM will write out the corresponding FEHM grid file.
 

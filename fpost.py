@@ -2038,6 +2038,11 @@ class fvtk(object):
 		self.spatial_derivatives = spatial_derivatives
 		self.time_derivatives = time_derivatives
 		self.zscale = zscale
+	def __getstate__(self):
+		return dict((k, getattr(self, k)) for k in self.__slots__)
+	def __setstate__(self, data_dict):
+		for (name, value) in data_dict.iteritems():
+			setattr(self, name, value)
 	def assemble(self):		
 		"""Assemble all information in pyvtk objects."""			
 		self.assemble_grid()		# add grid information
