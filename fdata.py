@@ -265,6 +265,7 @@ def process_output(filename,input=None,grid=None,hide=False):
 	dat._diagnostic.stdout = open(filename)
 	dat._diagnostic.poll = True
 	dat._diagnostic.construct_viewer()	
+	return dat._diagnostic
 class fzone(object):						#FEHM zone object.
 	"""FEHM Zone object.
 	
@@ -6456,6 +6457,8 @@ class fdiagnostic(object):
 		
 		self.ax3.slot0 = []
 		self.ax3.slot1 = []
+		
+		self.node = dict([('water',None),('gas',None),('tracer1',None),('tracer2',None)])
 	def refresh_nodes(self):
 		ndN = len(self.parent.hist.nodelist)
 		varN = len(self.parent.hist.variables)
@@ -6534,7 +6537,8 @@ class fdiagnostic(object):
 			elif self.update_mass_output(ln): pass
 			elif self.update_enthalpy_input(ln): pass
 			elif self.update_enthalpy_output(ln): pass
-			elif self.update_node(ln): pass
+			#elif self.update_node(ln): pass
+			elif self.update_node2(ln): pass
 			elif self.update_errors(ln): pass			
 			elif self.update_residuals(ln): pass			
 			elif self.update_largestNR(ln): pass			
@@ -6991,6 +6995,58 @@ class fdiagnostic(object):
 			self.update_plot(update)
 		
 		return True
+	def update_node2(self,ln):
+		check_string = 'Nodal Information (Water)'
+		if len(check_string.split()) > len(ln): return False
+		if not all([(lni == chk) for lni, chk in zip(check_string.split(),ln)]): return False
+		
+		####### 1. check species type, e.g., water, gas, tracer
+		node_type = ln[-1]
+		if node_type == '(Water)': self.update_node_general('water')
+		elif node_type == '(Gas)': self.update_node_general('gas')
+		elif node_type == '(Tracer)': self.update_node_general('tracer')
+	def update_node_general(self,type):
+		if not self.node[type]:
+			self.node[type]={}
+		lns = [self.stdout.readline().rstrip()]
+		while lns[-1].split()[0] != 'Node': lns.append(self.stdout.readline().rstrip())
+		for ln in lns: print ln
+		if type == 'water': keys = ['P (MPa)','E (MJ)','L sat','Temp (C)','(kg/s)','(MJ/s)','perm (m2)','porosity','Kx W/(m K)','Pwv (MPa)','D*wv (m2/s)','ps_delta_rxn','density (kg/m3)']
+		elif type == 'gas': keys = ['Gas (MPa)','Pres (MPa)','(kg/s)','Residual']; keys2 = ['Capillary','Liquid']
+		elif type == 'tracer': keys = ['an','anl','anw','mol/s','residual']; keys2 = ['sinkint']
+		key_pos = []
+		for k in keys:
+			if k in lns[-1]: 
+				if k == 'Pres (MPa)':
+					for k2 in keys2:
+						if k2 in lns[0]: 
+							key_pos.append((k2,len(lns[-1].split(k2)[0])))
+				else:
+					key_pos.append((k,len(lns[-1].split(k)[0])))
+		if type == 'tracer':
+			for k2 in keys2:
+				if k2 in lns[0]: 
+					key_pos.append((k2,len(lns[-1].split(k2)[0])))
+		key_pos.sort(key=lambda x: x[1])
+		
+		ln = self.stdout.readline().rstrip()
+		print ln
+		ln = ln.split()
+		while ln[0] != '-':
+			nd = int(ln[0])
+			vals = [float(lni) for lni in ln[1:]]
+			if nd not in self.node[type].keys():
+				self.node[type][nd] = dict([(k[0],[]) for k in key_pos])
+			for k,val in zip(key_pos,vals):
+				if k[0] not in self.node[type][nd].keys(): self.node[type][nd][k[0]] = []
+				self.node[type][nd][k[0]] = val
+			ln = self.stdout.readline().rstrip()
+			print ln
+			ln = ln.split()
+			if len(ln) == 0: break
+			if ln[0]=='-':
+				self.update_node_general(type)
+		return
 	def update_errors(self,ln):
 		check_string = 'Conservation Errors:'
 		if len(check_string.split()) > len(ln): return False
@@ -7082,6 +7138,15 @@ class fdiagnostic(object):
 			self.largest_NR.retext()
 	def _get_axs(self): return dict(zip(['0','1','2','3'],[self.ax0,self.ax1,self.ax2,self.ax3]))
 	axs = property(_get_axs)
+class foutput(object):
+	def __init__(self,filename = None, input=None, grid = None, hide = True):
+		self._filename = filename
+		if self._filename:
+			if input and grid:
+				diag = process_output(filename, hide = hide,input=input,grid=grid)
+			else:
+				diag = process_output(filename, hide = hide)		
+		self._node = diag.node
 	
 	
 	
