@@ -4802,7 +4802,7 @@ class fdata(object):						#FEHM data file.
 			checkWarnings = []
 			buildWarnings = []
 		return False
-	def temperature_gradient(self,filename,offset=0.,first_zone = 100,auxiliary_file=None,hydrostatic = 0):
+	def temperature_gradient(self,filename,offset=0.,first_zone = 100,auxiliary_file=None,hydrostatic = 0,flip_depth_sign=False):
 		'''Assign initial temperature distribution to model based on supplied temperature profile.
 		
 		:param filename: Name of a file containing temperature gradient data. File should be two columns, comma or space separated, with elevation in the first column and temperature (degC) in the second.
@@ -4815,6 +4815,8 @@ class fdata(object):						#FEHM data file.
 		:type auxiliary_file: str
 		:param hydrostatic: Pressure at top of well profile. PyFEHM will calculate hydrostatic pressures consistent with the temperature profile. If left blank, default pressures will be used.
 		:type hydrostatic: fl64
+		:param flip_depth_sign: If sign of depths in file does not match z coordinate in simulation, flip the sign.
+		:type flip_depth_sign: bool
 		'''
 		# check if file exists
 		if not os.path.isfile(filename): 
@@ -4838,7 +4840,10 @@ class fdata(object):						#FEHM data file.
 		else: tempdat = np.loadtxt(filename)
 		zt = tempdat[:,0]; tt = tempdat[:,1]
 		zt = zt + offset
-		if (zt[0]>zt[-1] and z[0]<z[-1]) or (zt[0]<zt[-1] and z[0]>z[-1]): zt = np.flipud(zt); tt = np.flipud(tt)
+		if flip_depth_sign: zt = -zt
+		if (zt[0]>zt[-1] and z[0]<z[-1]) or (zt[0]<zt[-1] and z[0]>z[-1]): 
+			zt = np.flipud(zt)
+			tt = np.flipud(tt)
 		# calculate pressure to assign
 		if 0 in self.pres.keys():
 			p0 = self.pres[0].param['pressure']
