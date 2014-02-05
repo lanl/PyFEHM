@@ -3711,6 +3711,10 @@ class fdata(object):						#FEHM data file.
 		nums = line.split()
 		self.strs.param['ISTRS'] = int(nums[0])
 		self.strs.param['IHMS'] = int(nums[1])
+		try:
+			self.strs.param['porosity_factor'] = float(nums[2])
+		except:
+			self.strs.param['porosity_factor'] = None
 		line=infile.readline().strip()
 		while not line.startswith('stressend'):
 			if line.startswith('bodyforce'): 				# bodyforce boolean
@@ -3743,10 +3747,13 @@ class fdata(object):						#FEHM data file.
 			line=infile.readline().strip()
 	def _write_strs(self,outfile):								#Writes STRS and associated macros.
 		ws = _title_string('STRESS MODULE',72)
-		outfile.write(ws)
+		outfile.write(ws)                                
 		outfile.write('strs\n')
 		outfile.write(str(self.strs.param['ISTRS'])+'\t')
-		outfile.write(str(self.strs.param['IHMS'])+'\n')
+		outfile.write(str(self.strs.param['IHMS'])+'\t')
+		if self.strs.param['porosity_factor'] is not None:
+			outfile.write(str(self.strs.param['porosity_factor'])+'\t')
+		outfile.write('\n')
 		if self.strs.bodyforce: outfile.write('bodyforce\n')
 		if self.strs.initcalc: outfile.write('initcalc\n')
 		if self.strs.fem: outfile.write('fem\n')
@@ -5341,7 +5348,7 @@ class fdata(object):						#FEHM data file.
 			line=infile.readline().strip()
 			if not os.path.isfile(line):
 				# check if in subdirectory with input file
-				fname = self._path.split(os.sep)
+				fname = self._path.filename.split(os.sep)
 				if len(fname)>0:
 					fn0 = ''
 					for fn in fname[:-1]: fn0 += fn
