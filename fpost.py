@@ -361,7 +361,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 						file = file.split('_vec')[0]
 						file = file.split('_days')[0]						
 						file = file.split('.')
-						file = [fl for fl in file if fl[0].isdigit()]
+						file = [fl for fl in file if fl.isdigit()]
 						ts.append(float('.'.join(file)))
 					ts = np.unique(ts)
 					
@@ -562,7 +562,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 				file = file.split('_vec')[0]
 				file = file.split('_days')[0]						
 				file = file.split('.')
-				file = [fl for fl in file if fl[0].isdigit()]
+				file = [fl for fl in file if fl.isdigit()]
 				time = float('.'.join(file))
 				self._times.append(time)
 			

@@ -751,6 +751,7 @@ class fzone(object):						#FEHM zone object.
 			row = []
 			if self.type == 'nnum': row.append(len(self.nodelist))
 			for nd in self.nodelist:
+				if isinstance(nd,int): nd = self._parent.grid.node[nd]
 				if self.type == 'list': pts.append(nd.position)
 				elif self.type == 'nnum': row.append(nd.index)
 				if len(row) == 10: pts.append(row); row = []
@@ -829,6 +830,7 @@ class fzone(object):						#FEHM zone object.
 		# node association
 		if self._parent:
 			for nd in self._nodelist:
+				if isinstance(nd,int): nd = self._parent.grid.node[nd]
 				if len(set([zn.index for zn in nd.zonelist])-set([994,995,996,997,998,999]))==0:
 					nd.__setattr__(prop0,value)		
 				elif len([zn.index for zn in nd.zonelist if zn.index in ks])==0:				
@@ -2954,7 +2956,9 @@ class fdata(object):						#FEHM data file.
 		for nd in self.grid.nodelist:
 			nd._connected_nodes = [ndi._index for ndi in nd._connected_nodes]
 			nd._elements = [el._index for el in nd._elements]
-			nd._connections = [(c._nodes[0]._index,c._nodes[1]._index) for c in nd._connections]
+		for con in self.grid.connlist:
+			con._nodes = [con._nodes[0]._index,con._nodes[1]._index]
+		#nd._connections = [(c._nodes[0]._index,c._nodes[1]._index) for c in nd._connections]
 	def _add_boundary_zones(self): 						#Automatically creates zones corresponding to x,y,z boundaries
 		x0,x1 = self.grid.xmin,self.grid.xmax
 		y0,y1 = self.grid.ymin,self.grid.ymax
@@ -4527,9 +4531,11 @@ class fdata(object):						#FEHM data file.
 					self._diagnostic.stdout = p.stdout
 					self._diagnostic.poll = p.poll
 					self._diagnostic.construct_viewer() 			# construct the diagnosis window
-					
-				for line in iter(p.stdout.readline, b''):
-					print line.rstrip() 	# print remainder to screen	
+				if self._verbose:
+					for line in iter(p.stdout.readline, b''):
+						print line.rstrip() 	# print remainder to screen	
+				else:
+					p.communicate()
 			else:
 				self._running = True
 				interval = 0

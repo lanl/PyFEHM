@@ -159,7 +159,7 @@ class wellbore_model(fdata):
 		self._remember_inittemp = None
 		
 		if inputfilename: self._filename = inputfilename
-		if gridfilename: self.grid._filename = gridfilename; self.grid._path.filename = gridfilename
+		if gridfilename: self.grid._path.filename = gridfilename
 		
 		self.work_dir = work_dir
 				
