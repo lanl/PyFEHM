@@ -2484,7 +2484,7 @@ class fvtk(object):
 	def _get_filename(self): return self.path.absolute_to_file+os.sep+self.path.filename
 	filename = property(_get_filename) #: (**)
 
-def fdiff( in1, in2, format='diff', times=[], variables=[]):
+def fdiff( in1, in2, format='diff', times=[], variables=[], components=[]):
 	'''Take the difference of two fpost objects
 	
 	:param in1: First fpost object
@@ -2497,6 +2497,8 @@ def fdiff( in1, in2, format='diff', times=[], variables=[]):
 	:type times: lst(fl64)
 	:param variables: Variables to diff
 	:type variables: lst(str)
+	:param components: Components to diff (foutput objects)
+	:type components: lst(str)
 	:returns: fpost object of same type as in1 and in2
 	'''
     # Copy in1 and in2 in case they get modified below
@@ -2505,7 +2507,7 @@ def fdiff( in1, in2, format='diff', times=[], variables=[]):
 	if type(in1) is not type(in2):
 		print "ERROR: fpost objects are not of the same type: "+str(type(in1))+" and "+str(type(in2))
 		return
-	if isinstance(in1, fcontour):
+	if isinstance(in1, fcontour) or 'foutput' in str(in1.__class__):
 		# Find common times
 		t = np.intersect1d(in1.times,in2.times)
 		if len(t) == 0:
@@ -2518,15 +2520,16 @@ def fdiff( in1, in2, format='diff', times=[], variables=[]):
 				return
 		else:
 			times = t
-		# Find common variables
+	if isinstance(in1, fcontour):
+	    # Find common variables
 		v = np.intersect1d(in1.variables,in2.variables)
 		if len(v) == 0:
-			print "ERROR: fpost object times do not have any matching values"
+			print "ERROR: fcontour object variables do not have any matching values"
 			return
 		if len(variables) > 0:
 			variables = np.intersect1d(variables,v)
 			if len(variables) == 0:
-				print "ERROR: provided times are not coincident with fpost object times"
+				print "ERROR: provided variables are not coincident with fcontour object variables"
 				return
 		else:
 			variables = v
@@ -2542,6 +2545,48 @@ def fdiff( in1, in2, format='diff', times=[], variables=[]):
 			elif format is 'percent':
 				out._data[t] = dict([(v,100*np.abs((in1[t][v] - in2[t][v])/in2[t][v])) for v in variables])
 		return out
+	elif 'foutput' in str(in1.__class__):
+		# Find common components
+		c = np.intersect1d(in1.components,in2.components)
+		if len(c) == 0:
+			print "ERROR: foutput object components do not have any matching values"
+			return
+		if len(components) > 0:
+			components = np.intersect1d(components,c)
+			if len(components) == 0:
+				print "ERROR: provided components are not coincident with foutput object components"
+				return
+		else:
+			components = c		
+		out = deepcopy(in1)
+		out._times = times
+		out._node = {}
+		for tp in ['water','gas','tracer1','tracer2']:		
+			out._node[tp] = None
+		for cp in components:
+			if format is 'diff':
+				if len(variables):
+					out._node[cp] = dict([(n,dict([(v,np.array(in1._node[cp][n][v]) - np.array(in2._node[cp][n][v])) for v in in1._node[cp][n].keys() if v in variables])) for n in in1.nodes])
+				else:
+					out._node[cp] = dict([(n,dict([(v,np.array(in1._node[cp][n][v]) - np.array(in2._node[cp][n][v])) for v in in1._node[cp][n].keys()])) for n in in1.nodes])
+			elif format is 'relative':
+				if len(variables):
+					out._node[cp] = dict([(n,dict([(v,(np.array(in1._node[cp][n][v]) - np.array(in2._node[cp][n][v]))/np.abs(in2._node[cp][n][v])) for v in in1._node[cp][n].keys() if v in variables])) for n in in1.nodes])
+				else:
+					out._node[cp] = dict([(n,dict([(v,(np.array(in1._node[cp][n][v]) - np.array(in2._node[cp][n][v]))/np.abs(in2._node[cp][n][v])) for v in in1._node[cp][n].keys()])) for n in in1.nodes])
+			elif format is 'percent':
+				if len(variables):
+					out._node[cp] = dict([(n,dict([(v,100*np.abs((np.array(in1._node[cp][n][v]) - np.array(in2._node[cp][n][v]))/in2._node[cp][n][v])) for v in in1._node[cp][n].keys() if v in variables])) for n in in1.nodes])
+				else:
+					out._node[cp] = dict([(n,dict([(v,100*np.abs((np.array(in1._node[cp][n][v]) - np.array(in2._node[cp][n][v]))/in2._node[cp][n][v])) for v in in1._node[cp][n].keys()])) for n in in1.nodes])
+		return out
+
+				
+				
+
+
+
+
 
 
 	
