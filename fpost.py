@@ -2126,6 +2126,7 @@ class fvtk(object):
 		"""Assemble contour output in pyvtk objects."""
 		self.data.contour = dict([(time,pv.PointData()) for time in self.contour.times])
 		if self.diff: time0 = self.contour.times[0]
+		print self.contour.times
 		for time in self.contour.times:
 			do_lims = (time == self.contour.times[-1])
 			for var in self.contour.variables+self.contour.user_variables:
@@ -2140,12 +2141,14 @@ class fvtk(object):
 				# field for contour variable
 				if var not in self.variables: self.variables.append(var)
 				self.data.contour[time].append(pv.Scalars(self.contour[time][var],name=var,lookup_table='default'))
+				print 't = ',time,', var = ',var
+				if var in ['x','y','z','n']: continue
 				if do_lims: self.__setattr__(var+'_lim',[np.min(self.contour[time][var]),np.max(self.contour[time][var])])
 				
 				# differences from initial value
 				if self.diff:
 					self.data.contour[time].append(pv.Scalars(self.contour[time][var]-self.contour[time0][var],name='diff_'+var,lookup_table='default'))
-				
+					print 't = ',time,', var = ','diff_'+var
 				# time derivatives
 				if self.time_derivatives:
 					# find position, determines type of differencing
@@ -2171,6 +2174,7 @@ class fvtk(object):
 						f2 = self.contour[self.contour.times[ind+1]][var]
 						dat = -dt2/(dt1*(dt1+dt2))*f0 + (dt2-dt1)/(dt1*dt2)*f1 + dt1/(dt2*(dt1+dt2))*f2
 					self.data.contour[time].append(pv.Scalars(dat,name='d_'+var+'_dt',lookup_table='default'))
+					print 't = ',time,', var = ','d_'+var+'_dt'
 				
 	def write(self):	
 		"""Call to write out vtk files."""
