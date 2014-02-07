@@ -6459,10 +6459,6 @@ class fdiagnostic(object):
 	"""Class for FEHM real-time diagnosis 
 	
 	"""		
-#	__slots__ = ['parent','file_cv','file_nr','file_nd','nds','nd_vars','hide','_job','time','timestep','total_mass',
-#		'total_energy','residual1','residual2','residual3','largest_NR','mass_input_rate','mass_output_rate',
-#		'enthalpy_input_rate','enthalpy_output_rate','mass_error','energy_error','rel_frame','ax0','ax1',
-#		'ax2','ax3','node','write','silent','write_nd','stdout','poll','root','fig','txt','texts']
 	def __init__(self,parent):
 		self.parent = parent
 		self.file_cv = None         # write out information collected by diagnostic tool
@@ -6471,6 +6467,8 @@ class fdiagnostic(object):
 		self.nds = []
 		self.nd_vars = ['pressure','temperature','flow']
 		self.hide = False
+		self.silent = False
+		self.write = True
 		
 		self._job = True
 		
@@ -6517,11 +6515,6 @@ class fdiagnostic(object):
 		self.ax3.slot1 = []
 		
 		self.node = dict([('water',None),('gas',None),('tracer1',None),('tracer2',None)])
-#	def __getstate__(self):
-#		return dict((k, getattr(self, k)) for k in self.__slots__)
-#	def __setstate__(self, data_dict):
-#		for (name, value) in data_dict.iteritems():
-#			setattr(self, name, value)
 	def refresh_nodes(self):
 		ndN = len(self.parent.hist.nodelist)
 		varN = len(self.parent.hist.variables)
