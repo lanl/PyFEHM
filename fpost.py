@@ -2134,7 +2134,7 @@ class fvtk(object):
 					if time != self.contour.times[0] and var in ['x','y','z','n']: continue
 				else:
 					if var not in self.contour[time].keys(): continue
-					if diff:
+					if self.diff:
 						if var not in self.contour[time0].keys(): continue
 				
 				# field for contour variable

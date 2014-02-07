@@ -1662,6 +1662,7 @@ class fstrs(object):						#FEHM stress module.
 		self._param={}					
 		self._param['IHMS']=-3
 		self._param['ISTRS']=0
+		self._param['porosity_factor']=None
 		self._excess_she = {}			
 		self._excess_she['PAR1']=None
 		self._excess_she['PAR2']=None
