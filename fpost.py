@@ -2083,7 +2083,7 @@ class fVtkData(pv.VtkData):
 			written_files.append(filename_int)
 		return written_files
 class fvtk(object):
-	def __init__(self,parent,filename,contour,show_zones,diff,zscale,spatial_derivatives,time_derivatives):
+	def __init__(self,parent,filename,contour,diff,zscale,spatial_derivatives,time_derivatives):
 		self.parent = parent
 		self.path = fpath(parent = self)
 		self.path.filename = filename
@@ -2092,7 +2092,6 @@ class fvtk(object):
 		self.variables = []
 		self.materials = []
 		self.zones = []
-		self.show_zones = show_zones
 		self.diff = diff
 		self.spatial_derivatives = spatial_derivatives
 		self.time_derivatives = time_derivatives

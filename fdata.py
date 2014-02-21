@@ -4637,15 +4637,33 @@ class fdata(object):						#FEHM data file.
 		:type time_derivatives: bool
 		'''
 		# check for empty contour object
-		if contour is not None:
-			if len(contour.variables) == 0: contour = None		
-		self._vtk = fvtk(parent=self,filename=filename,contour=contour,show_zones = zones,diff=diff,zscale = zscale,spatial_derivatives = spatial_derivatives, time_derivatives = time_derivatives)
-		self._vtk.assemble()
-		fls = self._vtk.write()
+		self.write_vtk(filename=filename,contour=contour,diff=diff,zscale=zscale,spatial_derivatives=spatial_derivatives,time_derivatives=time_derivatives)
+		self._vtk.show_zones=zones
+		
 		self._vtk.initial_display(show)
 		self._vtk.startup_script()
 		
 		p = Popen(exe+' --script=pyfehm_paraview_startup.py',shell=(not WINDOWS))		
+	def write_vtk(self, filename = 'temp.vtk',contour=None,diff = True,zscale = 1.,
+			spatial_derivatives = False, time_derivatives = False):
+		'''Exports the model object to VTK.
+		
+		:param filename: Name of VTK file to be output.
+		:type filename: str
+		:param contour: Contout output data object loaded using fcontour().
+		:type contour: fcontour
+		:param diff: Flag to request PyFEHM to also plot differences of contour variables (from initial state) with time.
+		:type diff: bool
+		:param zscale: Factor by which to scale z-axis. Useful for visualising laterally extensive flow systems.
+		:type zscale: fl64
+		:param time_derivatives: Calculate new fields for time derivatives of contour data. For precision reasons, derivatives are calculated with units of 'per day'.
+		:type time_derivatives: bool
+		'''
+		if contour is not None:
+			if len(contour.variables) == 0: contour = None		
+		self._vtk = fvtk(parent=self,filename=filename,contour=contour,diff=diff,zscale = zscale,spatial_derivatives = spatial_derivatives, time_derivatives = time_derivatives)
+		self._vtk.assemble()
+		fls = self._vtk.write()
 	def visit(self,exe = 'visit',filename = 'temp.vtk',contour = None):
 		'''Exports the model object to VTK and loads in paraview.
 		
