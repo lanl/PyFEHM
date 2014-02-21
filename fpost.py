@@ -820,7 +820,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 			X,Y,Z,sxy = self.slice('strs_xy', slice, divisions, time, method)
 			X,Y,Z,sxz = self.slice('strs_xz', slice, divisions, time, method)
 			X,Y,Z,syz = self.slice('strs_yz', slice, divisions, time, method)
-			X,Y,Z,sp  = self.slice('P',       slice, divisions, time, method)
+			X,Y,Z,sp  = self.slice('P',	   slice, divisions, time, method)
 			
 			dip = variable[2]/180.*math.pi
 			azi = variable[1]/180.*math.pi+3.14159/2.
@@ -842,7 +842,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 				X,Y,Z,sxy = self.slice('strs_xy', slice, divisions, time0, method)
 				X,Y,Z,sxz = self.slice('strs_xz', slice, divisions, time0, method)
 				X,Y,Z,syz = self.slice('strs_yz', slice, divisions, time0, method)
-				X,Y,Z,sp  = self.slice('P',       slice, divisions, time0, method)
+				X,Y,Z,sp  = self.slice('P',	   slice, divisions, time0, method)
 				
 				px = sxx*nhat[0]+sxy*nhat[1]+sxz*nhat[2]
 				py = sxy*nhat[0]+syy*nhat[1]+syz*nhat[2]
@@ -1482,11 +1482,11 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 	zmax = property(_get_zmax, _set_zmax) #: (*fl64*) Maximum nodal z-coordinate for grid.
 	def _get_information(self):
 		print 'FEHM contour output - format '+self._format
-		print '    call format: fcontour[time][variable][node_index-1]'
-		prntStr =  '    times ('+str(len(self.times))+'): '
+		print '	call format: fcontour[time][variable][node_index-1]'
+		prntStr =  '	times ('+str(len(self.times))+'): '
 		for time in self.times: prntStr += str(time)+', '
 		print prntStr[:-2]+' days'
-		prntStr = '    variables: '
+		prntStr = '	variables: '
 		for var in self.variables: prntStr += str(var)+', '
 		print prntStr
 	what = property(_get_information) #:(*str*) Print out information about the fcontour object.
@@ -1716,14 +1716,14 @@ class fhistory(object):						# Reading and plotting methods associated with hist
 	nodes = property(_get_nodes)	#: (*lst[fl64]*) List of node indices for which output data are available.
 	def _get_information(self):
 		print 'FEHM history output - format '+self._format
-		print '    call format: fhistory[variable][node][time_index]'
-		prntStr = '    nodes: '
+		print '	call format: fhistory[variable][node][time_index]'
+		prntStr = '	nodes: '
 		for nd in self.nodes: prntStr += str(nd)+', '
 		print prntStr
-		prntStr =  '    times ('+str(len(self.times))+'): '
+		prntStr =  '	times ('+str(len(self.times))+'): '
 		for time in self.times: prntStr += str(time)+', '
 		print prntStr[:-2]+' days'
-		prntStr = '    variables: '
+		prntStr = '	variables: '
 		for var in self.variables: prntStr += str(var)+', '
 		print prntStr
 	what = property(_get_information) #:(*str*) Print out information about the fhistory object.
@@ -1969,6 +1969,65 @@ class multi_pdf(object):
 	save = property(_get_save, _set_save) #: (*str*) Name of the final pdf to output.
 
 """Classes for VTK output."""
+class fStructuredGrid(pv.StructuredGrid):
+	def __init__(self,dimensions,points):
+		pv.StructuredGrid.__init__(self,dimensions,points)
+	def to_string(self, time = None, format='ascii'):
+		t = self.get_datatype(self.points)
+		ret = ['DATASET STRUCTURED_GRID']
+		
+		# include time information
+		if time is not None:
+			ret.append('FIELD FieldData 2')
+			ret.append('TIME 1 1 double')
+			ret.append('%8.7f'%time)
+			ret.append('CYCLE 1 1 int')
+			ret.append('123')
+		
+		ret.append('DIMENSIONS %s %s %s'%self.dimensions)
+		ret.append('POINTS %s %s'%(self.get_size(),t))
+		ret.append(self.seq_to_string(self.points,format,t))
+		
+		return '\n'.join(ret)
+class fUnstructuredGrid(pv.UnstructuredGrid):
+	def __init__(self,points,vertex=[],poly_vertex=[],line=[],poly_line=[],
+				 triangle=[],triangle_strip=[],polygon=[],pixel=[],
+				 quad=[],tetra=[],voxel=[],hexahedron=[],wedge=[],pyramid=[]):
+		pv.UnstructuredGrid.__init__(self,points,vertex=vertex,poly_vertex=poly_vertex,line=line,poly_line=poly_line,
+				 triangle=triangle,triangle_strip=triangle_strip,polygon=polygon,pixel=pixel,
+				 quad=quad,tetra=tetra,voxel=voxel,hexahedron=hexahedron,wedge=wedge,pyramid=pyramid)			
+	def to_string(self,time = None,format='ascii'):
+		t = self.get_datatype(self.points)
+		ret = ['DATASET UNSTRUCTURED_GRID']
+		
+		# include time information
+		if time is not None:
+			ret.append('FIELD FieldData 2')
+			ret.append('TIME 1 1 double')
+			ret.append('%8.7f'%time)
+			ret.append('CYCLE 1 1 int')
+			ret.append('123')
+		
+		ret.append('POINTS %s %s'%(self.get_size(),t))
+		ret.append(self.seq_to_string(self.points,format,t))
+		tps = []
+		r = []
+		sz = 0
+		for k in self._vtk_cell_types_map.keys():
+			kv = getattr(self,k)
+			if kv==[] or kv[0]==[]: continue
+			s = self.seq_to_string([[len(v)]+list(v) for v in kv],format,'int')
+			r .append(s)
+			for v in kv:
+				tps.append(self._vtk_cell_types_map[k])
+				sz += len(v)+1
+		sep = (format=='ascii' and '\n') or (format=='binary' and '')
+		r = sep.join(r)
+		ret += ['CELLS %s %s'%(len(tps),sz),
+				r,
+				'CELL_TYPES %s'%(len(tps)),
+				self.seq_to_string(tps,format,'int')]
+		return '\n'.join(ret)
 class fVtkData(pv.VtkData):
 	def __init__(self,*args,**kws):
 		pv.VtkData.__init__(self,*args,**kws)
@@ -1979,15 +2038,15 @@ class fVtkData(pv.VtkData):
 		ret = ['# vtk DataFile Version 2.0',
 			   self.header,
 			   format.upper(),
-			   self.structure.to_string(format)
+			   self.structure.to_string(time=time,format=format)
 			   ]
 		if self.cell_data.data:
-			ret.append(self.cell_data.to_string(format))
+			ret.append(self.cell_data.to_string(format=format))
 		if material:
-			ret.append(self.material.to_string(format))
+			ret.append(self.material.to_string(format=format))
 		else:
 			if self.contour[time].data:
-				ret.append(self.contour[time].to_string(format))
+				ret.append(self.contour[time].to_string(format=format))
 		return '\n'.join(ret)
 	def tofile(self, filename, format = 'ascii'):
 		"""Save VTK data to file.
@@ -2006,7 +2065,7 @@ class fVtkData(pv.VtkData):
 		# first write material properties file
 		filename_int = ''.join(filename[:-4]+'_mat.vtk')
 		f = open(filename_int,'wb')
-		f.write(self.to_string(format,material=True))
+		f.write(self.to_string(format=format,material=True))
 		f.close()
 		written_files.append(filename_int)
 		
@@ -2019,7 +2078,7 @@ class fVtkData(pv.VtkData):
 				filename_int = filename
 			#print 'Creating file',`filename`
 			f = open(filename_int,'wb')
-			f.write(self.to_string(time,format))
+			f.write(self.to_string(time=time,format=format))
 			f.close()
 			written_files.append(filename_int)
 		return written_files
@@ -2061,9 +2120,9 @@ class fvtk(object):
 		
 		# make grid
 		if len(cns[0]) == 4:
-			self.data = fVtkData(pv.UnstructuredGrid(nds,tetra=cns),'PyFEHM VTK model output')
+			self.data = fVtkData(fUnstructuredGrid(nds,tetra=cns),'PyFEHM VTK model output')
 		elif len(cns[0]) == 8:
-			self.data = fVtkData(pv.UnstructuredGrid(nds,hexahedron=cns),'PyFEHM VTK model output')
+			self.data = fVtkData(fUnstructuredGrid(nds,hexahedron=cns),'PyFEHM VTK model output')
 		else:
 			print "ERROR: Number of connections in connectivity not recognized: "+str(len(cns[0]))
 			return
@@ -2126,7 +2185,6 @@ class fvtk(object):
 		"""Assemble contour output in pyvtk objects."""
 		self.data.contour = dict([(time,pv.PointData()) for time in self.contour.times])
 		if self.diff: time0 = self.contour.times[0]
-		print self.contour.times
 		for time in self.contour.times:
 			do_lims = (time == self.contour.times[-1])
 			for var in self.contour.variables+self.contour.user_variables:
@@ -2141,14 +2199,12 @@ class fvtk(object):
 				# field for contour variable
 				if var not in self.variables: self.variables.append(var)
 				self.data.contour[time].append(pv.Scalars(self.contour[time][var],name=var,lookup_table='default'))
-				print 't = ',time,', var = ',var
 				if var in ['x','y','z','n']: continue
 				if do_lims: self.__setattr__(var+'_lim',[np.min(self.contour[time][var]),np.max(self.contour[time][var])])
 				
 				# differences from initial value
 				if self.diff:
 					self.data.contour[time].append(pv.Scalars(self.contour[time][var]-self.contour[time0][var],name='diff_'+var,lookup_table='default'))
-					print 't = ',time,', var = ','diff_'+var
 				# time derivatives
 				if self.time_derivatives:
 					# find position, determines type of differencing
@@ -2174,8 +2230,6 @@ class fvtk(object):
 						f2 = self.contour[self.contour.times[ind+1]][var]
 						dat = -dt2/(dt1*(dt1+dt2))*f0 + (dt2-dt1)/(dt1*dt2)*f1 + dt1/(dt2*(dt1+dt2))*f2
 					self.data.contour[time].append(pv.Scalars(dat,name='d_'+var+'_dt',lookup_table='default'))
-					print 't = ',time,', var = ','d_'+var+'_dt'
-				
 	def write(self):	
 		"""Call to write out vtk files."""
 		if self.parent.work_dir: wd = self.parent.work_dir
@@ -2505,7 +2559,7 @@ def fdiff( in1, in2, format='diff', times=[], variables=[], components=[]):
 	:type components: lst(str)
 	:returns: fpost object of same type as in1 and in2
 	'''
-    # Copy in1 and in2 in case they get modified below
+	# Copy in1 and in2 in case they get modified below
 	in1 = deepcopy(in1)
 	in2 = deepcopy(in2)
 	if type(in1) is not type(in2):
@@ -2525,7 +2579,7 @@ def fdiff( in1, in2, format='diff', times=[], variables=[], components=[]):
 		else:
 			times = t
 	if isinstance(in1, fcontour):
-	    # Find common variables
+		# Find common variables
 		v = np.intersect1d(in1.variables,in2.variables)
 		if len(v) == 0:
 			print "ERROR: fcontour object variables do not have any matching values"
