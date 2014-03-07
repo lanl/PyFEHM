@@ -762,6 +762,7 @@ Methods
 .. automethod:: fdata.fdata.write
 .. automethod:: fdata.fdata.run
 .. automethod:: fdata.fdata.paraview
+.. automethod:: fdata.fdata.write_vtk
 .. automethod:: fdata.fdata.add
 .. automethod:: fdata.fdata.delete
 .. automethod:: fdata.fdata.change_timestepping
