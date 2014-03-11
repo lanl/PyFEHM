@@ -248,6 +248,12 @@ Warnings will be printed if a parameter is not set when the FEHM data file is wr
   +---------------+---------------------------+-------------------+-------------------------------------------------------------------------+
   |               | gdepth (*m*)              | GDEPTH            | Only used for ``subtype='lithograd'``.                                  |                                                                                                  
   +---------------+---------------------------+-------------------+-------------------------------------------------------------------------+
+  | *bodyforce*   | fx (*MN, m/s^2*)          | FX                | Body force in x-direction (acceleration if ``subtype='acceleration'``)  |                                      
+  +---------------+---------------------------+-------------------+-------------------------------------------------------------------------+
+  |               | fy (*MN, m/s^2*)          | FY                | Body force in y-direction.                                              |                                                
+  +---------------+---------------------------+-------------------+-------------------------------------------------------------------------+
+  |               | fz (*MN, m/s^2*)          | FZ                | Body force in z-direction.                                              |                                
+  +---------------+---------------------------+-------------------+-------------------------------------------------------------------------+
   
 Examples
 ^^^^^^^^   
@@ -287,6 +293,16 @@ Examples
   ``mcr.``\ :attr:`~.fmacro.param`\ ``['direction'] = 1``
   
   ``mcr.``\ :attr:`~.fmacro.param`\ ``['value'] = 0.03``
+  
+5. Specifying body forces corresponding to moon-strength gravitational acceleration.
+
+  ``mcr=``\ :class:`.fmacro`\ ``('bodyforce',`` :attr:`~.fmacro.subtype`\ ``='acceleration')``
+  
+  ``mcr.``\ :attr:`~.fmacro.param`\ ``['fx'] = 0.``
+  
+  ``mcr.``\ :attr:`~.fmacro.param`\ ``['fy'] = 0.``
+  
+  ``mcr.``\ :attr:`~.fmacro.param`\ ``['fz'] = -1.62``
   
 Models
 ------
