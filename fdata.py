@@ -153,6 +153,7 @@ frock = (('density',None),('specific_heat',None),('porosity',None))
 fgrad = (('reference_coord',None),('direction',None),('variable',None),('reference_value',None),('gradient',None))
 fbiot = (('thermal_expansion',None),('pressure_coupling',None))
 felastic = (('youngs_modulus',None),('poissons_ratio',None))
+fbodyforce = (('fx',None),('fy',None),('fz',None))
 fco2frac = (('water_rich_sat',None),('co2_rich_sat',None),('co2_mass_frac',None),('init_salt_conc',None),('override_flag',None))
 fco2flow = (('rate',None),('energy',None),('impedance',None),('bc_flag',None))
 fco2diff = (('diffusion',None),('tortuosity',None))
@@ -162,10 +163,8 @@ fhflx = (('heat_flow',None),('multiplier',None))
 ftpor = (('tracer_porosity',None),)
 
 macro_list = dict((('pres',fpres),('perm',fperm),('cond',fcond),('flow',fflow),('rock',frock),
-			('biot',fbiot),('elastic',felastic),('co2frac',fco2frac),('co2flow',fco2flow),
+			('biot',fbiot),('elastic',felastic),('bodyforce',fbodyforce),('co2frac',fco2frac),('co2flow',fco2flow),
 			('co2pres',fco2pres),('co2diff',fco2diff),
-			#('permmodel',fpermmodel),
-			#	('rlp',frlp),
 			('stressboun',fstressboun),('grad',fgrad),('hflx',fhflx),('tpor',ftpor)))
 			
 # potential nodal properties
@@ -181,13 +180,12 @@ macro_titles = dict((('pres','INITIAL TEMPERATURE AND PRESSURE'),
 					 ('grad','INITIAL VARIABLE GRADIENTS'),
 					 ('elastic',''),
 					 ('biot',''),
+					 ('bodyforce',''),
 					 ('co2flow',''),
 					 ('co2frac',''),
 					 ('co2pres',''),
 					 ('co2diff',''),
 					 ('stressboun',''),
-#					 ('permmodel',''),
-#					 ('rlp',''),
 					 ('rlpm','RELATIVE PERMEABILITY'),
 					 ('tpor',''),))
 macro_descriptor = dict((('pres','Initial conditions'),
@@ -197,6 +195,7 @@ macro_descriptor = dict((('pres','Initial conditions'),
 					 ('rock','Material properties'),
 					 ('grad','Initial condition gradients'),
 					 ('elastic','Elastic properties'),
+					 ('bodyforce','Body force at node'),
 					 ('biot','Fluid-stress coupling properties'),
 					 ('co2flow','CO2 source of sink'),
 					 ('co2frac','CO2 fraction'),
@@ -1017,6 +1016,7 @@ class fmacro(object): 						#FEHM macro object
 	def __init__(self,type='',zone=[],param=[],subtype='',file = None,write_one_macro=False):
 		self._type = type 		
 		if type == 'stressboun' and not subtype: subtype = 'fixed'
+		if type == 'bodyforce' and not subtype: subtype = 'force'
 		if type == 'stressboun': write_one_macro = True
 		self._param = None 		
 		self._check_type()
@@ -1086,8 +1086,8 @@ class fmacro(object): 						#FEHM macro object
 	def _get_subtype(self): return self._subtype
 	def _set_subtype(self,value):
 		self._subtype = value
-		if self.type != 'stressboun': _buildWarnings('WARNING: subtype ignored for non-stressboun macros')
-	subtype = property(_get_subtype,_set_subtype)	#: (*str*) Macro subtype, required for **STRESSBOUN** macro.
+		if self.type not in ['stressboun','bodyforce']: _buildWarnings('WARNING: subtype ignored unless macro is stressboun or bodyforce')
+	subtype = property(_get_subtype,_set_subtype)	#: (*str*) Macro subtype, required for **STRESSBOUN**  or **BODYFORCE** macros.
 	def _get_file(self): return self._file
 	def _set_file(self,value): self._file = value
 	file = property(_get_file,_set_file)#: (*str*) File string where information about the macro is stored. If file does not currently exist, it will be created and written to when the FEHM input file is written.
@@ -3789,7 +3789,14 @@ class fdata(object):						#FEHM data file.
 		line=infile.readline().strip()
 		while not line.startswith('stressend'):
 			if line.startswith('bodyforce'): 				# bodyforce boolean
-				self.strs.bodyforce = 1
+				if line.endswith('force'):
+					self._read_macro(infile,'bodyforce')
+					for m in self.bodyforcelist: m.subtype = 'force'
+				elif line.endswith('acceleration'):
+					self._read_macro(infile,'bodyforce')
+					for m in self.bodyforcelist: m.subtype = 'acceleration'
+				else:
+					self.strs.bodyforce = True
 			elif line.startswith('initcalc'):				# initcalc boolean
 				self.strs.initcalc = 1
 			elif line.startswith('fem'):					# fem boolean
@@ -3825,7 +3832,8 @@ class fdata(object):						#FEHM data file.
 		if self.strs.param['porosity_factor'] is not None:
 			outfile.write(str(self.strs.param['porosity_factor'])+'\t')
 		outfile.write('\n')
-		if self.strs.bodyforce: outfile.write('bodyforce\n')
+		if self.bodyforcelist: self._write_macro(outfile,'bodyforce')
+		elif self.strs.bodyforce: outfile.write('bodyforce\n')
 		if self.strs.initcalc: outfile.write('initcalc\n')
 		if self.strs.fem: outfile.write('fem\n')
 		if self.strs.excess_she['PAR1']:
@@ -5600,7 +5608,10 @@ class fdata(object):						#FEHM data file.
 							if zn.index : zns.append(zn)
 				self._write_zonn_one(outfile,zns)
 		if textmacros:
-			outfile.write(macroName+'\n')
+			if macroName == 'bodyforce':
+				outfile.write(macroName+' '+textmacros[0].subtype+'\n')
+			else:
+				outfile.write(macroName+'\n')
 				#vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 				#vvvvvvvvvvvvvvvvvvvvvvv exception for grad vvvvvvvvvvvvvvvvvvvvvvvvvvvv
 			if macroName == 'grad': outfile.write(str(len(self._allMacro[macroName]))+'\n')
@@ -5654,7 +5665,10 @@ class fdata(object):						#FEHM data file.
 		if singlemacros:
 			for macro in singlemacros:
 				self._write_zonn_one(outfile,[macro.zone])
-				outfile.write(macroName+'\n')
+				if macroName == 'bodyforce':
+					outfile.write(macroName+' '+textmacros[0].subtype+'\n')
+				else:
+					outfile.write(macroName+'\n')
 					#vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 					#vvvvvvvvvvvvvvvvvvvvvvv exception for grad vvvvvvvvvvvvvvvvvvvvvvvvvvvv
 				if macroName == 'grad': outfile.write(str(len(self._allMacro[macroName]))+'\n')
@@ -5700,7 +5714,10 @@ class fdata(object):						#FEHM data file.
 			for macro in filemacros: 
 				if macro.file not in unique_fnames: unique_fnames.append(macro.file)
 			for file_nm in unique_fnames:
-				outfile.write(macroName+'\n')
+				if macroName == 'bodyforce':
+					outfile.write(macroName+' nodal\n')
+				else:
+					outfile.write(macroName+'\n')
 				outfile.write('file\n')
 				outfile.write(file_nm+'\n')	
 				# if filename does not exist, write file
@@ -5965,6 +5982,10 @@ class fdata(object):						#FEHM data file.
 	elastic = property(_get_elastic)
 	def _get_elasticlist(self): return self._allMacro['elastic']
 	elasticlist = property(_get_elasticlist)
+	def _get_bodyforce(self): return self._get_macro('bodyforce')
+	bodyforce = property(_get_bodyforce)
+	def _get_bodyforcelist(self): return self._allMacro['bodyforce']
+	bodyforcelist = property(_get_bodyforcelist)
 	def _get_co2frac(self): return self._get_macro('co2frac')
 	co2frac = property(_get_co2frac)
 	def _get_co2fraclist(self): return self._allMacro['co2frac']
