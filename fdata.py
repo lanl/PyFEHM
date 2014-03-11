@@ -390,6 +390,76 @@ class fzone(object):						#FEHM zone object.
 			return
 		self._parent.add(fmacro('flow',zone=self,param=(('rate',P),('energy',-T),('impedance',impedance)),file=file))
 		self._fixedP = [P,T]
+	def fix_displacement(self,direction,displacement,file=None):
+		''' Fixes displacement at nodes within this zone. Displacements fixed by adding a STRESSBOUN macro.
+			
+			:param direction: Direction in which displacement is fixed. Specify as string or integer, e.g., 1 = 'x', 2 = 'y', 3 = 'z'.
+			:type direction: str, int
+			:param displacement: Fixed displacement
+			:type displacement: fl64
+			:param file: Name of auxiliary file to save macro.
+			:type file: str
+		'''
+		if not self._parent: 
+			pyfehm_print('fix_displacement() only available if zone associated with fdata() object')
+			return
+		if direction == 'x': direction = 1
+		elif direction == 'y': direction = 2
+		elif direction == 'z': direction = 3
+		elif direction in [1,2,3]: pass
+		else:
+			pyfehm_print('direction must be specified as either 1, 2, 3, \'x\', \'y\', \'z\'.')
+			return
+		self._parent.add(fmacro('stressboun',zone=self,param=(('direction',direction),('value',displacement)),file=file))
+	def fix_stress(self,direction,stress,file=None):
+		''' Fixes displacement at nodes within this zone. Displacements fixed by adding a STRESSBOUN macro.
+			
+			:param direction: Direction in which stress is fixed. Specify as string or integer, e.g., 1 = 'x', 2 = 'y', 3 = 'z'.
+			:type direction: str, int
+			:param stress: Fixed stress
+			:type stress: fl64
+			:param file: Name of auxiliary file to save macro.
+			:type file: str
+		'''
+		if not self._parent: 
+			pyfehm_print('fix_stress() only available if zone associated with fdata() object')
+			return
+		if direction == 'x': direction = 1
+		elif direction == 'y': direction = 2
+		elif direction == 'z': direction = 3
+		elif abs(direction) in [1,2,3]: pass
+		else:
+			pyfehm_print('direction must be specified as either 1, 2, 3, \'x\', \'y\', \'z\'.')
+			return
+		self._parent.add(fmacro('stressboun',zone=self,param=(('direction',-abs(direction)),('value',stress)),file=file))
+	def roller(self,direction=None,file=None):
+		''' Assigns a roller boundary condition to the zone (zero displacement in normal direction).
+			
+			:param direction: Normal of roller. Specify as string or integer, e.g., 1 = 'x', 2 = 'y', 3 = 'z'. Defaults to zone normal for 'XMIN', 'ZMAX' etc.
+			:type direction: str, int
+		'''
+		if direction is None:
+			if self.name in ['XMIN','XMAX']: direction = 1
+			elif self.name in ['YMIN','YMAX']: direction = 2
+			elif self.name in ['ZMIN','ZMAX']: direction = 3
+			else:
+				pyfehm_print('no direction specified')
+				return
+		self.fix_displacement(direction=direction,displacement=0,file=file)
+	def free_surface(self,direction=None,file=None):
+		''' Assigns a free surface boundary condition to the zone (zero stress in normal direction).
+			
+			:param direction: Normal of free surface. Specify as string or integer, e.g., 1 = 'x', 2 = 'y', 3 = 'z'. Defaults to zone normal for 'XMIN', 'ZMAX' etc.
+			:type direction: str, int
+		'''
+		if direction is None:
+			if self.name in ['XMIN','XMAX']: direction = -1
+			elif self.name in ['YMIN','YMAX']: direction = -2
+			elif self.name in ['ZMIN','ZMAX']: direction = -3
+			else:
+				pyfehm_print('no direction specified')
+				return
+		self.fix_stress(direction=direction,stress=0,file=file)
 	def copy_from(self,from_zone=None,grid_new=None,method = 'nearest',grid_old=None):
 		'''Transfer zone information from one grid to another.
 		

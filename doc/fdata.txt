@@ -68,6 +68,10 @@ Methods
 .. automethod:: fdata.fzone.rect
 .. automethod:: fdata.fzone.fix_temperature
 .. automethod:: fdata.fzone.fix_pressure
+.. automethod:: fdata.fzone.fix_displacement
+.. automethod:: fdata.fzone.fix_stress
+.. automethod:: fdata.fzone.roller
+.. automethod:: fdata.fzone.free_surface
 .. automethod:: fdata.fzone.plot
 .. automethod:: fdata.fzone.topo
 .. autoattribute:: fdata.fzone.what
@@ -93,14 +97,17 @@ auxiliary file *zones.macro*. The zone is created and added to the ``dat`` in a 
   
   ``dat.``\ :meth:`add <.fdata.add>`\ ``(``\ :class:`.fzone`\ ``(``\ :attr:`~.fzone.index`\ ``=10,`` :attr:`~.fzone.type`\ ``='nnum',`` :attr:`~.fzone.name`\ ``='injectors',`` :attr:`~.fzone.nodelist`\ ``=[nd1.index, nd2],`` :attr:`~.fzone.file`\ ``='zones.macro'))``
 
-3. For the zone named ``zmax``, fix its temperature to 90degC.
+3. For the zone named ``ZMAX``, fix its temperature to 90degC.
 
-  ``dat.``\ :attr:`~.fdata.zone`\ ``['zmax'].``\ :meth:`fix_temperature<.fzone.fix_temperature>`\ ``(T=90.)``  
+  ``dat.``\ :attr:`~.fdata.zone`\ ``['ZMAX'].``\ :meth:`fix_temperature<.fzone.fix_temperature>`\ ``(T=90.)``  
   
 4. Assign anisotropic permeability to the zone ``caprock``
 
   ``dat.``\ :attr:`~.fdata.zone`\ ``['caprock'].``\ :attr:`~.fzone.permeability`\ ``=[1.e-19,1.e-19,1.e-21]``
   
+5. Assign PyFEHM defined zone ``XMIN`` as a roller boundary condition (zero displacement in x-direction)
+
+  ``dat.``\ :attr:`~.fdata.zone`\ ``['XMIN'].``\ :meth:`roller<.fzone.roller>`\ ``()``  
 Macros
 ------
 

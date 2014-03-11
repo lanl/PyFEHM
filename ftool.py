@@ -320,7 +320,9 @@ def dict_key_check(dict,keys,dict_name):
 	returnFlag = False
 	ws = 'Key error in '+dict_name+'.\n'
 	for k in dict.keys():
-		if k not in keys:
+		if k in ['sdepth','gdepth']:
+			continue
+		elif k not in keys:
 			ws += 'No such key \''+k+'\''
 			if len(k)>2:
 				matches = difflib.get_close_matches(k,keys)
