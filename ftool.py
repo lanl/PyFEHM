@@ -343,6 +343,9 @@ def os_path(path):
 	if WINDOWS: path = path.replace('/','\\')
 	else: path = path.replace('\\','/')
 	return path
+def float0(f):
+	try: return float(f)
+	except: return 0.
 def _title_string(s,n): 						#prepends headers to sections of FEHM input file
 	if not n: return
 	ws = '# '

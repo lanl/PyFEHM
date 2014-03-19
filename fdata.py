@@ -5666,7 +5666,7 @@ class fdata(object):						#FEHM data file.
 			for macro in singlemacros:
 				self._write_zonn_one(outfile,[macro.zone])
 				if macroName == 'bodyforce':
-					outfile.write(macroName+' '+textmacros[0].subtype+'\n')
+					outfile.write(macroName+' '+singlemacros[0].subtype+'\n')
 				else:
 					outfile.write(macroName+'\n')
 					#vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
@@ -5715,7 +5715,7 @@ class fdata(object):						#FEHM data file.
 				if macro.file not in unique_fnames: unique_fnames.append(macro.file)
 			for file_nm in unique_fnames:
 				if macroName == 'bodyforce':
-					outfile.write(macroName+' nodal\n')
+					outfile.write(macroName+' '+filemacros[0].subtype+'\n')
 				else:
 					outfile.write(macroName+'\n')
 				outfile.write('file\n')

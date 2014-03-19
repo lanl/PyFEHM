@@ -571,9 +571,9 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 			fp.close()
 			
 			if first: 
-				datas.append(np.array([[float(d) for d in ln.strip().split(',')] for ln in lns]))
+				datas.append(np.array([[float0(d) for d in ln.strip().split(',')] for ln in lns]))
 			else:
-				datas.append(np.array([[float(d) for d in ln.strip().split(',')[4:]] for ln in lns]))
+				datas.append(np.array([[float0(d) for d in ln.strip().split(',')[4:]] for ln in lns]))
 			
 		data = np.concatenate(datas,1)
 		self._data[time] = dict([(var,data[:,icol]) for icol,var in enumerate(self.variables)])
@@ -624,14 +624,14 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 			
 			if has_xyz:
 				if first: 
-					datas.append(np.array([[float(d) for d in ln.strip().split()] for ln in lns]))
+					datas.append(np.array([[float0(d) for d in ln.strip().split()] for ln in lns]))
 				else:
-					datas.append(np.array([[float(d) for d in ln.strip().split()[4:]] for ln in lns]))
+					datas.append(np.array([[float0(d) for d in ln.strip().split()[4:]] for ln in lns]))
 			else:
 				if first: 
-					datas.append(np.array([[float(d) for d in ln.strip().split()] for ln in lns]))
+					datas.append(np.array([[float0(d) for d in ln.strip().split()] for ln in lns]))
 				else:
-					datas.append(np.array([[float(d) for d in ln.strip().split()[1:]] for ln in lns]))
+					datas.append(np.array([[float0(d) for d in ln.strip().split()[1:]] for ln in lns]))
 						
 		data = np.concatenate(datas,1)
 		if data.shape[1]< len(self.variables): 		# insert xyz data from previous read
