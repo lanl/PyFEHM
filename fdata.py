@@ -2759,8 +2759,9 @@ class fdata(object):						#FEHM data file.
 						#inconfilename = wd+ln.split('rsti:')[-1].strip()
 						inconfilename = ln.split('rsti:')[-1].strip()
 					if ln.startswith('grida:'): 
-						#gridfilename = wd+ln.split('grida:')[-1].strip()
 						gridfilename = ln.split('grida:')[-1].strip()
+					if ln.startswith('grid:'): 
+						gridfilename = ln.split('grid:')[-1].strip()
 					if ln.startswith('gridf:'): 
 						#gridfilename = wd+ln.split('gridf:')[-1].strip()
 						gridfilename = ln.split('gridf:')[-1].strip()
@@ -2887,8 +2888,11 @@ class fdata(object):						#FEHM data file.
 					precedingZoneKey = None
 				else:
 					if keyword in ['zone','zonn']:
-						block = fn(infile)
-						precedingZoneKey = copy(precedingKey)
+						if 'rad' in line:
+							self._read_zonn_rad(infile)
+						else:
+							block = fn(infile)
+							precedingZoneKey = copy(precedingKey)
 					else:
 						fn(infile)
 						precedingZoneKey = None
@@ -3287,8 +3291,13 @@ class fdata(object):						#FEHM data file.
 		outfile.write('restart\n\n')
 		if self.sticky_zones:
 			zns = []
-			for key in ['co2frac','co2flow','co2pres','co2diff']:
-				zns += [m.zone for m in self._allMacro[key] if m.zone.index]
+			for key in ['co2frac','co2flow','co2pres','co2diff']:				
+				for m in self._allMacro[key]:
+					if isinstance(m.zone,fzone):
+						if m.zone.index : zns.append(m.zone)
+					elif isinstance(m.zone,list) and len(m.zone) != 0:
+						for zn in m.zone:
+							if zn.index : zns.append(zn)
 			self._write_zonn_one(outfile,list(set(zns)))
 		outfile.write('carb\n')
 		outfile.write(str(self.carb.iprtype)+'\n')
@@ -5072,6 +5081,35 @@ class fdata(object):						#FEHM data file.
 				line=infile.readline(); block.append(line+'\n')
 				if not line.strip(): more = False
 		return block
+	def _read_zonn_rad(self,infile,file=''):					#ZONE: Reads ZONE or ZONN macro.
+		line=infile.readline().strip()
+		more = True
+		while more:
+			# assess whether zone has already been defined
+			zind = int(line.split()[0])
+			name = None
+			if line.rfind('#') != -1: name = line[line.rfind('#')+1:].strip()
+			
+			if self.ctrl['geometry_ICNL']: return
+			
+			r_pts = line=infile.readline().strip().split('#')[0]
+			r_pts = [float(pi) for pi in r_pts.split()]
+			z_pts = line=infile.readline().strip().split('#')[0]
+			z_pts = [float(pi) for pi in z_pts.split()]
+			
+			r_min,r_max = np.min(r_pts),np.max(r_pts)
+			z_min,z_max = np.min(z_pts),np.max(z_pts)
+			
+			pts = np.array([nd.position for nd in self.grid.nodelist])
+			r = np.sqrt(pts[:,0]**2+pts[:,1]**2)
+			z = pts[:,2]
+			
+			inds = np.where((z>z_min)&(z<z_max)*(r>r_min)&(r<r_max))[0]
+			nds = [self.grid.nodelist[i] for i in inds]
+			self.new_zone(zind, name=name, nodelist = nds)
+
+			line=infile.readline()
+			if not line.strip(): more = False
 	def _read_zonn_file(self,file):								#Reads ZONN from specified file.
 		zone_file = open(file,'r')
 		line = zone_file.readline().strip()

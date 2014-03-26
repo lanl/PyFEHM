@@ -72,7 +72,7 @@ dat.run(root+'_INPUT.dat', verbose=True, diagnostic=True) 		# note, because no e
 # 7.1.7 Visualisation
 c = fcontour(dat.work_dir+'\\*.csv')
 
-#dat.paraview(contour = c, diff=True, time_derivatives=True)
+dat.paraview(contour = c, diff=True, time_derivatives=True)
 
 c.slice_plot(save='Tslice.png',cbar=True,levels=11,slice=['x',5],variable='T',method='linear',title='temperature / degC',
 xlabel='y / m', ylabel = 'z / m')
