@@ -2432,7 +2432,7 @@ class fvtk(object):
 		
 		zones = []; cols = []
 		for zone,color in zip(self.zones,colors):
-			if self.show_zones == 'user':			
+			if self.show_zones == 'user':		
 				if ('XMIN' in zone) or ('XMAX' in zone) or ('YMIN' in zone) or ('YMAX' in zone) or ('ZMIN' in zone) or ('ZMAX' in zone): continue
 			elif self.show_zones == 'none': continue
 			zones.append(zone)
