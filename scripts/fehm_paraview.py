@@ -13,6 +13,7 @@ parser.add_option('-d',action='store_true',dest='diff', default=False, help = 'P
 (options, args) = parser.parse_args()
 
 from fdata import*
+dflt = fdflt()
 
 if len(args) < 2:
 	# look for fehmn.files
@@ -41,8 +42,11 @@ if dat.cont.variables != []:
 		c = fcontour(dat.files.root+'*node*.avsx')
 		
 if options.contname: c = fcontour(options.contname)
-exe = 'paraview.exe'
+#exe = 'paraview.exe'
 if options.exename: exe = options.exename
+elif dflt.paraview_path: exe = dflt.paraview_path
+#elif os.name is not 'posix': exe = 'paraview.exe' 
 zscale = 1.
 if options.zscale: zscale = float(options.zscale)
+
 dat.paraview(exe=exe,contour=c,diff=options.diff,zscale=zscale)
