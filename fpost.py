@@ -97,7 +97,7 @@ if True: 					# output variable dictionaries defined in here, indented for code 
 	('Vapor Pressure (MPa)','P_vap'),
 	('Capillary Pressure (MPa)','P_cap'),
 	('Saturation','saturation'),
-	('Water Saturation','saturation'),
+	('Water Saturation','water'),
 	('Super-Critical/Liquid CO2 Saturation','co2_liquid'),
 	('Gaseous CO2 Saturation','co2_gas'),
 	('Dissolved CO2 Mass Fraction','co2_aq'),
