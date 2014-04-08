@@ -1539,7 +1539,8 @@ class fhistory(object):						# Reading and plotting methods associated with hist
 		files=glob(filename)
 		configured=False
 		for i,fname in enumerate(files):
-			pyfehm_print(fname)
+			if self._verbose:
+				pyfehm_print(fname)
 			self._file=open(fname,'rU')
 			header=self._file.readline()
 			if header.strip()=='': continue				# empty file
@@ -2433,6 +2434,7 @@ class fvtk(object):
 		for zone,color in zip(self.zones,colors):
 			if self.show_zones == 'user':			
 				if ('XMIN' in zone) or ('XMAX' in zone) or ('YMIN' in zone) or ('YMAX' in zone) or ('ZMIN' in zone) or ('ZMAX' in zone): continue
+			elif self.show_zones == 'none': continue
 			zones.append(zone)
 			cols.append(color)
 		

@@ -1046,6 +1046,8 @@ class fmacro(object): 						#FEHM macro object
 		'''Determine if zone definitions are acceptable.'''
 		if not self.zone: return
 		elif isinstance(self.zone,fzone): return
+		elif isinstance(self.zone,fnode): 
+			self.zone = (self.zone.index,self.zone.index,1)
 		elif isinstance(self.zone,tuple):
 			if len(self.zone) != 3: self.zone=None; return
 			self.zone = tuple([int(pt) for pt in self.zone])
@@ -2499,7 +2501,8 @@ class files(object):						#FEHM file constructor.
 	'''Class containing information necessary to write out fehmn.files.
 	'''
 	__slots__ = ['_root','_input','_grid','_incon','_use_incon','_rsto','_use_rsto','_outp','_use_outp','_check',
-		'_use_check','_hist','_use_hist','_co2in','_use_co2in','_stor','_use_stor','_parent','_exe','_co2_inj_time']
+		'_use_check','_hist','_use_hist','_co2in','_use_co2in','_stor','_use_stor','_parent','_exe','_co2_inj_time',
+		'_nopf','_use_nopf','_error','_use_error']
 	def __init__(self,root='',input='',grid='',incon='',rsto='',outp='',check='',hist='',co2in='',stor='',exe='fehm.exe',co2_inj_time=None):
 		self._root = ''
 		self._input = ''
@@ -2517,7 +2520,11 @@ class files(object):						#FEHM file constructor.
 		self._co2in = ''
 		self._use_co2in = False
 		self._stor = ''
-		self._use_stor = False		
+		self._use_stor = False	
+		self._nopf = ''
+		self._use_nopf = False		
+		self._error = ''
+		self._use_error = False		
 		self._parent = None
 		self._exe = exe
 		self._co2_inj_time = co2_inj_time
@@ -2595,6 +2602,12 @@ class files(object):						#FEHM file constructor.
 			
 		if self._use_co2in: 
 			outfile.write('co2in: '+co2_path.full_path+'\n')	
+			
+		if self._use_nopf: 
+			outfile.write('nopf: '+self._nopf+'\n')	
+			
+		if self._use_error: 
+			outfile.write('error: '+self._error+'\n')	
 			
 		if self._use_stor: 
 			outfile.write('stor:')	
@@ -2756,25 +2769,29 @@ class fdata(object):						#FEHM data file.
 			with open(filename) as f:
 				for ln in f.readlines():
 					if ln.startswith('rsti:'): 
-						#inconfilename = wd+ln.split('rsti:')[-1].strip()
 						inconfilename = ln.split('rsti:')[-1].strip()
 					if ln.startswith('grida:'): 
 						gridfilename = ln.split('grida:')[-1].strip()
 					if ln.startswith('grid:'): 
 						gridfilename = ln.split('grid:')[-1].strip()
 					if ln.startswith('gridf:'): 
-						#gridfilename = wd+ln.split('gridf:')[-1].strip()
 						gridfilename = ln.split('gridf:')[-1].strip()
 					if ln.startswith('input:'): 
-						#filename = wd+ln.split('input:')[-1].strip()
 						filename = ln.split('input:')[-1].strip()
 					if ln.startswith('stor:'): 
-						#storfilename = wd+ln.split('stor:')[-1].strip()
 						storfilename = ln.split('stor:')[-1].strip()
 						self.files.stor = storfilename
+					if ln.startswith('stori:'): 
+						storfilename = ln.split('stori:')[-1].strip()
+						self.files.stor = storfilename
 					if ln.startswith('root:'): 
-						#filename = wd+ln.split('input:')[-1].strip()
 						self.files.root = ln.split('root:')[-1].strip()
+					if ln.startswith('error:'): 
+						self.files._error = ln.split('error:')[-1].strip()
+						self.files._use_error = True
+					if ln.startswith('nopf:'): 
+						self.files._nopf = ln.split('nopf:')[-1].strip()
+						self.files._use_nopf = True
 			
 			# set up  path objects then pass to read function
 			self._path.filename = filename
@@ -3033,7 +3050,6 @@ class fdata(object):						#FEHM data file.
 			nd._elements = [el._index for el in nd._elements]
 		for con in self.grid.connlist:
 			con._nodes = [con._nodes[0]._index,con._nodes[1]._index]
-		#nd._connections = [(c._nodes[0]._index,c._nodes[1]._index) for c in nd._connections]
 	def _add_boundary_zones(self): 						#Automatically creates zones corresponding to x,y,z boundaries
 		x0,x1 = self.grid.xmin,self.grid.xmax
 		y0,y1 = self.grid.ymin,self.grid.ymax
