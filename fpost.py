@@ -396,22 +396,22 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 		FILES = []
 		for file_type in file_types:
 			tag = '_'+file_type+'_node'
-			FILES.append([file for file in files if tag in file])
-		FILES = np.array(FILES)	
+			FILES.append(sort_tec_files([file for file in files if tag in file]))
+		FILES = np.array(FILES)
 		
 		# determine headers for 'tec' output
 		for i in range(FILES.shape[1]):
 			if not self._variables:
 				files = FILES[:,i]
 				headers = []
-				for file in sorted(files):
+				for file in sort_tec_files(files):
 					fp = open(file,'rU')
 					headers.append(fp.readline())
 					fp.close()
 				firstFile = self._detect_format(headers)
 				if self._format=='tec' and firstFile: 
 					headers = []
-					for file in sorted(files):
+					for file in sort_tec_files(files):
 						fp = open(file,'rU')
 						fp.readline()
 						headers.append(fp.readline())
@@ -421,10 +421,10 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 		# read in output data
 		for i in range(FILES.shape[1]):
 			files = FILES[:,i]
-			for file in sorted(files): pyfehm_print(file)
+			for file in sort_tec_files(files): pyfehm_print(file)
 			if not self._variables:
 				headers = []
-				for file in sorted(files):
+				for file in sort_tec_files(files):
 					fp = open(file,'rU')
 					headers.append(fp.readline())
 					fp.close()
@@ -2648,4 +2648,29 @@ def fdiff( in1, in2, format='diff', times=[], variables=[], components=[]):
 
 
 
+	
+def sort_tec_files(files):
+	# sort first by number, then by type
+	from string import join
+	paths = [join(file.split(os.sep)[:-1],os.sep) for file in files]
+	files = [file.split(os.sep)[-1] for file in files]
+	
+	times = []
+	for file in files: 
+		for type in ['_sca_node','_vec_node','_con_node']:
+			if type in file: times.append(float(file.split(type)[0].split('.')[-1]))
+	times = sorted(enumerate(times), key=lambda x: x[1])
+	
+	paths = [paths[ind] for ind,time in times]
+	files = [files[ind] for ind,time in times]
+
+	return [path+os.sep+file for path,file in zip(paths,files)]
+	
+	
+	
+	
+	
+	
+	
+	
 	
