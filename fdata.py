@@ -83,6 +83,12 @@ permDicts = dict((
 	(25,['shear_frac_tough',
 	'static_frict_coef','dynamic_frict_coef','frac_num','onset_disp','disp_interval','max_perm_change',
 	'frac_cohesion']),
+	
+	(100,['perm_mult_x','perm_mult_y','perm_mult_z','ramp_range']),
+	))
+# dictionary of plastic model parameters, indexed by plastic model number, ORDER OF LIST MUST EQUAL ORDER OF INPUT
+plasticDicts = dict((
+	(3,['youngs_modulus','poissons_ratio','eta_drucker','zeta_drucker','c_drucker']),
 	))
 # dictionary of perm model units, indexed by perm model number, ORDER OF LIST MUST EQUAL ORDER OF INPUT
 permUnits = dict((
@@ -90,8 +96,8 @@ permUnits = dict((
 	(21,['','','','','MPa','','MPa','','','','','','']),
 	(22,['','MPa','','MPa','','','','','','','','','MPa']),
 	(24,['MPa/m','','','','m','m','log(m^2)','MPa','']),
-	#(25,['m','m','MPa/m','MPa/m','degrees','','','','m','m','log(m^2)','MPa','']),
 	(25,['MPa/m','','','','m','m','log(m^2)','MPa']),
+	(100,['','','','MPa']),
 	))
 # dictionary of relative permeability model parameters, indexed by model number, ORDER OF LIST MUST EQUAL ORDER OF INPUT
 rlpDicts = dict((
@@ -132,6 +138,7 @@ pporDicts = dict((
 	(7,['param1','param2','param3','param4']), 		# unknown - salt
 	))
 model_list = dict((('permmodel',permDicts),
+		('plasticmodel',plasticDicts),
 		('rlp',rlpDicts),
 		('vcon',vconDicts),
 		('ppor',pporDicts),
@@ -139,6 +146,7 @@ model_list = dict((('permmodel',permDicts),
 		('diffusion',diffusionDicts)))
 model_titles = dict((('rlp','RELATIVE PERMEABILITY'),
 					 ('permmodel',''),
+					 ('plasticmodel',''),
 					 ('vcon','VARIABLE THERMAL CONDUCTIVITY'),
 					 ('ppor','VARIABLE POROSITY'),
 					 ('dispersion',''),
@@ -188,24 +196,27 @@ macro_titles = dict((('pres','INITIAL TEMPERATURE AND PRESSURE'),
 					 ('stressboun',''),
 					 ('rlpm','RELATIVE PERMEABILITY'),
 					 ('tpor',''),))
-macro_descriptor = dict((('pres','Initial conditions'),
-					 ('perm','Permeability'),
-					 ('cond','Thermal conductivity properties'),
-					 ('flow','Source or sink'),
-					 ('rock','Material properties'),
-					 ('grad','Initial condition gradients'),
-					 ('elastic','Elastic properties'),
-					 ('bodyforce','Body force at node'),
-					 ('biot','Fluid-stress coupling properties'),
-					 ('co2flow','CO2 source of sink'),
-					 ('co2frac','CO2 fraction'),
-					 ('co2pres','CO2 initial conditions'),
-					 ('co2diff','CO2 diffusion properties'),
-					 ('stressboun','Stress boundary condition'),
-					 ('permmodel','Stress permeability relationship'),
-					 ('rlp','Relative permeablity relationship'),
-					 ('hflx','Heat flux boundary condition'),
-					 ('tpor','Tracer porosity'),))
+macro_descriptor = dict((
+	('pres','Initial conditions'),
+	('perm','Permeability'),
+	('cond','Thermal conductivity properties'),
+	('flow','Source or sink'),
+	('rock','Material properties'),
+	('grad','Initial condition gradients'),
+	('elastic','Elastic properties'),
+	('bodyforce','Body force at node'),
+	('biot','Fluid-stress coupling properties'),
+	('co2flow','CO2 source of sink'),
+	('co2frac','CO2 fraction'),
+	('co2pres','CO2 initial conditions'),
+	('co2diff','CO2 diffusion properties'),
+	('stressboun','Stress boundary condition'),
+	('permmodel','Stress permeability relationship'),
+	('plasticmodel','Plasticity relationship'),
+	('rlp','Relative permeablity relationship'),
+	('hflx','Heat flux boundary condition'),
+	('tpor','Tracer porosity'),)
+	)
 rlpm_dicts=dict((
 	('constant',{}),
 	('linear',(('minimum_saturation',0),('maximum_saturation',1))),
@@ -3835,6 +3846,8 @@ class fdata(object):						#FEHM data file.
 				self.strs.excess_she['PAR3']=nums[2]
 			elif line.startswith('permmodel'):				# read details of stress/permeability model
 				self._read_model(infile,'permmodel')
+			elif line.startswith('plastic'):				# read details of stress/permeability model
+				self._read_model(infile,'plastic')
 			elif line.startswith('elastic'):
 				self._read_macro(infile,'elastic')
 			elif line.startswith('stressboun'):
@@ -3868,6 +3881,7 @@ class fdata(object):						#FEHM data file.
 			if self.strs.excess_she['PAR3']: outfile.write(str(self.strs.excess_she['PAR3'])+'\t')
 			outfile.write('\n')
 		if self.permmodellist: self._write_model(outfile,'permmodel')
+		if self.plasticmodellist: self._write_model(outfile,'plastic')
 		if self.stressbounlist: self._write_macro(outfile,'stressboun')
 		if self.elasticlist: self._write_macro(outfile,'elastic')
 		if self.biotlist: self._write_macro(outfile,'biot')
@@ -5803,6 +5817,7 @@ class fdata(object):						#FEHM data file.
 	def _read_model(self,infile,modelName): 				#MODEL: Reads general format models
 		# redirect of special cases
 		if modelName == 'ppor':	self._read_model_ppor(infile); return
+		if modelName == 'plastic':	self._read_model_plastic(infile); return
 		line = infile.readline().strip()
 		models=[]
 		while line != '':									# perm model specification
@@ -5828,6 +5843,20 @@ class fdata(object):						#FEHM data file.
 			models[int(nums[-1])-1].zonelist.append(self._macro_zone(nums))
 			line = infile.readline().strip()
 		for m in models: self._add_model(m)
+	def _read_model_plastic(self,infile): 		
+		# redirect of special cases
+		line = infile.readline().strip()
+		line = infile.readline().strip()
+		nums = line.split()
+		m = fmodel('plasticmodel',index=int(nums[0]))
+		m.zonelist = [0]
+		parVector = [float(num) for num in nums[1:]] 	# parameter values
+		if m.index in model_list['plasticmodel'].keys():
+			parList = model_list['plasticmodel'][m.index] 		# parameter names
+		else: 	# enumerate generic parameter names
+			parList = ['param'+str(i+1) for i in range(len(parVector))]
+		m.param = dict(zip(parList,parVector)) 	# make dictionary
+		self._add_model(m)
 	def _read_model_trac(self,infile,transverseFlag): 
 		line = infile.readline().strip()
 		models1 = []
@@ -5913,6 +5942,7 @@ class fdata(object):						#FEHM data file.
 	def _write_model(self,outfile,modelName):
 		# redirect of special cases
 		if modelName == 'ppor':	self._write_model_ppor(outfile); return
+		if modelName == 'plastic':	self._write_model_plastic(outfile); return
 		ws = _title_string(model_titles[modelName],72)
 		outfile.write(ws)
 		if self.sticky_zones:
@@ -5997,6 +6027,25 @@ class fdata(object):						#FEHM data file.
 					outfile.write('0 ')
 			outfile.write('\n')
 		outfile.write('\n')	
+	def _write_model_plastic(self,outfile):
+		ws = _title_string(model_titles['plasticmodel'],72)
+		outfile.write(ws)
+		from operator import itemgetter
+		self._allModel['plasticmodel'].sort(key=lambda x: x.index)
+		outfile.write('plastic\n')
+		outfile.write('1\n')
+		for model in self._allModel['plasticmodel']:
+			if model.index in model_list['plasticmodel'].keys():
+				paramList = model_list['plasticmodel'][model.index] 		# parameter names
+			else: 	# enumerate generic parameter names
+				paramList = ['param'+str(i+1) for i in range(len(model.param.keys()))]
+			outfile.write(str(model.index)+'\t')
+			for key in paramList:
+				if key in model.param.keys():
+					outfile.write(str(model.param[key])+' ')
+				elif key =='write0':
+					outfile.write('0 ')
+			outfile.write('\n')
 	def _get_model(self,model):
 		return dict([(m.index,m) for m in self._allModel[model]])
 ################## MACRO, ZONE, BOUN LISTS
@@ -6064,6 +6113,10 @@ class fdata(object):						#FEHM data file.
 	permmodel = property(_get_permmodel)
 	def _get_permmodellist(self): return self._allModel['permmodel']
 	permmodellist = property(_get_permmodellist)
+	def _get_plasticmodel(self): return self._get_model('plasticmodel')
+	plasticmodel = property(_get_plasticmodel)
+	def _get_plasticmodellist(self): return self._allModel['plasticmodel']
+	plasticmodellist = property(_get_plasticmodellist)
 	def _get_tpor(self): return self._get_macro('tpor')
 	tpor = property(_get_tpor)
 	def _get_tporlist(self): return self._allMacro['tpor']
