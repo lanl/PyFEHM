@@ -2595,7 +2595,9 @@ class fvtk(object):
 				lns += ['mr.UseIndexForXAxis = 0']
 				lns += ['mr.SeriesColor = [\'time\', \'0\', \'0\', \'0\']']
 				lns += ['mr.AttributeType = \'Row Data\'']
-				switch_off = [header for header in headers if (variable+':') not in header]
+				for header in headers: print header
+				for header in headers: print header.strip()
+				switch_off = [header for header in headers if not header.strip().startswith(variable+':')]
 				ln = 'mr.SeriesVisibility = [\'vtkOriginalIndices\', \'0\', \'time\', \'0\''
 				for header in switch_off:
 					ln+=', \''+header+'\',\'0\''
@@ -2683,7 +2685,7 @@ class fcsv(object):
 		for variable in vars:
 			for node in self.history.nodes:		
 				var = variable
-				if len(var)>6: var = var[:6]
+				#if len(var)>6: var = var[:6]
 				ln += '%16s,'%(var+': nd '+str(node))
 		fp.write(ln[:-1]+'\n')
 		
