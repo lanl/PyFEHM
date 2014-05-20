@@ -4528,7 +4528,7 @@ class fdata(object):						#FEHM data file.
 			self.zone[index]._Pi = Pi
 			self.zone[index]._Ti = Ti
 			self.zone[index]._Si = Si
-	def run(self,input='',grid = '',incon='',exe=dflt.fehm_path,files=dflt.files,verbose = None, until=None,autorestart=0,use_paths=False,write_files_only = False,diagnostic = False):
+	def run(self,input='',grid = '',incon='',exe=dflt.fehm_path,files=dflt.files,verbose = None, until=None,autorestart=0,use_paths=False,write_files_only = False,diagnostic = False, clean = False):
 		'''Run an fehm simulation. This command first writes out the input file, *fehmn.files* and this incon file
 		if changes have been made. A command line call is then made to the FEHM executable at the specified path (defaults
 		to *fehm.exe* in the working directory if not specified).
@@ -4553,6 +4553,8 @@ class fdata(object):						#FEHM data file.
 		:type write_files_only: bool
 		:param diagnostic: Flag to indicate PyFEHM should flash up a diagnostic window to monitor the simulation.
 		:type diagnostic: bool
+		:param clean: Delete files after simulation 'nop.temp'
+		:type clean: bool
 		'''
 		
 		if verbose != None: self._verbose = verbose
@@ -4727,7 +4729,13 @@ class fdata(object):						#FEHM data file.
 					files = filter(os.path.isfile, glob(self.files.root+'*'+outtype+'*.'+suffix))
 					if files:
 						for file in files: os.remove(file)
-				
+		
+		if clean:
+			try: os.remove('nop.temp')
+			except: pass
+			try: os.remove('fort.97')
+			except: pass
+		
 		if self.work_dir: os.chdir(cwd)
 		
 		if tempRstoFlag: 
