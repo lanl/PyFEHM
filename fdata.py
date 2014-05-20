@@ -2123,6 +2123,12 @@ class _tracer_generator(object):
 	def _get_zone(self): return self._zone
 	def _set_zone(self,value): self._zone = value
 	zone = property(_get_zone,_set_zone) #: (**)
+class fstorage(object):
+	"""Storage object - allows user to save information to the dat file.
+	
+	"""
+	def __init__(self,parent=None):		
+		self._parent =parent
 class fcont(object):						#FEHM contour output object.
 	"""Contour output object, makes request for contour data to be output (see macro **CONT**).
 	
@@ -2701,7 +2707,7 @@ class fdata(object):						#FEHM data file.
 			'_bounlist','_cont','_ctrl','_grid','_incon','_hist','_iter','_nfinv','_nobr','_vapl','_adif','_rlpmlist','_sol',
 			'_time','text','_times','_zonelist','_writeSubFiles','_strs','_ngas','_carb','_trac','_files','_verbose',
 			'_tf','_ti','_dti','_dtmin','_dtmax','_dtn','_dtx','_sections','_help','_running','_unparsed_blocks','keep_unknown','_flxo',
-			'_output_times','_path','_vtk','_diagnostic']
+			'_output_times','_path','_vtk','_diagnostic','_storage']
 	def __init__(self,filename='',gridfilename='',inconfilename='',sticky_zones=dflt.sticky_zones,associate=dflt.associate,work_dir = None,
 		full_connectivity=dflt.full_connectivity,skip=[],keep_unknown=dflt.keep_unknown):		#Initialise data file
 		from copy import copy
@@ -2718,6 +2724,8 @@ class fdata(object):						#FEHM data file.
 		self.grid._parent = self
 		self._incon=fincon() 			
 		self.incon._parent = self
+		self._storage = fstorage()
+		self._storage._parent = self
 		self._hist = fhist()				
 		self._iter=copy(dflt.iter)
 		self._nfinv = False
@@ -6221,6 +6229,9 @@ class fdata(object):						#FEHM data file.
 	hist = property(_get_hist) #: (*fhist*) History output for the model.
 	def _get_incon(self): return self._incon
 	incon = property(_get_incon) #: (*fincon*) Initial conditions (restart file) associated with the model.
+	def _get_storage(self): return self._storage
+	def _set_storage(self,value): self._storage = value
+	storage = property(_get_storage, _set_storage) #: (*fstorage*) Storage object. No restrictions on creating, setting attributes. Created attributes will not be used by PyFEHM.
 	def _get_work_dir(self): 
 		if self._path.absolute_to_workdir: return self._path.absolute_to_workdir
 		else: return ''
