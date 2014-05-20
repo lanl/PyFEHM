@@ -2595,8 +2595,6 @@ class fvtk(object):
 				lns += ['mr.UseIndexForXAxis = 0']
 				lns += ['mr.SeriesColor = [\'time\', \'0\', \'0\', \'0\']']
 				lns += ['mr.AttributeType = \'Row Data\'']
-				for header in headers: print header
-				for header in headers: print header.strip()
 				switch_off = [header for header in headers if not header.strip().startswith(variable+':')]
 				ln = 'mr.SeriesVisibility = [\'vtkOriginalIndices\', \'0\', \'time\', \'0\''
 				for header in switch_off:
