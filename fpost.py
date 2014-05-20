@@ -1503,6 +1503,7 @@ class fhistory(object):						# Reading and plotting methods associated with hist
 		self._nodes=[]	
 		self._zones = []
 		self._variables=[] 
+		self._user_variables = []
 		self._keyrows={}
 		self.column_name=[]
 		self.num_columns=0
@@ -1510,7 +1511,7 @@ class fhistory(object):						# Reading and plotting methods associated with hist
 		filename = os_path(filename)
 		if filename: self._filename=filename; self.read(filename)
 	def __getitem__(self,key):
-		if key in self.variables:
+		if key in self.variables or key in self.user_variables:
 			return self._data[key]
 		else: return None
 	def __repr__(self): 
@@ -1705,8 +1706,28 @@ class fhistory(object):						# Reading and plotting methods associated with hist
 		if pdf: 
 			os.system('epstopdf ' + save_fname)
 			os.remove(save_fname)	
+	def new_variable(self,name,node,data): 	
+		'''Creates a new variable, which is some combination of the available variables.
+		
+		:param name: Name for the variable.
+		:type name: str
+		:param time: Node key which the variable should be associated with. Must be one of the existing keys, i.e., an item in fhistory.nodes.
+		:type time: fl64
+		:param data: Variable data, most likely some combination of the available parameters, e.g., pressure*temperature, pressure[t=10] - pressure[t=5]
+		:type data: lst[fl64]
+		'''
+		if node not in self.nodes: 
+			pyfehm_print('ERROR: supplied node must correspond to an existing node in fhistory.nodes')
+			return
+		if name not in self._user_variables:
+			self._data.update({name:dict([(nd,None) for nd in self.nodes])})
+			self._user_variables.append(name)
+		self._data[name][node] = data
 	def _get_variables(self): return self._variables
 	variables = property(_get_variables)#: (*lst[str]*) List of variables for which output data are available.
+	def _get_user_variables(self): return self._user_variables
+	def _set_user_variables(self,value): self._user_variables = value
+	user_variables = property(_get_user_variables, _set_user_variables) #: (*lst[str]*) List of user-defined variables for which output data are available.
 	def _get_format(self): return self._format
 	format = property(_get_format) #: (*str*) Format of output file, options are 'tec', 'surf', 'avs' and 'avsx'.
 	def _get_filename(self): return self._filename
@@ -2556,7 +2577,13 @@ class fvtk(object):
 			fp.close()
 			headers = [lni for lni in ln.split(',')]
 			
-			for i,variable in enumerate(self.csv.history.variables):
+			# put variables in order to account for diff or time derivatives
+			vars = []
+			for variable in self.csv.history.variables:
+				vars.append(variable)
+				if self.csv.diff: vars.append('diff_'+variable)
+				#if self.time_derivatives: vars.append('d'+variable+'_dt')
+			for i,variable in enumerate(vars):
 				plot_title = variable+'_history'
 				lns += []
 				lns += [plot_title+' = PlotData()']
@@ -2575,7 +2602,7 @@ class fvtk(object):
 					
 				#lns += ['mr.SeriesVisibility = [\'vtkOriginalIndices\', \'0\', \'time\', \'0\']']
 				lns += [ln+']']
-				if i != (len(self.csv.history.variables)-1):
+				if i != (len(vars)-1):
 					lns += ['mr.Visibility = 0']
 		
 		lns += ['']
@@ -2596,6 +2623,45 @@ class fcsv(object):
 		self.history = history
 		self.diff = diff
 		self.time_derivatives = time_derivatives
+		if diff:
+			self.assemble_diff()
+		if time_derivatives:
+			self.assemble_time_derivatives()
+	def assemble_diff(self):
+		for variable in self.history.variables:
+			for node in self.history.nodes:
+				self.history.new_variable('diff_'+variable,node,self.history[variable][node]-self.history[variable][node][0])
+	def assemble_time_derivatives(self):
+		return
+		#for variable in self.history.variables:
+		#	for node in self.history.nodes:
+		#		data = self.history[variable][node]
+		#		time = self.history.times
+		#		self.history.new_variable('d'+variable+'_dt',node,dt)
+		#		
+		#			ind = np.where(time==self.contour.times)[0][0]
+		#			if ind == 0: 
+		#				# forward difference
+		#				dt = self.contour.times[1]-time
+		#				f0 = self.contour[time][var]
+		#				f1 = self.contour[self.contour.times[1]][var]
+		#				dat = (f1-f0)/dt
+		#			elif ind == (len(self.contour.times)-1): 
+		#				# backward difference
+		#				dt = time-self.contour.times[-2]
+		#				f0 = self.contour[self.contour.times[-2]][var]
+		#				f1 = self.contour[time][var]
+		#				dat = (f1-f0)/dt
+		#			else:
+		#				# central difference
+		#				dt1 = time - self.contour.times[ind-1]
+		#				dt2 = self.contour.times[ind+1] - time
+		#				f0 = self.contour[self.contour.times[ind-1]][var]
+		#				f1 = self.contour[time][var]
+		#				f2 = self.contour[self.contour.times[ind+1]][var]
+		#				dat = -dt2/(dt1*(dt1+dt2))*f0 + (dt2-dt1)/(dt1*dt2)*f1 + dt1/(dt2*(dt1+dt2))*f2
+		#			self.data.contour[time].append(pv.Scalars(dat,name='d_'+var+'_dt',lookup_table='default'))
+					
 	def write(self):	
 		"""Call to write out csv files."""
 		if self.parent.work_dir: wd = self.parent.work_dir
@@ -2609,7 +2675,12 @@ class fcsv(object):
 		self.filename = wd+self.path.filename
 		# write headers
 		ln = '%16s,'%('time')
+		vars = []
 		for variable in self.history.variables:
+			vars.append(variable)
+			if self.diff: vars.append('diff_'+variable)
+			#if self.time_derivatives: vars.append('d'+variable+'_dt')
+		for variable in vars:
 			for node in self.history.nodes:		
 				var = variable
 				if len(var)>6: var = var[:6]
@@ -2619,7 +2690,7 @@ class fcsv(object):
 		# write row for each time
 		for i,time in enumerate(self.history.times): 		# each row is one time output
 			ln = '%16.8e,'%time
-			for variable in self.history.variables:
+			for variable in vars:
 				for node in self.history.nodes:			# each column is one node
 					ln += '%16.8e,'%self.history[variable][node][i]
 			ln = ln[:-1]+'\n'
