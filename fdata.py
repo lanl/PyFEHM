@@ -4576,23 +4576,7 @@ class fdata(object):						#FEHM data file.
 			#pyfehm_print()
 			raise NameError('No executable at location '+exe)
 			return
-		
-		tempRstoFlag = False
-		if until is not None and self.files.rsto == '':	tempRstoFlag = True
 						
-		# if using 'until' to break a simulation, we require a restart file to be written each timestep
-		# restart files are written at the same frequency as contour output, hence contour output will
-		# need to be written every timestep - manage this data by deleting it
-		contUnchanged = True 			# flag to indicate whether we have modified cont
-		if until:
-			if self.cont.timestep_interval == 1 and self.cont.variables: contUnchanged = True
-			else:
-				from copy import deepcopy
-				oldCont = deepcopy(self.cont)
-				if not self.cont.variables: self.cont.variables.append('temperature')
-				self.cont.timestep_interval = 1
-				contUnchanged = False
-				
 		# option to write input, grid, incon files to new names
 		if input: self._path.filename = input
 		if grid: self.grid._path.filename = grid
@@ -4661,8 +4645,8 @@ class fdata(object):						#FEHM data file.
 			if breakAutorestart: break
 			untilFlag = False
 			if diagnostic: self._diagnostic.refresh_nodes()
-			p = Popen(exe_path.full_path,stdout=PIPE)
 			if until is None:
+				p = Popen(exe_path.full_path,stdout=PIPE)
 				if diagnostic:
 					self._diagnostic.stdout = p.stdout
 					self._diagnostic.poll = p.poll
@@ -4673,46 +4657,12 @@ class fdata(object):						#FEHM data file.
 				else:
 					p.communicate()
 			else:
+				p = Popen(exe_path.full_path)
 				self._running = True
-				interval = 0
-				delFiles = []
 				while self._running:					# loop for checking if stop condition is met
 					sleep(dflt.sleep_time) 					# wait 
-					is_new = self.incon.read(self.files.rsto, if_new = True) 	# read new input file
-					if is_new: 
-						untilFlag = until(self) 				# check stop condition
-						if not contUnchanged: #delete cont file that was created
-							
-							if delFiles: 
-								for delFile in delFiles: os.remove(delFile)
-							delFiles = []
-								
-							interval += 1
-							if interval%oldCont.timestep_interval == 0: continue
-							
-							if self.cont.format == 'surf': suffix = 'csv'
-							elif self.cont.format == 'tec': suffix = 'dat'
-							elif self.cont.format == 'avsx': suffix = 'avsx'
-							
-							# use glob to find most recently created file							
-							from glob import glob
-							outtypes = ['_vec','_sca','_con']
-							for outtype in outtypes:
-								files = filter(os.path.isfile, glob(self.files.root+'*'+outtype+'*.'+suffix))
-								if not files: continue
-								files.sort(key=lambda x: os.path.getmtime(x))
-								files = files[-2:]
-							
-								# delete file if 
-								ts = [fl.split(outtype)[0] for fl in files]
-								ts = [fl.split('_days')[0] for fl in ts]
-								ts = [fl.split('.')[-2:] for fl in ts]
-								ts = [float(tsi[0]+'.'+tsi[1]) for tsi in ts]
-								
-								if (1-(abs(ts[0]-ts[1])/oldCont.time_interval)) <0.001: continue
-								delFiles.append(files[-1])
-							
-					p.poll() 								# check if run finished on its own
+					untilFlag = until(self) 		
+					p.poll() 						# check if run finished on its own
 					if p.returncode == 0:					# IF run finshed on its own
 						self._running = False					# break the loop
 					if untilFlag and self._running: 		# IF stop condition met
@@ -4726,18 +4676,6 @@ class fdata(object):						#FEHM data file.
 			else:
 				breakAutorestart = True
 		
-		if not contUnchanged: 
-			if self.cont.format == 'surf': suffix = 'csv'
-			elif self.cont.format == 'tec': suffix = 'dat'
-			elif self.cont.format == 'avsx': suffix = 'avsx'
-			self._cont = oldCont
-			if len(self.cont.variables) == 0:
-				outtypes = ['_vec','_sca','_con']
-				for outtype in outtypes:
-					files = filter(os.path.isfile, glob(self.files.root+'*'+outtype+'*.'+suffix))
-					if files:
-						for file in files: os.remove(file)
-		
 		if clean:
 			try: os.remove('nop.temp')
 			except: pass
@@ -4746,10 +4684,7 @@ class fdata(object):						#FEHM data file.
 		
 		if self.work_dir: os.chdir(cwd)
 		
-		if tempRstoFlag: 
-			self.files.incon = ''
-			self.files.write()
-	def paraview(self,exe = dflt.paraview_path,filename = 'temp.vtk',contour = None,show='kx',zones = 'user',diff = True,zscale = 1.,
+	def paraview(self,exe = dflt.paraview_path,filename = 'temp.vtk',contour = None, history = None, show='kx',zones = 'user',diff = True,zscale = 1.,
 		spatial_derivatives = False, time_derivatives = False):
 		'''Exports the model object to VTK and loads in paraview.
 		
@@ -4759,6 +4694,8 @@ class fdata(object):						#FEHM data file.
 		:type filename: str
 		:param contour: Contout output data object loaded using fcontour().
 		:type contour: fcontour
+		:param history: History output data object loaded using fhistory().
+		:type history: fhistory
 		:param show: Variable to show when Paraview starts up (default = 'kx').
 		:type show: str
 		:param zones: Zones to plot: 'user' = user-defined zones (default), 'all' = all zones except zone[0].
@@ -4767,11 +4704,17 @@ class fdata(object):						#FEHM data file.
 		:type diff: bool
 		:param zscale: Factor by which to scale z-axis. Useful for visualising laterally extensive flow systems.
 		:type zscale: fl64
+		:param spatial_derivatives: Calculate new fields for spatial derivatives of contour data. 
+		:type spatial_derivatives: bool
 		:param time_derivatives: Calculate new fields for time derivatives of contour data. For precision reasons, derivatives are calculated with units of 'per day'.
 		:type time_derivatives: bool
 		'''
 		# check for empty contour object
 		self.write_vtk(filename=filename,contour=contour,diff=diff,zscale=zscale,spatial_derivatives=spatial_derivatives,time_derivatives=time_derivatives)
+		if history is not None:
+			from string import join
+			filename_csv = join(filename.split('.')[:-1],'.')+'.csv'
+			self.write_csv(filename=filename_csv,history=history,diff=diff,time_derivatives=time_derivatives)
 		self._vtk.show_zones=zones
 		
 		self._vtk.initial_display(show)
@@ -4790,14 +4733,34 @@ class fdata(object):						#FEHM data file.
 		:type diff: bool
 		:param zscale: Factor by which to scale z-axis. Useful for visualising laterally extensive flow systems.
 		:type zscale: fl64
+		:param spatial_derivatives: Calculate new fields for spatial derivatives of contour data. 
+		:type spatial_derivatives: bool
 		:param time_derivatives: Calculate new fields for time derivatives of contour data. For precision reasons, derivatives are calculated with units of 'per day'.
 		:type time_derivatives: bool
 		'''
 		if contour is not None:
 			if len(contour.variables) == 0: contour = None		
+		# write vtk files for contour output data
 		self._vtk = fvtk(parent=self,filename=filename,contour=contour,diff=diff,zscale = zscale,spatial_derivatives = spatial_derivatives, time_derivatives = time_derivatives)
 		self._vtk.assemble()
-		fls = self._vtk.write()
+		fls = self._vtk.write()	
+	def write_csv(self, filename = 'temp.csv',history=None,diff = True,	time_derivatives = False):
+		'''Exports the fhistory object to CSV for reading into paraview.
+		
+		:param filename: Name of CSV file to be output.
+		:type filename: str
+		:param history: History output data object loaded using fhistory().
+		:type history: fhistory
+		:param diff: Flag to request PyFEHM to also plot differences of contour variables (from initial state) with time.
+		:type diff: bool
+		:param time_derivatives: Calculate new fields for time derivatives of contour data. For precision reasons, derivatives are calculated with units of 'per day'.
+		:type time_derivatives: bool
+		'''
+		if history is not None:
+			if len(history.variables) == 0: history = None		
+		# write vtk files for contour output data
+		self._vtk.csv = fcsv(parent=self,filename=filename,history=history,diff=diff,time_derivatives = time_derivatives)
+		self._vtk.csv.write()
 	def visit(self,exe = 'visit',filename = 'temp.vtk',contour = None):
 		'''Exports the model object to VTK and loads in paraview.
 		

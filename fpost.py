@@ -2538,11 +2538,94 @@ class fvtk(object):
 					'model_rep.Visibility = 0',
 					'cont_rep.Visibility = 1',
 					]			
+		
+		################################### load in history output ###################################	
+		lns += ['xyview = CreateXYPlotView()']
+		lns += ['xyview.BottomAxisRange = [0.0, 5.0]']
+		lns += ['xyview.TopAxisRange = [0.0, 6.66]']
+		lns += ['xyview.ViewTime = 0.0']
+		lns += ['xyview.LeftAxisRange = [0.0, 10.0]']
+		lns += ['xyview.RightAxisRange = [0.0, 6.66]']
+		lns += ['']
+		if os.path.isfile(self.csv.filename):
+			lns += ['hout = CSVReader( FileName=[r\''+self.csv.filename+'\'] )']
+			lns += ['RenameSource("history_output",hout)']
+			
+			fp = open(self.csv.filename)
+			ln = fp.readline().rstrip()
+			fp.close()
+			headers = [lni for lni in ln.split(',')]
+			
+			for i,variable in enumerate(self.csv.history.variables):
+				plot_title = variable+'_history'
+				lns += []
+				lns += [plot_title+' = PlotData()']
+				lns += ['RenameSource("'+plot_title+'",'+plot_title+')']
+				
+				lns += ['mr = Show()']
+				lns += ['mr = GetDisplayProperties('+plot_title+')']
+				lns += ['mr.XArrayName = \'time\'']
+				lns += ['mr.UseIndexForXAxis = 0']
+				lns += ['mr.SeriesColor = [\'time\', \'0\', \'0\', \'0\']']
+				lns += ['mr.AttributeType = \'Row Data\'']
+				switch_off = [header for header in headers if (variable+':') not in header]
+				ln = 'mr.SeriesVisibility = [\'vtkOriginalIndices\', \'0\', \'time\', \'0\''
+				for header in switch_off:
+					ln+=', \''+header+'\',\'0\''
+					
+				#lns += ['mr.SeriesVisibility = [\'vtkOriginalIndices\', \'0\', \'time\', \'0\']']
+				lns += [ln+']']
+				if i != (len(self.csv.history.variables)-1):
+					lns += ['mr.Visibility = 0']
+		
+		lns += ['']
+		lns += ['AnimationScene1.ViewModules = [ RenderView1, SpreadSheetView1, XYChartView1 ]']
+		
+		lns += ['Render()']
+		
 		f.writelines('\n'.join(lns))
 		f.close()
 	def _get_filename(self): return self.path.absolute_to_file+os.sep+self.path.filename
 	filename = property(_get_filename) #: (**)
-
+class fcsv(object):
+	def __init__(self,parent,filename,history,diff,time_derivatives):
+		self.parent = parent
+		self.path = fpath(parent = self)
+		self.path.filename = filename
+		self.data = None
+		self.history = history
+		self.diff = diff
+		self.time_derivatives = time_derivatives
+	def write(self):	
+		"""Call to write out csv files."""
+		if self.parent.work_dir: wd = self.parent.work_dir
+		else: wd = self.parent._path.absolute_to_file
+		if wd is None: wd = ''
+		else: wd += os.sep
+		
+		# write one large .csv file for all variables, nodes
+		from string import join
+		fp = open(wd+self.path.filename,'w')
+		self.filename = wd+self.path.filename
+		# write headers
+		ln = '%16s,'%('time')
+		for variable in self.history.variables:
+			for node in self.history.nodes:		
+				var = variable
+				if len(var)>6: var = var[:6]
+				ln += '%16s,'%(var+': nd '+str(node))
+		fp.write(ln[:-1]+'\n')
+		
+		# write row for each time
+		for i,time in enumerate(self.history.times): 		# each row is one time output
+			ln = '%16.8e,'%time
+			for variable in self.history.variables:
+				for node in self.history.nodes:			# each column is one node
+					ln += '%16.8e,'%self.history[variable][node][i]
+			ln = ln[:-1]+'\n'
+			fp.write(ln)
+		fp.close()		
+	
 def fdiff( in1, in2, format='diff', times=[], variables=[], components=[]):
 	'''Take the difference of two fpost objects
 	
@@ -2639,19 +2722,11 @@ def fdiff( in1, in2, format='diff', times=[], variables=[], components=[]):
 				else:
 					out._node[cp] = dict([(n,dict([(v,100*np.abs((np.array(in1._node[cp][n][v]) - np.array(in2._node[cp][n][v]))/in2._node[cp][n][v])) for v in in1._node[cp][n].keys()])) for n in in1.nodes])
 		return out
-
-				
-				
-
-
-
-
-
-
-	
 def sort_tec_files(files):
 	# sort first by number, then by type
 	from string import join
+	for file in files:
+		if not file.endswith('.dat'): return files
 	paths = [join(file.split(os.sep)[:-1],os.sep) for file in files]
 	files = [file.split(os.sep)[-1] for file in files]
 	
