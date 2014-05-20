@@ -4563,7 +4563,8 @@ class fdata(object):						#FEHM data file.
 		exe_path.filename = exe
 		
 		if not os.path.isfile(exe_path.full_path): 	# if can't find the executable, halt
-			pyfehm_print('ERROR: No executable at location '+exe)
+			#pyfehm_print()
+			raise NameError('No executable at location '+exe)
 			return
 		
 		tempRstoFlag = False
