@@ -1495,6 +1495,7 @@ class fhistory(object):						# Reading and plotting methods associated with hist
 	'''
 	def __init__(self,filename=None,verbose=True):
 		self._filename=None	
+		self._format = ''
 		self._times=[]	
 		self._verbose = verbose
 		self._data={}
@@ -2810,10 +2811,6 @@ def sort_tec_files(files):
 	files = [files[ind] for ind,time in times]
 
 	return [path+os.sep+file if path else file for path,file in zip(paths,files)]
-	
-	
-	
-	
 	
 	
 	
