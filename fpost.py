@@ -650,7 +650,6 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 					data2.append(data[:,j]); j +=1
 			data = np.transpose(np.array(data2))
 		self._data[time] = dict([(var,data[:,icol]) for icol,var in enumerate(self.variables)])
-		
 		if mat_file and not self._material_properties:
 			fp = open(mat_file,'rU')
 			fp.readline()
@@ -2810,7 +2809,7 @@ def sort_tec_files(files):
 	paths = [paths[ind] for ind,time in times]
 	files = [files[ind] for ind,time in times]
 
-	return [path+os.sep+file for path,file in zip(paths,files)]
+	return [path+os.sep+file if path else file for path,file in zip(paths,files)]
 	
 	
 	

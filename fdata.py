@@ -2704,7 +2704,7 @@ class fdata(object):						#FEHM data file.
 	
 	"""		
 	__slots__ = ['_gridfilename','_inconfilename','_sticky_zones','_allMacro','_allModel','_associate',
-			'_bounlist','_cont','_ctrl','_grid','_incon','_hist','_iter','_nfinv','_nobr','_vapl','_adif','_rlpmlist','_sol',
+			'_bounlist','_cont','_ctrl','_grid','_incon','_hist','_iter','_nfinv','_nobr','_head','_vapl','_adif','_rlpmlist','_sol',
 			'_time','text','_times','_zonelist','_writeSubFiles','_strs','_ngas','_carb','_trac','_files','_verbose',
 			'_tf','_ti','_dti','_dtmin','_dtmax','_dtn','_dtx','_sections','_help','_running','_unparsed_blocks','keep_unknown','_flxo',
 			'_output_times','_path','_vtk','_diagnostic','_storage']
@@ -2729,7 +2729,8 @@ class fdata(object):						#FEHM data file.
 		self._hist = fhist()				
 		self._iter=copy(dflt.iter)
 		self._nfinv = False
-		self._nobr = False					
+		self._nobr = False		
+		self._head = False					
 		self._vapl = False					
 		self._adif = None
 		self._rlpmlist=[]
@@ -2893,7 +2894,7 @@ class fdata(object):						#FEHM data file.
 						 self._read_time,self._read_ctrl,self._read_iter,self._read_macro,self._read_macro,
 						 self._read_boun,self._read_macro,self._read_strs,self._read_text,self._read_sol,
 						self._read_nfinv,self._read_hist,self._read_histnode,self._read_carb,self._read_model,
-						 self._read_macro,self._read_nobr,self._read_flxz,self._read_rlpm,self._read_macro,
+						 self._read_macro,self._read_nobr,self._read_head, self._read_flxz,self._read_rlpm,self._read_macro,
 						 self._read_trac,self._read_model,self._read_model,self._read_vapl,self._read_adif,
 						 self._read_ngas,self._read_flxo]))
 		self._sections=[]
@@ -2929,6 +2930,9 @@ class fdata(object):						#FEHM data file.
 						else:
 							block = fn(infile)
 							precedingZoneKey = copy(precedingKey)
+					elif keyword in ['head']:
+						fn(infile,line)
+						precedingZoneKey = None
 					else:
 						fn(infile)
 						precedingZoneKey = None
@@ -2995,6 +2999,7 @@ class fdata(object):						#FEHM data file.
 		if self.sol: self._write_sol(outfile); self._write_unparsed(outfile,'sol')
 		if self.nfinv: self._write_nfinv(outfile); self._write_unparsed(outfile,'nfinv')
 		if self.nobr: self._write_nobr(outfile); self._write_unparsed(outfile,'nobr')
+		if self.head: self._write_head(outfile); self._write_unparsed(outfile,'head')
 		if self.vapl: self._write_vapl(outfile); self._write_unparsed(outfile,'vapl')
 		if self.adif != None: self._write_adif(outfile); self._write_unparsed(outfile,'adif')
 		if self.flxo: self._write_flxo(outfile); self._write_unparsed(outfile,'flxo')
@@ -3542,6 +3547,17 @@ class fdata(object):						#FEHM data file.
 					_buildWarnings('WARNING: zone ' +num+' in FLXZ not defined.')
 				newind += 1
 			if newind == node_num: more = False
+	def _read_head(self,infile,line):						#HEAD: Reads HEAD macro.
+		line = line.rstrip().split()
+		if len(line) == 2:
+			self.head=float(line[-1])
+		else:
+			self.head=True
+	def _write_head(self,outfile):								#Writes HEAD macro.
+		if self.head is True:
+			outfile.write('head\n')
+		else:
+			outfile.write('head\t'+str(self.head)+'\n')
 	def _write_hist(self,outfile):								#Writes HIST macro.
 		if not self.hist.nodelist and not self.hist.zonelist and not self.hist.zoneflux: _buildWarnings('WARNING: no zones or nodes specified for history output'); return
 		if not self.hist.variables: _buildWarnings('WARNING: no variables requested in hist')
@@ -6160,6 +6176,9 @@ class fdata(object):						#FEHM data file.
 	def _get_nobr(self): return self._nobr
 	def _set_nobr(self,value): self._nobr = value
 	nobr = property(_get_nobr, _set_nobr) #: (*int*) Boolean integer calling for no breaking of connections between boundary condition nodes.
+	def _get_head(self): return self._head
+	def _set_head(self,value): self._head = value
+	head = property(_get_head, _set_head) #: (*int*,*fl64*) Boolean integer calling for head inputs (instead of pressure) in FEHM. If assigned a float, then all input heads will be incremented by this amount.
 	def _get_vapl(self): return self._vapl
 	def _set_vapl(self,value): self._vapl = value
 	vapl = property(_get_vapl, _set_vapl) #: (*int*) Boolean integer calling for vapor pressure lowering.
