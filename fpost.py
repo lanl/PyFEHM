@@ -2697,7 +2697,7 @@ class fcsv(object):
 			fp.write(ln)
 		fp.close()		
 	
-def fdiff( in1, in2, format='diff', times=[], variables=[], components=[]):
+def fdiff( in1, in2, format='diff', times=[], variables=[], components=[], nodes=[]):
 	'''Take the difference of two fpost objects
 	
 	:param in1: First fpost object
@@ -2714,13 +2714,14 @@ def fdiff( in1, in2, format='diff', times=[], variables=[], components=[]):
 	:type components: lst(str)
 	:returns: fpost object of same type as in1 and in2
 	'''
+	
 	# Copy in1 and in2 in case they get modified below
 	in1 = deepcopy(in1)
 	in2 = deepcopy(in2)
 	if type(in1) is not type(in2):
 		print "ERROR: fpost objects are not of the same type: "+str(type(in1))+" and "+str(type(in2))
 		return
-	if isinstance(in1, fcontour) or 'foutput' in str(in1.__class__):
+	if isinstance(in1, fcontour) or isinstance(in1, fhistory) or 'foutput' in str(in1.__class__):
 		# Find common times
 		t = np.intersect1d(in1.times,in2.times)
 		if len(t) == 0:
@@ -2733,6 +2734,7 @@ def fdiff( in1, in2, format='diff', times=[], variables=[], components=[]):
 				return
 		else:
 			times = t
+			
 	if isinstance(in1, fcontour):
 		# Find common variables
 		v = np.intersect1d(in1.variables,in2.variables)
@@ -2758,6 +2760,60 @@ def fdiff( in1, in2, format='diff', times=[], variables=[], components=[]):
 			elif format is 'percent':
 				out._data[t] = dict([(v,100*np.abs((in1[t][v] - in2[t][v])/in2[t][v])) for v in variables])
 		return out
+	
+	#Takes the difference of two fhistory objects.	
+	elif isinstance(in1, fhistory):
+		# Find common variables
+		v = np.intersect1d(in1.variables, in2.variables)		
+		if len(v) == 0:
+			print "ERROR: fhistory object variables do not have any matching values"
+			return
+		if len(variables) > 0:
+			variables = np.intersect1d(variables,v)
+			if len(variables) == 0:
+				print "ERROR: provided variables are not coincident with fhistory object variables"
+				return
+		else:
+			variables = v
+			
+		#Find common nodes.
+		n = np.intersect1d(in1.nodes, in2.nodes)
+		if len(n) == 0:
+			print "ERROR: fhistory object nodes do not have any matching values"
+			return
+		if len(nodes) > 0:
+			nodes = np.intersect1d(nodes,n)
+			if len(nodes) == 0:
+				print "ERROR: provided nodes are not coincident with fhistory object nodes"
+				return
+		else:
+			nodes = n
+		
+		#Set up the out object.
+		out = deepcopy(in1)
+		out._times = times
+		out._variables = variables
+		out._nodes = nodes
+		out._data = {}
+		
+		#Find the difference at each time index for a variable and node.
+		for v in variables:
+			for n in nodes:
+				i = 0
+				diff = []
+				while i < len(times):
+					if format is 'diff':
+						diff.append(in1[v][n][i]-in2[v][n][i]) 	
+					elif format is 'relative':
+						diff.append((in1[t][v] - in2[t][v])/np.abs(in2[t][v])) 
+					elif format is 'percent':
+						diff.append(100*np.abs((in1[t][v] - in2[t][v])/in2[t][v])) 	
+					i = i + 1
+				out._data[v] = dict([(n, diff)])
+				
+		#Return the difference.		
+		return out
+	  		
 	elif 'foutput' in str(in1.__class__):
 		# Find common components
 		c = np.intersect1d(in1.components,in2.components)
@@ -2792,7 +2848,9 @@ def fdiff( in1, in2, format='diff', times=[], variables=[], components=[]):
 					out._node[cp] = dict([(n,dict([(v,100*np.abs((np.array(in1._node[cp][n][v]) - np.array(in2._node[cp][n][v]))/in2._node[cp][n][v])) for v in in1._node[cp][n].keys() if v in variables])) for n in in1.nodes])
 				else:
 					out._node[cp] = dict([(n,dict([(v,100*np.abs((np.array(in1._node[cp][n][v]) - np.array(in2._node[cp][n][v]))/in2._node[cp][n][v])) for v in in1._node[cp][n].keys()])) for n in in1.nodes])
+						
 		return out
+		
 def sort_tec_files(files):
 	# sort first by number, then by type
 	from string import join
