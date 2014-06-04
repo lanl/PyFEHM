@@ -6838,14 +6838,16 @@ class fdiagnostic(object):
 		self.root = tk.Tk()
 		self.root.wm_title('PyFEHM diagnostic window: '+self.parent.filename)
 		self.root.protocol('WM_DELETE_WINDOW', self.handler)
-		if has_ctypes:
-			user32 = ctypes.windll.user32
-			screensize = np.array([user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)])
-			self.fig = plt.figure(figsize = screensize/120.,dpi = 100)
-			mng = plt.get_current_fig_manager()
-			mng.window.wm_geometry('+%04i+%04i'%(screensize[0]/20.,screensize[1]/20.))
-		else:
-			self.fig = plt.figure()
+		
+		if not self.hide:
+			if has_ctypes:
+				user32 = ctypes.windll.user32
+				screensize = np.array([user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)])
+				self.fig = plt.figure(figsize = screensize/120.,dpi = 100)
+				mng = plt.get_current_fig_manager()
+				mng.window.wm_geometry('+%04i+%04i'%(screensize[0]/20.,screensize[1]/20.))
+			else:
+				self.fig = plt.figure()
 
 		x1,x2 = 0.1, 0.55
 		y1,y2,y3 = 0.1,0.4,0.7
@@ -6934,12 +6936,14 @@ class fdiagnostic(object):
 			self.canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 			self.canvas.show()
 		
-		for k in self.axs.keys():
-			self.axs[k].add_empty_plots()
-			self.axs[k].reset_bg()
-			
+		if not self.hide:
+			for k in self.axs.keys():
+				self.axs[k].add_empty_plots()
+				self.axs[k].reset_bg()
+		
 		self.root.after(0,self.parse_line)
 		self.root.mainloop()
+		
 	def update_tlim(self):
 		if self.hide: return
 		if not self.time.data[-1]>self.time.lim[-1]: return
