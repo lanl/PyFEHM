@@ -281,7 +281,6 @@ def process_output(filename,input=None,grid=None,hide=False,silent=False,write=T
 	dat._diagnostic.stdout = open(filename)
 	dat._diagnostic.poll = True
 	dat._diagnostic.read_with_tcl()
-	#dat._diagnostic.construct_viewer()	
 	return dat._diagnostic
 class fzone(object):						#FEHM zone object.
 	"""FEHM Zone object.
@@ -6944,14 +6943,8 @@ class fdiagnostic(object):
 		self.root.after(0,self.parse_line)
 		self.root.mainloop()
 	def read_with_tcl(self):
-		""" Assembles axes on the screen.
-		"""
-		# create figure window
 		while self.poll: self.parse_line()
 		self.close_files('timestep less than daymin')
-		#self.root = tk.Tcl()
-		#self.root.after(0,self.parse_line)
-		#self.root.mainloop()
 	def update_tlim(self):
 		if self.hide: return
 		if not self.time.data[-1]>self.time.lim[-1]: return
@@ -7044,9 +7037,6 @@ class fdiagnostic(object):
 		if self.file_nd: self.file_nd.close()
 		
 		if self.poll is True: self.poll = False
-		#if self.hide: 
-		#	self.root.quit()
-		#	self.root.destroy()
 	def summarise_nr(self):
 		
 		self.file_nr.write('\n')
@@ -7461,10 +7451,6 @@ class foutput(object):
 				diag = process_output(filename, hide = hide,silent=silent,write=write)		
 		self._node = deepcopy(diag.node)
 		self._times = deepcopy(diag.time.data[1:])
-		print self._times
-		print self.components
-		print self._node.keys()	
-		print diag.time.data
 	def _get_node(self): return self._node
 	node = property(_get_node) #: (*dict*) Dictionary of node output, keyed first on component ('water','gas','tracer1'), then on node number, then on variable.
 	def _get_nodes(self): 
