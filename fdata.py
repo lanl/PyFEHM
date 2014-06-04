@@ -280,7 +280,8 @@ def process_output(filename,input=None,grid=None,hide=False,silent=False,write=T
 	dat._diagnostic.refresh_nodes()
 	dat._diagnostic.stdout = open(filename)
 	dat._diagnostic.poll = True
-	dat._diagnostic.construct_viewer()	
+	dat._diagnostic.read_with_tcl()
+	#dat._diagnostic.construct_viewer()	
 	return dat._diagnostic
 class fzone(object):						#FEHM zone object.
 	"""FEHM Zone object.
@@ -6946,7 +6947,13 @@ class fdiagnostic(object):
 		
 		self.root.after(0,self.parse_line)
 		self.root.mainloop()
-		
+	def read_with_tcl(self):
+		""" Assembles axes on the screen.
+		"""
+		# create figure window
+		self.root = tk.Tcl()
+		self.root.after(0,self.parse_line)
+		self.root.mainloop()
 	def update_tlim(self):
 		if self.hide: return
 		if not self.time.data[-1]>self.time.lim[-1]: return
