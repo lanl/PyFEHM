@@ -6835,9 +6835,12 @@ class fdiagnostic(object):
 			self.ax2.slot0 = ['residual1','residual2']
 		
 		# create figure window
-		self.root = tk.Tk()
-		self.root.wm_title('PyFEHM diagnostic window: '+self.parent.filename)
-		self.root.protocol('WM_DELETE_WINDOW', self.handler)
+		if self.hide:
+			self.root = tk.Tcl()
+		else:
+			self.root = tk.Tk()
+			self.root.wm_title('PyFEHM diagnostic window: '+self.parent.filename)
+			self.root.protocol('WM_DELETE_WINDOW', self.handler)
 		
 		if not self.hide:
 			if has_ctypes:
@@ -7038,7 +7041,7 @@ class fdiagnostic(object):
 		if self.poll is True: self.poll = False
 		if self.hide: 
 			self.root.quit()
-			self.root.destroy()
+			#self.root.destroy()
 	def summarise_nr(self):
 		
 		self.file_nr.write('\n')
