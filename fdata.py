@@ -6819,8 +6819,9 @@ class fdiagnostic(object):
 			elif self.update_errors(ln): pass			
 			elif self.update_residuals(ln): pass			
 			elif self.update_largestNR(ln): pass			
-			elif self.close_files(ln): pass			
-		self._job = self.root.after(0,self.parse_line)
+			elif self.close_files(ln): pass		
+		if not self.hide:
+			self._job = self.root.after(0,self.parse_line)
 	def handler(self):
 		self.root.quit()
 		self.root.destroy()
@@ -6836,22 +6837,18 @@ class fdiagnostic(object):
 			self.ax2.slot0 = ['residual1','residual2']
 		
 		# create figure window
-		if self.hide:
-			self.root = tk.Tcl()
-		else:
-			self.root = tk.Tk()
-			self.root.wm_title('PyFEHM diagnostic window: '+self.parent.filename)
-			self.root.protocol('WM_DELETE_WINDOW', self.handler)
+		self.root = tk.Tk()
+		self.root.wm_title('PyFEHM diagnostic window: '+self.parent.filename)
+		self.root.protocol('WM_DELETE_WINDOW', self.handler)
 		
-		if not self.hide:
-			if has_ctypes:
-				user32 = ctypes.windll.user32
-				screensize = np.array([user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)])
-				self.fig = plt.figure(figsize = screensize/120.,dpi = 100)
-				mng = plt.get_current_fig_manager()
-				mng.window.wm_geometry('+%04i+%04i'%(screensize[0]/20.,screensize[1]/20.))
-			else:
-				self.fig = plt.figure()
+		if has_ctypes:
+			user32 = ctypes.windll.user32
+			screensize = np.array([user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)])
+			self.fig = plt.figure(figsize = screensize/120.,dpi = 100)
+			mng = plt.get_current_fig_manager()
+			mng.window.wm_geometry('+%04i+%04i'%(screensize[0]/20.,screensize[1]/20.))
+		else:
+			self.fig = plt.figure()
 
 		x1,x2 = 0.1, 0.55
 		y1,y2,y3 = 0.1,0.4,0.7
@@ -6935,15 +6932,14 @@ class fdiagnostic(object):
 					t.set_color(col)
 		
 			if k == '3': self.axs[k].make_legend()
-		if not self.hide:
-			self.canvas = FigureCanvasTkAgg(self.fig,master = self.root)
-			self.canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
-			self.canvas.show()
 		
-		if not self.hide:
-			for k in self.axs.keys():
-				self.axs[k].add_empty_plots()
-				self.axs[k].reset_bg()
+		self.canvas = FigureCanvasTkAgg(self.fig,master = self.root)
+		self.canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+		self.canvas.show()
+		
+		for k in self.axs.keys():
+			self.axs[k].add_empty_plots()
+			self.axs[k].reset_bg()
 		
 		self.root.after(0,self.parse_line)
 		self.root.mainloop()
@@ -6951,9 +6947,11 @@ class fdiagnostic(object):
 		""" Assembles axes on the screen.
 		"""
 		# create figure window
-		self.root = tk.Tcl()
-		self.root.after(0,self.parse_line)
-		self.root.mainloop()
+		while self.poll: self.parse_line()
+		self.close_files('timestep less than daymin')
+		#self.root = tk.Tcl()
+		#self.root.after(0,self.parse_line)
+		#self.root.mainloop()
 	def update_tlim(self):
 		if self.hide: return
 		if not self.time.data[-1]>self.time.lim[-1]: return
@@ -7046,9 +7044,9 @@ class fdiagnostic(object):
 		if self.file_nd: self.file_nd.close()
 		
 		if self.poll is True: self.poll = False
-		if self.hide: 
-			self.root.quit()
-			#self.root.destroy()
+		#if self.hide: 
+		#	self.root.quit()
+		#	self.root.destroy()
 	def summarise_nr(self):
 		
 		self.file_nr.write('\n')
@@ -7453,6 +7451,7 @@ class fdiagnostic(object):
 	def _get_axs(self): return dict(zip(['0','1','2','3'],[self.ax0,self.ax1,self.ax2,self.ax3]))
 	axs = property(_get_axs)
 class foutput(object):
+	from copy import deepcopy
 	def __init__(self,filename = None, input=None, grid = None, hide = True, silent=True, write = False):
 		self._filename = filename
 		if self._filename:
@@ -7460,8 +7459,12 @@ class foutput(object):
 				diag = process_output(filename, hide = hide,silent = silent,input=input,grid=grid,write=write)
 			else:
 				diag = process_output(filename, hide = hide,silent=silent,write=write)		
-		self._node = diag.node
-		self._times = diag.time.data[1:]
+		self._node = deepcopy(diag.node)
+		self._times = deepcopy(diag.time.data[1:])
+		print self._times
+		print self.components
+		print self._node.keys()	
+		print diag.time.data
 	def _get_node(self): return self._node
 	node = property(_get_node) #: (*dict*) Dictionary of node output, keyed first on component ('water','gas','tracer1'), then on node number, then on variable.
 	def _get_nodes(self): 
@@ -7485,7 +7488,7 @@ class foutput(object):
 	filename = property(_get_filename, _set_filename) #: (*str*) Name of output file
 	def _get_information(self):
 		print 'FEHM output file \''+self.filename+'\''
-		print '    call format: foutput[component][node][variable]'
+		print '    call format: foutput.node[component][node][variable]'
 		prntStr =  '    components: '
 		for cpt in self.components: prntStr += str(cpt)+', '
 		print prntStr[:-2]
