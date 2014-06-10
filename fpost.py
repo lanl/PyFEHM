@@ -430,7 +430,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 					fp.close()
 				self._detect_format(headers)
 				#if self._format=='tec': self._setup_headers_tec(headers)
-				if self._format=='avs': self._setup_headers_avs(headers)
+				if self._format=='avs': self._setup_headers_avs(headers,files)
 				elif self._format=='avsx': self._setup_headers_avsx(headers)
 				elif self._format=='surf': self._setup_headers_surf(headers)
 				else: pyfehm_print('ERROR: Unrecognised format');return
@@ -517,26 +517,44 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 			fp.close()
 			data = np.array([[float(d) for d in ln.strip().split(':')[1:]] for ln in lns])
 			self._material= dict([(var,data[:,icol]) for icol,var in enumerate(self._material_properties)])
-	def _setup_headers_avs(self,header): 		# headers for the AVS output format
-		lns_num = int(header.strip().split(' ')[0])
-		self._variables.append('n')
-		for i in range(lns_num): 
-			ln = self._file.readline().strip().split(',')[0]
-			var = cont_var_names_avs[ln]
-			self._variables.append(var)
-	def _read_data_avs(self,fname):		# read data in AVS format
-		lni = fname.split('.',1)[1]
-		lni = lni.split('_',1)
-		time = float(lni[0])
-		if lni[1].startswith('days'):
-			time = time*24*2600
-		self._times.append(time)		
-		if self._variables: 
-			for var in self.variables: lni=self._file.readline()
-		lns = self._file.readlines()
-		data = []
-		for ln in lns: data.append([float(d) for d in ln.strip().split()])
-		data = np.array(data)
+	def _setup_headers_avs(self,headers,files): 		# headers for the AVS output format
+		for header,file in zip(headers,files):
+			lns_num = int(header.strip().split()[0])
+			fp = open(file)
+			lns = [fp.readline() for i in range(lns_num+1)][1:]
+			fp.close()
+			self._variables.append('n')
+			for ln in lns:
+				varname = ln.strip().split(',')[0]
+				if varname in cont_var_names_avs.keys():
+					var = cont_var_names_avs[varname]
+				else: var = varname
+				if var not in self._variables: self._variables.append(var)
+	def _read_data_avs(self,files,mat_file):		# read data in AVS format
+		datas = []
+		for file in sorted(files):
+			first = (file == sorted(files)[0])
+			fp = open(file,'rU')
+			lns = fp.readlines()
+			lns = lns[int(float(lns[0].split()[0]))+1:]
+			
+			if first: 
+				file = file.split('_node')[0]
+				file = file.split('_sca')[0]
+				file = file.split('_con')[0]
+				file = file.split('_vec')[0]
+				file = file.split('_days')[0]						
+				file = file.split('.')
+				file = [fl for fl in file if fl.isdigit() or 'E-' in fl]
+				time = float('.'.join(file))
+				self._times.append(time)
+			
+			if first: 
+				datas.append(np.array([[float0(d) for d in ln.strip().split()] for ln in lns]))
+			else:
+				datas.append(np.array([[float0(d) for d in ln.strip().split()[4:]] for ln in lns]))
+			
+		data = np.concatenate(datas,1)
 		self._data[time] = dict([(var,data[:,icol]) for icol,var in enumerate(self.variables)])
 	def _setup_headers_surf(self,headers): 		# headers for the SURF output format
 		for header in headers:
