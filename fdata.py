@@ -7460,13 +7460,34 @@ class foutput(object):
 			nds.sort()
 			return nds
 		return None
-	nodes = property(_get_nodes) #: (*lst*) List of node indices for which node output available
+	nodes = property(_get_nodes)
+	
+	def _get_variables(self):
+		""" Get Variables
+		Returns the variables in the foutput object or returns None if no 
+		variables. """
+
+		for type in ['water','gas','tracer1']:
+			for node in self.nodes:
+				if self._node[type][node] == None: 
+					continue
+					
+				vrbls = self._node[type][node].keys()
+				vrbls.sort()
+				
+				return vrbls
+			
+		return None
+
+	variables = property(_get_variables)
+    
 	def _get_components(self): 
 		cpts = []
 		for type in ['water','gas','tracer1','tracer2']:		
 			if self._node[type] != None: cpts.append(type)
 		return cpts
 	components = property(_get_components) #: (**) List of component names for which nodal information available
+	
 	def _get_times(self): return self._times
 	times = property(_get_times) #: (*ndarray*) Vector of output times.
 	def _get_filename(self): return self._filename
