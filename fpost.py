@@ -2740,7 +2740,7 @@ def fdiff( in1, in2, format='diff', times=[], variables=[], components=[], nodes
 		print "ERROR: fpost objects are not of the same type: "+str(type(in1))+" and "+str(type(in2))
 		return
 	if isinstance(in1, fcontour) or isinstance(in1, fhistory) or 'foutput' in str(in1.__class__):
-		# Find common times
+		# Find common timesclear
 		t = np.intersect1d(in1.times,in2.times)
 		if len(t) == 0:
 			print "ERROR: fpost object times do not have any matching values"
@@ -2782,7 +2782,7 @@ def fdiff( in1, in2, format='diff', times=[], variables=[], components=[], nodes
 	#Takes the difference of two fhistory objects.	
 	elif isinstance(in1, fhistory):
 		# Find common variables
-		v = np.intersect1d(in1.variables, in2.variables)		
+		v = np.intersect1d(in1.variables, in2.variables)
 		if len(v) == 0:
 			print "ERROR: fhistory object variables do not have any matching values"
 			return
