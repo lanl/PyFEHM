@@ -1056,7 +1056,7 @@ class fgrid(object):				#Grid object.
 			nds = np.zeros((1,len(materials)))[0]
 			for nd in el.nodes:
 				for i,material in enumerate(materials):
-					if material in nd.zonelist: 
+					if material in [zn.name for zn in nd.zonelist]: 
 						nds[i] +=1
 						break
 			num = materials.index(materials[np.argmax(nds)])
