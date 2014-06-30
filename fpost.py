@@ -1555,7 +1555,10 @@ class fhistory(object):						# Reading and plotting methods associated with hist
 		:type filename: str
 		'''
 		from glob import glob
-		files=glob(filename)
+		import re
+		glob_pattern = re.sub(r'\[','[[]',filename)
+		glob_pattern = re.sub(r'(?<!\[)\]','[]]', glob_pattern)
+		files=glob(glob_pattern)
 		configured=False
 		for i,fname in enumerate(files):
 			if self._verbose:
