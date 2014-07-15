@@ -300,6 +300,9 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 	def __getitem__(self,key):
 		if key in self.times:
 			return self._data[key]
+		elif np.min(abs(self.times-key)/self.times)<.01:
+			ind = np.argmin(abs(self.times-key))
+			return self._data[self.times[ind]]
 		else: return None
 	def read(self,filename,latest=False,first=False,nearest=[]): 						# read contents of file
 		'''Read in FEHM contour output information.
