@@ -2894,7 +2894,7 @@ class fdata(object):						#FEHM data file.
 						 self._read_time,self._read_ctrl,self._read_iter,self._read_macro,self._read_macro,
 						 self._read_boun,self._read_macro,self._read_strs,self._read_text,self._read_sol,
 						self._read_nfinv,self._read_hist,self._read_histnode,self._read_carb,self._read_model,
-						 self._read_macro,self._read_nobr,self._read_head, self._read_flxz,self._read_rlpm,self._read_macro,
+						 self._read_macro,self._read_nobr,self._read_flxz,self._read_rlpm,self._read_macro,
 						 self._read_trac,self._read_model,self._read_model,self._read_vapl,self._read_adif,
 						 self._read_ngas,self._read_flxo]))
 		self._sections=[]
