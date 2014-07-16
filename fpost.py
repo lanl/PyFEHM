@@ -2162,6 +2162,7 @@ class fvtk(object):
 		self.path = fpath(parent = self)
 		self.path.filename = filename
 		self.data = None
+		self.csv = None
 		self.contour = contour
 		self.variables = []
 		self.materials = []
@@ -2244,8 +2245,8 @@ class fvtk(object):
 			self.add_material('perm_y',blank)
 			self.add_material('perm_z',blank)
 
-		props = np.array([[nd.density, nd.porosity, nd.specific_heat, nd.youngs_modulus,nd.poissons_ratio,nd.thermal_expansion,nd.pressure_coupling,nd.Ti,nd.Pi,nd.Si] 	for nd in self.parent.grid.nodelist])
-		names = ['density','porosity','specific_heat','youngs_modulus','poissons_ratio','thermal_expansion','pressure_coupling','Pi','Ti','Si']
+		props = np.array([[nd.density, nd.porosity, nd.specific_heat, nd.youngs_modulus,nd.poissons_ratio,nd.thermal_expansion,nd.pressure_coupling] 	for nd in self.parent.grid.nodelist])
+		names = ['density','porosity','specific_heat','youngs_modulus','poissons_ratio','thermal_expansion','pressure_coupling']
 		for name, column in zip(names,props.T):
 			self.add_material(name,column)
 	def add_material(self,name,data):
@@ -2612,56 +2613,57 @@ class fvtk(object):
 					'cont_rep.Visibility = 1',
 					]			
 		
-		################################### load in history output ###################################	
-		lns += ['xyview = CreateXYPlotView()']
-		lns += ['xyview.BottomAxisRange = [0.0, 5.0]']
-		lns += ['xyview.TopAxisRange = [0.0, 6.66]']
-		lns += ['xyview.ViewTime = 0.0']
-		lns += ['xyview.LeftAxisRange = [0.0, 10.0]']
-		lns += ['xyview.RightAxisRange = [0.0, 6.66]']
-		lns += ['']
-		if os.path.isfile(self.csv.filename):
-			lns += ['hout = CSVReader( FileName=[r\''+self.csv.filename+'\'] )']
-			lns += ['RenameSource("history_output",hout)']
-			
-			fp = open(self.csv.filename)
-			ln = fp.readline().rstrip()
-			fp.close()
-			headers = [lni for lni in ln.split(',')]
-			
-			# put variables in order to account for diff or time derivatives
-			vars = []
-			for variable in self.csv.history.variables:
-				vars.append(variable)
-				if self.csv.diff: vars.append('diff_'+variable)
-				#if self.time_derivatives: vars.append('d'+variable+'_dt')
-			for i,variable in enumerate(vars):
-				plot_title = variable+'_history'
-				lns += []
-				lns += [plot_title+' = PlotData()']
-				lns += ['RenameSource("'+plot_title+'",'+plot_title+')']
+		if self.csv is not None:
+			################################### load in history output ###################################	
+			lns += ['xyview = CreateXYPlotView()']
+			lns += ['xyview.BottomAxisRange = [0.0, 5.0]']
+			lns += ['xyview.TopAxisRange = [0.0, 6.66]']
+			lns += ['xyview.ViewTime = 0.0']
+			lns += ['xyview.LeftAxisRange = [0.0, 10.0]']
+			lns += ['xyview.RightAxisRange = [0.0, 6.66]']
+			lns += ['']
+			if os.path.isfile(self.csv.filename):
+				lns += ['hout = CSVReader( FileName=[r\''+self.csv.filename+'\'] )']
+				lns += ['RenameSource("history_output",hout)']
 				
-				lns += ['mr = Show()']
-				lns += ['mr = GetDisplayProperties('+plot_title+')']
-				lns += ['mr.XArrayName = \'time\'']
-				lns += ['mr.UseIndexForXAxis = 0']
-				lns += ['mr.SeriesColor = [\'time\', \'0\', \'0\', \'0\']']
-				lns += ['mr.AttributeType = \'Row Data\'']
-				switch_off = [header for header in headers if not header.strip().startswith(variable+':')]
-				ln = 'mr.SeriesVisibility = [\'vtkOriginalIndices\', \'0\', \'time\', \'0\''
-				for header in switch_off:
-					ln+=', \''+header+'\',\'0\''
+				fp = open(self.csv.filename)
+				ln = fp.readline().rstrip()
+				fp.close()
+				headers = [lni for lni in ln.split(',')]
+				
+				# put variables in order to account for diff or time derivatives
+				vars = []
+				for variable in self.csv.history.variables:
+					vars.append(variable)
+					if self.csv.diff: vars.append('diff_'+variable)
+					#if self.time_derivatives: vars.append('d'+variable+'_dt')
+				for i,variable in enumerate(vars):
+					plot_title = variable+'_history'
+					lns += []
+					lns += [plot_title+' = PlotData()']
+					lns += ['RenameSource("'+plot_title+'",'+plot_title+')']
 					
-				#lns += ['mr.SeriesVisibility = [\'vtkOriginalIndices\', \'0\', \'time\', \'0\']']
-				lns += [ln+']']
-				if i != (len(vars)-1):
-					lns += ['mr.Visibility = 0']
-		
-		lns += ['']
-		lns += ['AnimationScene1.ViewModules = [ RenderView1, SpreadSheetView1, XYChartView1 ]']
-		
-		lns += ['Render()']
-		
+					lns += ['mr = Show()']
+					lns += ['mr = GetDisplayProperties('+plot_title+')']
+					lns += ['mr.XArrayName = \'time\'']
+					lns += ['mr.UseIndexForXAxis = 0']
+					lns += ['mr.SeriesColor = [\'time\', \'0\', \'0\', \'0\']']
+					lns += ['mr.AttributeType = \'Row Data\'']
+					switch_off = [header for header in headers if not header.strip().startswith(variable+':')]
+					ln = 'mr.SeriesVisibility = [\'vtkOriginalIndices\', \'0\', \'time\', \'0\''
+					for header in switch_off:
+						ln+=', \''+header+'\',\'0\''
+						
+					#lns += ['mr.SeriesVisibility = [\'vtkOriginalIndices\', \'0\', \'time\', \'0\']']
+					lns += [ln+']']
+					if i != (len(vars)-1):
+						lns += ['mr.Visibility = 0']
+			
+			lns += ['']
+			lns += ['AnimationScene1.ViewModules = [ RenderView1, SpreadSheetView1, XYChartView1 ]']
+			
+			lns += ['Render()']
+			
 		f.writelines('\n'.join(lns))
 		f.close()
 	def _get_filename(self): return self.path.absolute_to_file+os.sep+self.path.filename

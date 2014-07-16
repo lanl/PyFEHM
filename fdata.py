@@ -4699,7 +4699,6 @@ class fdata(object):						#FEHM data file.
 			except: pass
 		
 		if self.work_dir: os.chdir(cwd)
-		
 	def paraview(self,exe = dflt.paraview_path,filename = 'temp.vtk',contour = None, history = None, show='kx',zones = 'user',diff = True,zscale = 1.,
 		spatial_derivatives = False, time_derivatives = False):
 		'''Exports the model object to VTK and loads in paraview.
