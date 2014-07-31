@@ -2911,7 +2911,11 @@ def fdiff( in1, in2, format='diff', times=[], variables=[], components=[], nodes
 				diff = []
 				while i < len(times):
 					if format is 'diff':
-						diff.append(in1[v][n][i]-in2[v][n][i]) 	
+					    #Quick fix to handle ptrk files.
+					    if isinstance(in1, fptrk):
+					        diff.append(in1[v][n]-in2[v][n]) 
+					    else:
+						    diff.append(in1[v][n][i]-in2[v][n][i])	
 					elif format is 'relative':
 						diff.append((in1[t][v] - in2[t][v])/np.abs(in2[t][v])) 
 					elif format is 'percent':
