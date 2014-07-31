@@ -1956,6 +1956,58 @@ class ftracer(fhistory): 					# Derived class of fhistory, for tracer output
 		if data[-1,0]<data[-2,0]: data = data[:-1,:]
 		self._times = np.array(data[:,0])
 		self._data[var_key] = dict([(node,data[:,icol+1]) for icol,node in enumerate(self.nodes)])
+class fptrk(fhistory): 					# Derived class of fhistory, for particle tracking output
+	'''Tracer history output information object.
+	'''
+	def __init__(self,filename=None,verbose=True):
+		super(fptrk,self).__init__(filename, verbose)
+		self._filename=None	
+		self._times=[]	
+		self._verbose = verbose
+		self._data={}
+		self._row=None
+		self._nodes=[0]	
+		self._variables=[] 
+		self._keyrows={}
+		self.column_name=[]
+		self.num_columns=0
+		self._nkeys=1
+		if filename: self._filename=filename; self.read(filename)
+	def read(self,filename): 						# read contents of file
+		'''Read in FEHM particle tracking output information. Index by variable name.
+		
+		:param filename: File name for output data, can include wildcards to define multiple output files.
+		:type filename: str
+		'''
+		from glob import glob
+		import re
+		glob_pattern = re.sub(r'\[','[[]',filename)
+		glob_pattern = re.sub(r'(?<!\[)\]','[]]', glob_pattern)
+		files=glob(glob_pattern)
+		configured=False
+		for i,fname in enumerate(files):
+			if self._verbose:
+				pyfehm_print(fname)
+			self._file=open(fname,'rU')
+			header=self._file.readline()
+			if header.strip()=='': continue				# empty file
+			header=self._file.readline()
+			self._setup_headers_default(header)
+			self._read_data_default()
+			self._file.close()
+	def _setup_headers_default(self,header):
+		header=header.strip().split('"')[3:-1]
+		header = [h for h in header if h != ' ']
+		for var in header: self._variables.append(var)
+	def _read_data_default(self):
+		lns = self._file.readlines()
+		data = []
+		for ln in lns: data.append([float(d) for d in ln.strip().split()])
+		data = np.array(data)
+		if data[-1,0]<data[-2,0]: data = data[:-1,:]
+		self._times = np.array(data[:,0])
+		self._data = dict([(var,data[:,icol+1]) for icol,var in enumerate(self.variables)])
+
 class multi_pdf(object):
 	'''Tool for making a single pdf document from multiple eps files.'''
 	def __init__(self,combineString = 'gswin64',
@@ -2193,7 +2245,9 @@ class fvtk(object):
 		cns = [[nd.index-1 for nd in el.nodes] for el in self.parent.grid.elemlist]
 		
 		# make grid
-		if len(cns[0]) == 4:
+		if len(cns[0]) == 3:
+			self.data = fVtkData(fUnstructuredGrid(nds,triangle=cns),'PyFEHM VTK model output')
+		elif len(cns[0]) == 4:
 			self.data = fVtkData(fUnstructuredGrid(nds,tetra=cns),'PyFEHM VTK model output')
 		elif len(cns[0]) == 8:
 			self.data = fVtkData(fUnstructuredGrid(nds,hexahedron=cns),'PyFEHM VTK model output')
