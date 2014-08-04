@@ -2973,8 +2973,10 @@ def sort_tec_files(files):
 	
 	times = []
 	for file in files: 
-		for type in ['_sca_node','_vec_node','_con_node']:
-			if type in file: times.append(float(file.split(type)[0].split('.')[-1]))
+		for type in ['_days_sca_node','_days_vec_node','_days_con_node','_sca_node','_vec_node','_con_node']:
+			if type in file: 				
+				times.append(float(join(file.split(type)[0].split('.')[1:],'.')))
+				break
 	times = sorted(enumerate(times), key=lambda x: x[1])
 	
 	paths = [paths[ind] for ind,time in times]
