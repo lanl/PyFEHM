@@ -78,12 +78,13 @@ def repair_grid(gridfilename):
 class fnode(object):				#Node object.
 	""" FEHM grid node object.
 	"""
-	__slots__ = ['_index','_position','_connections','_elements','_generator','_zone','_connected_nodes',
+	__slots__ = ['_silent','_index','_position','_connections','_elements','_generator','_zone','_connected_nodes',
 		'_permeability','_conductivity','_density','_specific_heat','_porosity','_youngs_modulus','_poissons_ratio','_thermal_expansion',
 		'_pressure_coupling','_Pi','_Ti','_Si','_S_co2gi','_S_co2li','_co2aqi','_strsi','_dispi','_P','_T','_S',
 		'_S_co2g','_S_co2l','_co2aq','_strs','_disp','_vol','_rlpmodel','_permmodel','_pormodel','_condmodel']
 	def __init__(self,index,position):		
-		self._index = index			
+		self._index = index		
+		self._silent = dflt.silent
 		self._position=position	
 		self._connected_nodes = []
 		self._connections = []	
@@ -472,9 +473,10 @@ class fgrid(object):				#Grid object.
 	""" FEHM grid object.
 	
 	"""
-	__slots__ = ['_nodelist','_node','_connlist','_conn','_elemlist','_elem','_octree','_dimensions','_parent',
+	__slots__ = ['_silent','_nodelist','_node','_connlist','_conn','_elemlist','_elem','_octree','_dimensions','_parent',
 		'_full_connectivity','_path','_stor','_pos_matrix']
 	def __init__(self,full_connectivity=True):
+		self._silent = dflt.silent
 		self._nodelist=[]			
 		self._node={}				
 		self._connlist=[]			
@@ -513,12 +515,12 @@ class fgrid(object):				#Grid object.
 		self._full_connectivity = full_connectivity
 		self._path.filename = gridfilename 
 		if not os.path.isfile(gridfilename):
-			pyfehm_print('ERROR: file at '+self._path.full_path+' not found.')
+			pyfehm_print('ERROR: file at '+self._path.full_path+' not found.',self._silent)
 			return
 		if storfilename:
 			self._stor.filename = storfilename 
 			if not os.path.isfile(storfilename):
-				pyfehm_print('ERROR: file at '+self._stor.full_path+' not found.')
+				pyfehm_print('ERROR: file at '+self._stor.full_path+' not found.',self._silent)
 				return
 		# assess format of file	from first two lines
 		infile = open(self._path.full_path)
@@ -541,7 +543,7 @@ class fgrid(object):				#Grid object.
 			self.write(newgridfilename, 'fehm')		# write out equivalent fehm grid
 			if self._parent: self._parent.files.grid = self._path.filename
 		else:
-			pyfehm_print('ERROR: Unrecognized grid format.')
+			pyfehm_print('ERROR: Unrecognized grid format.',self._silent)
 			
 		if octree: self.add_nodetree()
 		else: self._pos_matrix = np.array([nd._position for nd in self._nodelist])
@@ -632,7 +634,7 @@ class fgrid(object):				#Grid object.
 		Ncons, Nnds, Nptrs, Nac, NconMax = map(int,storfile.readline().split())
 		Ncoef = Nptrs - Nnds - 1 # Number of connections in mesh
 		if Nac != 1:
-			pyfehm_print('ERROR: Vector or vector/scalar coefficients are not currently supported - stor will not be read in')
+			pyfehm_print('ERROR: Vector or vector/scalar coefficients are not currently supported - stor will not be read in',self._silent)
 			storfile.close()
 			return
 		# Read in volumes
@@ -718,7 +720,7 @@ class fgrid(object):				#Grid object.
 					nds1 = [el[1],el[2],el[3]]
 					nds2 = [el[2],el[3],el[1]]
 				else:
-					pyfehm_print('ERROR: unrecognized connectivity')
+					pyfehm_print('ERROR: unrecognized connectivity',self._silent)
 					return
 				for nd1,nd2 in zip(nds1,nds2):
 					if nd1>nd2: ndi = nd2; nd2 = nd1; nd1 = ndi
@@ -769,7 +771,7 @@ class fgrid(object):				#Grid object.
 			elif extension == 'stor': format = 'stor'
 		
 		if format == 'stor' and not self._full_connectivity:
-			pyfehm_print('ERROR: STOR file cannot be written without full connectivity information. Read or create grid file with flag full_connectivity=True')
+			pyfehm_print('ERROR: STOR file cannot be written without full connectivity information. Read or create grid file with flag full_connectivity=True',self._silent)
 			return
 
 		if format == 'stor': old_path = copy(self._path)		# save path
@@ -793,7 +795,7 @@ class fgrid(object):				#Grid object.
 		if format == 'fehm': self._write_fehm(outfile)
 		elif format == 'avs': self._write_avs(outfile)
 		elif format == 'stor': self._write_stor(outfile,remove_duplicates,recalculate_coefficients,compress_eps=compress_eps)
-		else: pyfehm_print('ERROR: Unrecognized format '+format+'.');return
+		else: pyfehm_print('ERROR: Unrecognized format '+format+'.',self._silent);return
 		
 		if format == 'stor': 
 			if not self._parent is None:
@@ -879,7 +881,7 @@ class fgrid(object):				#Grid object.
 			gcU[NgcU] = 0.
 			gcU = gcU[:NgcU+1]
 			gcU.sort()
-			pyfehm_print("Number of compressed connections: "+ str(len(gcU)))
+			pyfehm_print("Number of compressed connections: "+ str(len(gcU)),self._silent)
 			
 		# write file
 		outfile.write('fehmstor ascir8i4 PyFEHM Sparse Matrix Voronoi Coefficients\n')
@@ -1097,8 +1099,8 @@ class fgrid(object):				#Grid object.
 		self._conn = {}
 		self._connlist = []		 # Erase connlist
 		mincoef = np.min(geom_coefs) * tolerance # Determine minimum allowed coef
-		pyfehm_print("Minimum coefficient value to keep:"+str(mincoef))
-		pyfehm_print("Number of connections (incl. zeros):"+str(len(geom_coefs)))
+		pyfehm_print("Minimum coefficient value to keep:"+str(mincoef),self._silent)
+		pyfehm_print("Number of connections (incl. zeros):"+str(len(geom_coefs)),self._silent)
 		# Collect connections to keep (less than because coef are given negative sign)
 		for i,j in enumerate(keepcons):
 			if isinstance(j,fconn):
@@ -1114,7 +1116,7 @@ class fgrid(object):				#Grid object.
 		for con in self.connlist:
 			con.nodes[0].connections.append(con)
 			con.nodes[1].connections.append(con)
-		pyfehm_print("Number of connections (zeros removed):"+str(len(self.connlist)))
+		pyfehm_print("Number of connections (zeros removed):"+str(len(self.connlist)),self._silent)
 	def make(self,gridfilename,x,y,z,full_connectivity=True,octree=False,radial=False):
 		""" Generates an orthogonal mesh for input node positions. 
 		
@@ -1169,10 +1171,10 @@ class fgrid(object):				#Grid object.
 		
 		"""
 		if self.filename == None: 	
-			pyfehm_print('ERROR: a grid must first be loaded/created before a stor file can be created.')	
+			pyfehm_print('ERROR: a grid must first be loaded/created before a stor file can be created.',self._silent)	
 			return
 		if not os.path.isfile(exe): 
-			pyfehm_print('ERROR: cannot find lagrit executable at '+exe)
+			pyfehm_print('ERROR: cannot find lagrit executable at '+exe,self._silent)
 			return
 		
 		# assign default stor file name if none given
@@ -1321,7 +1323,7 @@ class fgrid(object):				#Grid object.
 			min_dist = 1.e10
 			nd = None
 			if self.octree.leaf(pos) == None:
-				pyfehm_print('point outside domain')
+				pyfehm_print('point outside domain',self._silent)
 				return None
 			lf = self.octree.leaf(pos)
 			min_dist= 1.e10
@@ -1618,7 +1620,7 @@ class fgrid(object):				#Grid object.
 		s.append(' ####---------------------------------------------------------####')
 		s.append('')
 		s = '\n'.join(s)
-		pyfehm_print(s)
+		pyfehm_print(s,self._silent)
 	def rotate(self,angle=0.,centre=[0.,0.]):
 		'''Rotates the grid by some angle about a specified vertical axis.
 		
@@ -1769,7 +1771,7 @@ class fmake(object): 				#Rectilinear grid constructor.
 		if xF and yF and zF: self.dimension = 3
 		elif (xF and yF and not zF) or (xF and zF and not yF) or (zF and yF and not xF): self.dimension = 2
 		else: 
-			pyfehm_print('ERROR: not enough dimensions specified')
+			pyfehm_print('ERROR: not enough dimensions specified',self._silent)
 			return
 		if self.dimension == 2: 
 			# create nodes

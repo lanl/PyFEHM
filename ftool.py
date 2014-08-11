@@ -253,8 +253,8 @@ def SI(quantity,unit=None):
 	except KeyError:
 		print unit +' not a valid unit for conversion'
 		return	
-def pyfehm_print(s):
-	if not dflt.silent: print s
+def pyfehm_print(s,silent):
+	if not silent: print s
 #-----------------------------------------------------------------------------------------------------
 #------------------------------ FUNCTIONS AND CLASSES FOR INTERNAL USE -------------------------------
 #-----------------------------------------------------------------------------------------------------
