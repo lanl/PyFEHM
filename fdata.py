@@ -4727,7 +4727,7 @@ class fdata(object):						#FEHM data file.
 		
 		if self.work_dir: os.chdir(cwd)
 	def paraview(self,exe = dflt.paraview_path,filename = 'temp.vtk',contour = None, history = None, show='kx',zones = 'user',diff = True,zscale = 1.,
-		spatial_derivatives = False, time_derivatives = False):
+		spatial_derivatives = False, time_derivatives = False, nodes = False):
 		'''Exports the model object to VTK and loads in paraview.
 		
 		:param exe: Path to Paraview executable.
@@ -4750,6 +4750,8 @@ class fdata(object):						#FEHM data file.
 		:type spatial_derivatives: bool
 		:param time_derivatives: Calculate new fields for time derivatives of contour data. For precision reasons, derivatives are calculated with units of 'per day'.
 		:type time_derivatives: bool
+		:param nodes: Show node locations (default False).
+		:type nodes: bool
 		'''
 		# check for empty contour object
 		self.write_vtk(filename=filename,contour=contour,diff=diff,zscale=zscale,spatial_derivatives=spatial_derivatives,time_derivatives=time_derivatives)
@@ -4760,7 +4762,7 @@ class fdata(object):						#FEHM data file.
 		self._vtk.show_zones=zones
 		
 		self._vtk.initial_display(show)
-		self._vtk.startup_script()
+		self._vtk.startup_script(nodes)
 		
 		p = Popen(exe+' --script=pyfehm_paraview_startup.py',shell=(not WINDOWS))		
 	def write_vtk(self, filename = 'temp.vtk',contour=None,diff = True,zscale = 1.,

@@ -2415,7 +2415,7 @@ class fvtk(object):
 			for var in cont_vars:
 				print '  - '+var
 			print ''
-	def startup_script(self):
+	def startup_script(self,nodes):
 		x0,x1 = self.parent.grid.xmin, self.parent.grid.xmax
 		y0,y1 = self.parent.grid.ymin, self.parent.grid.ymax
 		z0,z1 = self.parent.grid.zmin, self.parent.grid.zmax
@@ -2481,37 +2481,37 @@ class fvtk(object):
 			]
 			
 		################################### load in nodes as glyphs ###################################	
-		
 		ndRadius = np.min([con.distance for con in self.parent.grid.connlist])/10.
 		ndRadius = ndRadius*self.zscale
-		lns += [
-			'AnimationScene1 = GetAnimationScene()',
-			'AnimationScene1.AnimationTime = 0.0',
-			'rv.ViewTime = 0.0',
-			'source = FindSource("model")',
-			'SetActiveSource(source)',
-			'',
-			'G = Glyph( GlyphType="Arrow", GlyphTransform="Transform2" )',
-			'G.GlyphTransform = "Transform2"',
-			'G.GlyphType = "Sphere"',
-			'G.RandomMode = 0',
-			'G.ScaleMode = \'off\'',
-			'G.MaskPoints = 0',
-			'G.GlyphType.Radius = %10.5f'%ndRadius,
-			'',
-			'RenameSource("nodes", G)',
-			'',
-			'rv = GetRenderView()',
-			'mr = GetDisplayProperties(source)',
-			'dr = Show()',
-			'dr.ColorArrayName = (\'POINT_DATA\', \'n\')',
-			'dr.ScaleFactor = 1.1',
-			'dr.SelectionPointFieldDataArrayName = "nodes"',
-			'dr.EdgeColor = [0.0, 0.0, 0.5000076295109483]',
-			'dr.ColorArrayName = (\'POINT_DATA\', \'\')',
-			'dr.DiffuseColor = [0.,0.,0.]',
-			'dr.Visibility = 0',
-			]
+		if nodes:
+			lns += [
+				'AnimationScene1 = GetAnimationScene()',
+				'AnimationScene1.AnimationTime = 0.0',
+				'rv.ViewTime = 0.0',
+				'source = FindSource("model")',
+				'SetActiveSource(source)',
+				'',
+				'G = Glyph( GlyphType="Arrow", GlyphTransform="Transform2" )',
+				'G.GlyphTransform = "Transform2"',
+				'G.GlyphType = "Sphere"',
+				'G.RandomMode = 0',
+				'G.ScaleMode = \'off\'',
+				'G.MaskPoints = 0',
+				'G.GlyphType.Radius = %10.5f'%ndRadius,
+				'',
+				'RenameSource("nodes", G)',
+				'',
+				'rv = GetRenderView()',
+				'mr = GetDisplayProperties(source)',
+				'dr = Show()',
+				'dr.ColorArrayName = (\'POINT_DATA\', \'n\')',
+				'dr.ScaleFactor = 1.1',
+				'dr.SelectionPointFieldDataArrayName = "nodes"',
+				'dr.EdgeColor = [0.0, 0.0, 0.5000076295109483]',
+				'dr.ColorArrayName = (\'POINT_DATA\', \'\')',
+				'dr.DiffuseColor = [0.,0.,0.]',
+				'dr.Visibility = 0',
+				]
 		################################### load in zones as glyphs ###################################		
 		colors = [
 			[1.,1.,0.],
