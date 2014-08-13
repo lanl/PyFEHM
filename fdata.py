@@ -4726,7 +4726,7 @@ class fdata(object):						#FEHM data file.
 			except: pass
 		
 		if self.work_dir: os.chdir(cwd)
-	def paraview(self,exe = dflt.paraview_path,filename = 'temp.vtk',contour = None, history = None, show='kx',zones = 'user',diff = True,zscale = 1.,
+	def paraview(self,exe = dflt.paraview_path,filename = 'temp.vtk',contour = None, history = None, show='kx',zones = 'none',diff = True,zscale = 1.,
 		spatial_derivatives = False, time_derivatives = False, nodes = False):
 		'''Exports the model object to VTK and loads in paraview.
 		
@@ -4740,7 +4740,7 @@ class fdata(object):						#FEHM data file.
 		:type history: fhistory
 		:param show: Variable to show when Paraview starts up (default = 'kx').
 		:type show: str
-		:param zones: Zones to plot: 'user' = user-defined zones (default), 'all' = all zones except zone[0].
+		:param zones: Zones to plot: 'user' = user-defined zones, 'all' = all zones except zone[0], 'none' (default), or list of zone objects.
 		:type zones: str
 		:param diff: Flag to request PyFEHM to also plot differences of contour variables (from initial state) with time.
 		:type diff: bool

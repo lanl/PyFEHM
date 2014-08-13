@@ -2305,7 +2305,7 @@ class fvtk(object):
 			self.add_material(name,column)
 	def add_material(self,name,data):
 		if all(v is None for v in data): return 		# if all None, no data to include
-		data = np.array([dt if dt != None else -1.e30 for dt in data]) 		# check for None, replace with -1.e30
+		data = np.array([dt if dt is not None else -1.e30 for dt in data]) 		# check for None, replace with -1.e30
 		self.data.material.append(pv.Scalars(data,name=name,lookup_table='default'))
 		self.materials.append(name)
 		self.__setattr__(name+'_lim',[np.min(data),np.max(data)])
@@ -2563,6 +2563,8 @@ class fvtk(object):
 			if self.show_zones == 'user':		
 				if ('XMIN' in zone) or ('XMAX' in zone) or ('YMIN' in zone) or ('YMAX' in zone) or ('ZMIN' in zone) or ('ZMAX' in zone): continue
 			elif self.show_zones == 'none': continue
+			elif isinstance(self.show_zones,list):
+				if zone not in ['zone%04i_%s'%(zn.index,zn.name) for zn in self.show_zones]: continue
 			zones.append(zone)
 			cols.append(color)
 		
