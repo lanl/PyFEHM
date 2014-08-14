@@ -270,6 +270,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 	'''
 	def __init__(self,filename=None,latest=False,first=False,nearest=None):
 		self._filename=os_path(filename)
+		self._silent = dflt.silent
 		self._times=[]   
 		self._format = ''
 		self._data={}
@@ -323,7 +324,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 		else:
 			files=glob(filename)
 			if len(files)==0: 	
-				pyfehm_print('ERROR: '+filename+' not found')
+				pyfehm_print('ERROR: '+filename+' not found',self._silent)
 				return
 			# decision-making
 			mat_file = None
@@ -424,7 +425,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 		# read in output data
 		for i in range(FILES.shape[1]):
 			files = FILES[:,i]
-			for file in sort_tec_files(files): pyfehm_print(file)
+			for file in sort_tec_files(files): pyfehm_print(file,self._silent)
 			if not self._variables:
 				headers = []
 				for file in sort_tec_files(files):
@@ -436,7 +437,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 				if self._format=='avs': self._setup_headers_avs(headers,files)
 				elif self._format=='avsx': self._setup_headers_avsx(headers)
 				elif self._format=='surf': self._setup_headers_surf(headers)
-				else: pyfehm_print('ERROR: Unrecognised format');return
+				else: pyfehm_print('ERROR: Unrecognised format',self._silent);return
 				self.num_columns = len(self.variables)+1
 			if self.format == 'tec': self._read_data_tec(files,mat_file)
 			elif self.format == 'surf': self._read_data_surf(files,mat_file)
@@ -689,14 +690,14 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 			s.append('Options are')
 			for var in self.variables: s.append(var)
 			s = '\n'.join(s)
-			pyfehm_print(s)
+			pyfehm_print(s,self._silent)
 			return True
 		if time==None: 
 			s = ['ERROR: no plot time specified.']
 			s.append('Options are')
 			for time in self.times: s.append(time)
 			s = '\n'.join(s)
-			pyfehm_print(s)
+			pyfehm_print(s,self._silent)
 			return True
 		if not slice: 
 			s = ['Error: slice orientation undefined.']
@@ -706,7 +707,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 			s.append('[\'theta\',float] - angle measured anti-clockwise from +x')
 			s.append('[[float,float],[float,float]] - point to point')
 			s = '\n'.join(s)
-			pyfehm_print(s)
+			pyfehm_print(s,self._silent)
 			return True
 		return False
 	def new_variable(self,name,time,data): 	
@@ -720,10 +721,10 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 		:type data: lst[fl64]
 		'''
 		if time not in self.times: 
-			pyfehm_print('ERROR: supplied time must correspond to an existing time in fcontour.times')
+			pyfehm_print('ERROR: supplied time must correspond to an existing time in fcontour.times',self._silent)
 			return
 		if name in self.variables:
-			pyfehm_print('ERROR: there is already a variable called \''+name+'\', please choose a different name')
+			pyfehm_print('ERROR: there is already a variable called \''+name+'\', please choose a different name',self._silent)
 			return
 		self._data[time][name] = data
 		self._user_variables.append(name)
@@ -788,7 +789,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 					else:
 						points = np.transpose(np.array([dat['x'],dat['y'],dat['z']]))
 				elif slice[0].startswith('theta'): 
-					pyfehm_print('ERROR: theta slicing not supported yet')	
+					pyfehm_print('ERROR: theta slicing not supported yet',self._silent)	
 					return
 				xrange = np.linspace(xmin,xmax,divisions[0])
 				yrange = np.linspace(ymin,ymax,divisions[1])
@@ -1052,7 +1053,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 			
 		if perm_contrasts:
 			if 'perm_x' not in self.variables: 
-				pyfehm_print('WARNING: No permeability data to construct unit boundaries.')
+				pyfehm_print('WARNING: No permeability data to construct unit boundaries.',self._silent)
 			else:
 				X, Y, Z, k = self.slice(variable='perm_z', time=time, slice=slice, divisions=divisions, method=method)
 				# calculate derivatives in X and Y directions
@@ -1193,7 +1194,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 			s.append('Options are')
 			for var in self.variables: s.append(var)
 			s = '\n'.join(s)
-			pyfehm_print(s)
+			pyfehm_print(s,self._silent)
 			return True
 		if not ylabel: ylabel = variable
 		
@@ -1299,7 +1300,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 		ax.set_aspect('equal', 'datalim')
 		# make axes equal
 		if 'x' not in self.variables or 'y' not in self.variables or 'z' not in self.variables: 
-			pyfehm_print('ERROR: No xyz data, skipping') 
+			pyfehm_print('ERROR: No xyz data, skipping',self._silent) 
 			return
 		xmin,xmax = np.min(self[time]['x']),np.max(self[time]['x'])
 		ymin,ymax = np.min(self[time]['y']),np.max(self[time]['y'])
@@ -1404,7 +1405,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 		
 		'''
 		if 'n' not in self.variables: 
-			pyfehm_print('Node information not available')
+			pyfehm_print('Node information not available',self._silent)
 			return
 		nd = np.where(self[self.times[0]]['n']==node)[0][0]
 		if time == None and variable == None:
@@ -1416,7 +1417,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 					outdat[k].append(dat[k][nd])
 		elif time == None:
 			if variable not in self.variables: 
-				pyfehm_print('ERROR: no variable by that name')
+				pyfehm_print('ERROR: no variable by that name',self._silent)
 				return
 			outdat = []
 			for t in self.times:
@@ -1516,6 +1517,7 @@ class fhistory(object):						# Reading and plotting methods associated with hist
 	'''
 	def __init__(self,filename=None,verbose=True):
 		self._filename=None	
+		self._silent = dflt.silent
 		self._format = ''
 		self._times=[]	
 		self._verbose = verbose
@@ -1565,7 +1567,7 @@ class fhistory(object):						# Reading and plotting methods associated with hist
 		configured=False
 		for i,fname in enumerate(files):
 			if self._verbose:
-				pyfehm_print(fname)
+				pyfehm_print(fname,self._silent)
 			self._file=open(fname,'rU')
 			header=self._file.readline()
 			if header.strip()=='': continue				# empty file
@@ -1593,7 +1595,7 @@ class fhistory(object):						# Reading and plotting methods associated with hist
 					if i==10: sum_file=True; break
 				if sum_file: continue
 				self._setup_headers_default(header)
-			else: pyfehm_print('Unrecognised format');return
+			else: pyfehm_print('Unrecognised format',self._silent);return
 			if not configured:
 				self.num_columns = len(self.nodes)+1
 			if self.num_columns>0: configured=True
@@ -1685,20 +1687,20 @@ class fhistory(object):						# Reading and plotting methods associated with hist
 		:type scale_t: fl64
 		'''
 		save = os_path(save)
-		if not node: pyfehm_print('ERROR: no plot node specified.'); return
+		if not node: pyfehm_print('ERROR: no plot node specified.',self._silent); return
 		if not variable: 
 			s = ['ERROR: no plot variable specified.']
 			s.append('Options are')
 			for var in self.variables: s.append(var)
 			s = '\n'.join(s)
-			pyfehm_print(s)
+			pyfehm_print(s,self._silent)
 			return True
 		if not node: 
 			s = ['ERROR: no plot node specified.']
 			s.append('Options are')
 			for node in self.nodes: s.append(node)
 			s = '\n'.join(s)
-			pyfehm_print(s)
+			pyfehm_print(s,self._silent)
 			return True
 		
 		plt.clf()
@@ -1741,7 +1743,7 @@ class fhistory(object):						# Reading and plotting methods associated with hist
 		:type data: lst[fl64]
 		'''
 		if node not in self.nodes: 
-			pyfehm_print('ERROR: supplied node must correspond to an existing node in fhistory.nodes')
+			pyfehm_print('ERROR: supplied node must correspond to an existing node in fhistory.nodes',self._silent)
 			return
 		if name not in self._user_variables:
 			self._data.update({name:dict([(nd,None) for nd in self.nodes])})
@@ -1874,6 +1876,7 @@ class fnodeflux(object): 					# Reading and plotting methods associated with int
 	'''
 	def __init__(self,filename=None):
 		self._filename = filename
+		self._silent = dflt.silent
 		self._nodepairs = []
 		self._times = []
 		self._timesteps = []
@@ -1890,7 +1893,7 @@ class fnodeflux(object): 					# Reading and plotting methods associated with int
 		:type filename: str
 		'''
 		if not os.path.isfile(filename):
-			pyfehm_print('ERROR: cannot find file at '+filename)
+			pyfehm_print('ERROR: cannot find file at '+filename,self._silent)
 			return
 		fp = open(filename)
 		lns = fp.readlines()
@@ -1962,6 +1965,7 @@ class fptrk(fhistory): 					# Derived class of fhistory, for particle tracking o
 	def __init__(self,filename=None,verbose=True):
 		super(fptrk,self).__init__(filename, verbose)
 		self._filename=None	
+		self._silent = dflt.silent
 		self._times=[]	
 		self._verbose = verbose
 		self._data={}
@@ -1987,7 +1991,7 @@ class fptrk(fhistory): 					# Derived class of fhistory, for particle tracking o
 		configured=False
 		for i,fname in enumerate(files):
 			if self._verbose:
-				pyfehm_print(fname)
+				pyfehm_print(fname,self._silent)
 			self._file=open(fname,'rU')
 			header=self._file.readline()
 			if header.strip()=='': continue				# empty file
@@ -2013,6 +2017,7 @@ class multi_pdf(object):
 	def __init__(self,combineString = 'gswin64',
 		save='multi_plot.pdf',files = [],delete_files = True):
 		self.combineString = combineString
+		self._silent = dflt.silent
 		self._save = os_path(save)
 		self._delete_files = delete_files
 		self._assign_files(files)
@@ -2023,7 +2028,7 @@ class multi_pdf(object):
 		elif isinstance(files,dict):
 			ks = files.keys()
 			for k in ks:
-				if not isinstance(k,int):pyfehm_print('ERROR: Dictionary keys must be integers.');return
+				if not isinstance(k,int):pyfehm_print('ERROR: Dictionary keys must be integers.',self._silent);return
 			self._files = files
 		elif isinstance(files,str):
 			self._files = dict(((1,files),))
