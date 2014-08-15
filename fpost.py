@@ -635,6 +635,9 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 				lni = ln.split('"')[1]
 				time = lni.split('days')[0].strip()
 				time = float(time.split()[-1].strip())
+				try:
+					if time<self._times[0]: return
+				except: pass
 				self._times.append(time)
 				nds = None
 				if 'N =' in ln: 
@@ -661,13 +664,13 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 			j = 0
 			for var in self.variables:
 				if var == 'x': 
-					data2.append(self._data[self.times[0]]['x'])
+					data2.append(self._data[self._times[0]]['x'])
 				elif var == 'y': 
-					data2.append(self._data[self.times[0]]['y'])
+					data2.append(self._data[self._times[0]]['y'])
 				elif var == 'z': 
-					data2.append(self._data[self.times[0]]['z'])
+					data2.append(self._data[self._times[0]]['z'])
 				elif var == 'zone': 
-					data2.append(self._data[self.times[0]]['zone'])
+					data2.append(self._data[self._times[0]]['zone'])
 				else: 
 					data2.append(data[:,j]); j +=1
 			data = np.transpose(np.array(data2))
@@ -767,7 +770,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 				if slice[0].startswith('y'):
 					xmin = np.min(dat['x']);xmax = np.max(dat['x'])
 					ymin = np.min(dat['z']);ymax = np.max(dat['z'])		
-					if slice[1] == None:
+					if slice[1] is None:
 						points = np.transpose(np.array([dat['x'],dat['z'],np.ones((1,len(dat['z'])))[0]]))
 						slice[1] = 1
 					else:
@@ -775,7 +778,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 				elif slice[0].startswith('x'):
 					xmin = np.min(dat['y']);xmax = np.max(dat['y'])
 					ymin = np.min(dat['z']);ymax = np.max(dat['z'])		
-					if slice[1] == None:
+					if slice[1] is None:
 						points = np.transpose(np.array([dat['y'],dat['z'],np.ones((1,len(dat['z'])))[0]]))
 						slice[1] = 1
 					else:
@@ -783,7 +786,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 				elif slice[0].startswith('z'):
 					xmin = np.min(dat['x']);xmax = np.max(dat['x'])
 					ymin = np.min(dat['y']);ymax = np.max(dat['y'])		
-					if slice[1] == None:
+					if slice[1] is None:
 						points = np.transpose(np.array([dat['x'],dat['y'],np.ones((1,len(dat['y'])))[0]]))
 						slice[1] = 1
 					else:
@@ -1408,14 +1411,14 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 			pyfehm_print('Node information not available',self._silent)
 			return
 		nd = np.where(self[self.times[0]]['n']==node)[0][0]
-		if time == None and variable == None:
+		if time is None and variable is None:
 			ks = copy(self.variables); ks.remove('n')
 			outdat = dict([(k,[]) for k in ks])
 			for t in self.times:
 				dat = self[t]
 				for k in outdat.keys():
 					outdat[k].append(dat[k][nd])
-		elif time == None:
+		elif time is None:
 			if variable not in self.variables: 
 				pyfehm_print('ERROR: no variable by that name',self._silent)
 				return
@@ -1424,7 +1427,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 				dat = self[t]
 				outdat.append(dat[variable][nd])
 			outdat = np.array(outdat)
-		elif variable == None:
+		elif variable is None:
 			ks = copy(self.variables); ks.remove('n')
 			outdat = dict([(k,self[time][k][nd]) for k in ks])			
 		else:
@@ -2228,6 +2231,7 @@ class fvtk(object):
 		self.spatial_derivatives = spatial_derivatives
 		self.time_derivatives = time_derivatives
 		self.zscale = zscale
+		self.wells = None
 	def __getstate__(self):
 		return dict((k, getattr(self, k)) for k in self.__slots__)
 	def __setstate__(self, data_dict):
@@ -2376,6 +2380,47 @@ class fvtk(object):
 		if len(fls)>1:
 			self.contour_files = fls[1:]
 		return fls
+	def write_wells(self,wells):
+		"""Receives a dictionary of well track objects, creates the corresping vtk grid.
+		
+			This method lifted almost verbatim from PyTOUGH - thanks Adrian!
+		"""		
+		from vtk import vtkUnstructuredGrid,vtkPoints,vtkIdList,vtkCharArray,vtkXMLUnstructuredGridWriter
+		
+		nds = np.array([nd.position for nd in self.parent.grid.nodelist])
+		zmin = np.min(nds[:,2])
+		for k in wells.keys():
+			well = wells[k]
+			grid=vtkUnstructuredGrid()
+			num_deviations=np.shape(well.data)[0]
+			pts=vtkPoints()
+			pts.SetNumberOfPoints(num_deviations)
+			i=0
+			for p in well.data[:,0]:
+				pts.SetPoint(i,well.location+[(p-zmin)*self.zscale+zmin])
+				i+=1
+			grid.SetPoints(pts)
+			VTK_POLY_LINE=4
+			i=0
+			ids=vtkIdList()
+			for p in well.data[:,0]:
+				ids.InsertNextId(i)
+				i+=1
+			grid.InsertNextCell(VTK_POLY_LINE,ids)
+			namearray=vtkCharArray()
+			string_length=len(k)
+			namearray.SetName('Name')
+			namearray.SetNumberOfComponents(string_length)
+			namearray.SetNumberOfTuples(1)
+			namearray.SetTupleValue(0,well.name)
+			grid.GetCellData().AddArray(namearray)
+			
+			filename=k+'_wells.vtu'
+			writer=vtkXMLUnstructuredGridWriter()
+			writer.SetFileName(filename)
+			writer.SetInput(grid)
+			writer.Write()
+		self.wells = wells.keys()
 	def initial_display(self,show):
 		"""Determines what variable should be initially displayed."""
 		mat_vars = ['n','x','y','z','perm_x','perm_y','perm_z','porosity','density','cond_x','cond_y','cond_z']
@@ -2724,7 +2769,26 @@ class fvtk(object):
 			lns += ['AnimationScene1.ViewModules = [ RenderView1, SpreadSheetView1, XYChartView1 ]']
 			
 			lns += ['Render()']
+		
+		
+		######################################## load in well ########################################	
+		if self.wells is not None:
+			lns += ['model_rep.Representation = \'Outline\'']
+			for well in self.wells:	
 			
+				lns += ['%s=XMLUnstructuredGridReader(FileName=[\'%s\'])'%(well,os.getcwd().replace('\\','\\\\')+'\\\\'+well+'_wells.vtu')]
+				lns += ['RenameSource("%s", %s)'%(well,well)]
+				lns += ['SetActiveSource(%s)'%well]
+				lns += ['dr = Show()']
+				lns += ['dr.ScaleFactor = 1366.97490234375']
+				#lns += ['dr.ScalarOpacityUnitDistance = 13669.7490234375']
+				#lns += ['dr.EdgeColor = [0.0, 0.0, 0.5000076295109483]']
+				lns += ['dr.SelectionCellFieldDataArrayName = \'Name\'']
+				lns += ['mr = GetDisplayProperties(%s)'%well]
+				lns += ['mr.LineWidth=4.0']
+				lns += ['%s.PointArrayStatus = []'%well]
+				lns += ['%s.CellArrayStatus = [\'Name\']'%well]
+
 		f.writelines('\n'.join(lns))
 		f.close()
 	def _get_filename(self): return self.path.absolute_to_file+os.sep+self.path.filename

@@ -4727,7 +4727,7 @@ class fdata(object):						#FEHM data file.
 		
 		if self.work_dir: os.chdir(cwd)
 	def paraview(self,exe = dflt.paraview_path,filename = 'temp.vtk',contour = None, history = None, show='kx',zones = 'none',diff = True,zscale = 1.,
-		spatial_derivatives = False, time_derivatives = False, nodes = False):
+		spatial_derivatives = False, time_derivatives = False, nodes = False, wells = None):
 		'''Exports the model object to VTK and loads in paraview.
 		
 		:param exe: Path to Paraview executable.
@@ -4752,6 +4752,8 @@ class fdata(object):						#FEHM data file.
 		:type time_derivatives: bool
 		:param nodes: Show node locations (default False).
 		:type nodes: bool
+		:param wells: Dictionary of well tracks ([x,y,z] column list), keyed by name.
+		:type wells: dict
 		'''
 		# check for empty contour object
 		self.write_vtk(filename=filename,contour=contour,diff=diff,zscale=zscale,spatial_derivatives=spatial_derivatives,time_derivatives=time_derivatives)
@@ -4760,7 +4762,14 @@ class fdata(object):						#FEHM data file.
 			filename_csv = join(filename.split('.')[:-1],'.')+'.csv'
 			self.write_csv(filename=filename_csv,history=history,diff=diff,time_derivatives=time_derivatives)
 		self._vtk.show_zones=zones
-		
+		if wells: 
+			# check dictionary keys have no spaces, dashed
+			wells2 = []
+			for k in wells.keys():
+				knew = k.replace(' ','_')
+				knew = knew.replace('-','_')
+				wells2.append((knew,wells[k]))
+			self._vtk.write_wells(dict(wells2))
 		self._vtk.initial_display(show)
 		self._vtk.startup_script(nodes)
 		
