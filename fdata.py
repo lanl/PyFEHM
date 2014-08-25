@@ -2215,8 +2215,8 @@ class fhist(object):						#FEHM history output object.
 	"""FEHM history output object.
 	
 	"""
-	__slots__=['_silent','_format','_timestep_interval','_time_interval','_variables','_nodelist','_zonelist','_zoneflux']
-	def __init__(self,format=dflt.hist_format,timestep_interval=1,time_interval=1.e30,variables=[],nodelist=[],zonelist=[],zoneflux=[]):
+	__slots__=['_silent','_format','_timestep_interval','_time_interval','_variables','_nodelist','_zonelist','_zoneflux','_azonelist']
+	def __init__(self,format=dflt.hist_format,timestep_interval=1,time_interval=1.e30,variables=[],nodelist=[],zonelist=[],zoneflux=[],azonelist=[]):
 		self._format = format	
 		self._silent = dflt.silent		
 		self._timestep_interval=timestep_interval	
@@ -2228,6 +2228,8 @@ class fhist(object):						#FEHM history output object.
 		if zonelist: self._zonelist = zonelist
 		self._zoneflux=[]
 		if zoneflux: self._zoneflux = zoneflux
+		self._azonelist=[]
+		if azonelist: self._azonelist = azonelist
 		if variables: self.variables=variables
 	def __repr__(self): 
 		retStr = self.format + ' history output:\n'
@@ -2256,6 +2258,9 @@ class fhist(object):						#FEHM history output object.
 	def _get_zoneflux(self): return self._zoneflux
 	def _set_zoneflux(self,value): self._zoneflux = value
 	zoneflux = property(_get_zoneflux, _set_zoneflux) #: (*lst[fzone,int]*) List of zone objects for which zone flux output required.
+	def _get_azonelist(self): return self._azonelist
+	def _set_azonelist(self,value): self._azonelist = value
+	azonelist = property(_get_azonelist, _set_azonelist) #: (*lst[fzone]*) List of zone objects for which zone history output required.
 	def _get_zone(self): return dict([(zn.index,zn) for zn in self.zonelist]+[(zn.name,zn) for zn in self.zonelist if zn.name != ''])
 	zone = property(_get_zone) #: (*dict[fzone]*) Dictionary of zones, indexed by number and name, for which history output is required.
 	def _get_info(self):
@@ -2276,8 +2281,15 @@ class fhist(object):						#FEHM history output object.
 			for nd in self.nodelist:
 				print '         '+str(nd.index)
 		if self.zonelist:
-			print '    for zones:'
+			print '    for nodes in zones:'
 			for zn in self.zonelist:
+				if zn.name: 
+					print '         '+str(zn.index)+' ('+zn.name+')'
+				else: 
+					print '         '+str(zn.index)
+		if self.azonelist:
+			print '    for zones:'
+			for zn in self.azonelist:
 				if zn.name: 
 					print '         '+str(zn.index)+' ('+zn.name+')'
 				else: 
@@ -3547,7 +3559,7 @@ class fdata(object):						#FEHM data file.
 				line=infile.readline().strip()
 				nums = line.split()
 				self.hist.nodelist.append(self.grid.node_nearest_point([float(num) for num in nums]))	
-		else:
+		elif 'block' == nums[0]:
 			more = True
 			while more:
 				line=infile.readline().strip()
@@ -3555,6 +3567,14 @@ class fdata(object):						#FEHM data file.
 				nums = line.split()
 				nums_zone,nums_params = nums[:3],nums[3:]
 				self.hist.zonelist.append(self._macro_zone(nums_zone))
+		elif 'azone' == nums[0]:
+			more = True
+			while more:
+				line=infile.readline().strip()
+				if not line: more = False; continue
+				nums = line.split()
+				nums_zone,nums_params = nums[:3],nums[3:]
+				self.hist.azonelist.append(self._macro_zone(nums_zone))
 	def _read_flxz(self,infile):								#Reads ZFLX macro.
 		line=infile.readline().strip()
 #		self._hist = fhist()
@@ -3587,7 +3607,7 @@ class fdata(object):						#FEHM data file.
 		else:
 			outfile.write('head\t'+str(self.head)+'\n')
 	def _write_hist(self,outfile):								#Writes HIST macro.
-		if not self.hist.nodelist and not self.hist.zonelist and not self.hist.zoneflux: _buildWarnings('WARNING: no zones or nodes specified for history output'); return
+		if not self.hist.nodelist and not self.hist.zonelist and not self.hist.azonelist and not self.hist.zoneflux: _buildWarnings('WARNING: no zones or nodes specified for history output'); return
 		if not self.hist.variables: _buildWarnings('WARNING: no variables requested in hist')
 		ws = _title_string('HISTORY OUTPUT REQUESTS',72)
 		outfile.write(ws)
@@ -3643,6 +3663,24 @@ class fdata(object):						#FEHM data file.
 				outfile.write('\n')
 			outfile.write('\n')
 			
+		if self.hist.azonelist: 
+			zns = []
+			for zn in self.hist.azonelist:
+				if isinstance(zn,int) or isinstance(zn,str): zns.append(self.zone[zn])
+				elif isinstance(zn,fzone): zns.append(zn)
+			self._write_zonn_one(outfile,zns)
+			outfile.write('node\n')
+			outfile.write('azone\n')
+			for zn in zns:
+				if isinstance(zn,int) or isinstance(zn,str): zn = self.zone[zn]
+				if isinstance(zn,tuple):
+					outfile.write(str(zn[0])+'\t'+str(zn[1])+'\t'+str(zn[2])+'\t')
+				else:
+					if not zn.index: outfile.write(str(1)+'\t'+'0\t0\t')
+					else: outfile.write(str(-zn.index)+'\t'+'0\t0\t') 
+				outfile.write('\n')
+			outfile.write('\n')
+
 		self._write_unparsed(outfile,'node')	
 		
 		if self.hist.nodelist:
