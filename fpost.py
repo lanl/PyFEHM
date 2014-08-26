@@ -1962,7 +1962,7 @@ class ftracer(fhistory): 					# Derived class of fhistory, for tracer output
 		if data[-1,0]<data[-2,0]: data = data[:-1,:]
 		self._times = np.array(data[:,0])
 		self._data[var_key] = dict([(node,data[:,icol+1]) for icol,node in enumerate(self.nodes)])
-class fptrk(fhistory): 					# Derived class of fhistory, for particle tracking output
+class fptrk(fhistory): 						# Derived class of fhistory, for particle tracking output
 	'''Tracer history output information object.
 	'''
 	def __init__(self,filename=None,verbose=True):
@@ -2382,44 +2382,14 @@ class fvtk(object):
 		return fls
 	def write_wells(self,wells):
 		"""Receives a dictionary of well track objects, creates the corresping vtk grid.
-		
-			This method lifted almost verbatim from PyTOUGH - thanks Adrian!
 		"""		
-		from vtk import vtkUnstructuredGrid,vtkPoints,vtkIdList,vtkCharArray,vtkXMLUnstructuredGridWriter
-		
-		nds = np.array([nd.position for nd in self.parent.grid.nodelist])
-		zmin = np.min(nds[:,2])
 		for k in wells.keys():
 			well = wells[k]
-			grid=vtkUnstructuredGrid()
-			num_deviations=np.shape(well.data)[0]
-			pts=vtkPoints()
-			pts.SetNumberOfPoints(num_deviations)
-			i=0
-			for p in well.data[:,0]:
-				pts.SetPoint(i,well.location+[(p-zmin)*self.zscale+zmin])
-				i+=1
-			grid.SetPoints(pts)
-			VTK_POLY_LINE=4
-			i=0
-			ids=vtkIdList()
-			for p in well.data[:,0]:
-				ids.InsertNextId(i)
-				i+=1
-			grid.InsertNextCell(VTK_POLY_LINE,ids)
-			namearray=vtkCharArray()
-			string_length=len(k)
-			namearray.SetName('Name')
-			namearray.SetNumberOfComponents(string_length)
-			namearray.SetNumberOfTuples(1)
-			namearray.SetTupleValue(0,well.name)
-			grid.GetCellData().AddArray(namearray)
-			
+			nds = np.array([[well.location[0],well.location[1],z] for z in well.data[:,0]])
+			cns = [[i,i+1] for i in range(np.shape(nds)[0]-1)]
+			grid = fVtkData(fUnstructuredGrid(nds,line=cns),'RAGE well track: %s'%well.name)
 			filename=k+'_wells.vtu'
-			writer=vtkXMLUnstructuredGridWriter()
-			writer.SetFileName(filename)
-			writer.SetInput(grid)
-			writer.Write()
+			grid.tofile(filename)
 		self.wells = wells.keys()
 	def initial_display(self,show):
 		"""Determines what variable should be initially displayed."""
