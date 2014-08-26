@@ -7559,14 +7559,14 @@ class foutput(object):
 			
 		return None
 
-	variables = property(_get_variables)
+	variables = property(_get_variables) #: (*lst*) List of variables available for the various components.
     
 	def _get_components(self): 
 		cpts = []
 		for type in ['water','gas','tracer1','tracer2']:		
 			if self._node[type] != None: cpts.append(type)
 		return cpts
-	components = property(_get_components) #: (**) List of component names for which nodal information available
+	components = property(_get_components) #: (*lst*) Component names for which nodal information available
 	
 	def _get_times(self): return self._times
 	times = property(_get_times) #: (*ndarray*) Vector of output times.

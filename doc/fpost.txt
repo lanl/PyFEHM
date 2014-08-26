@@ -95,6 +95,22 @@ Zone flux information is parsed using the :class:`~.fpost.fzoneflux` class, whic
 
 .. autoclass:: fpost.fzoneflux
 
+Tracers
+^^^^^^^
+
+Tracer information is parsed using the :class:`~.fpost.ftracer` class, which is a derived class of 
+:class:`~fpost.fhistory`. Where identical, methods and attributes are shown only for :class:`~.fpost.fhistory`.
+
+.. autoclass:: fpost.ftracer
+
+Particle tracking
+^^^^^^^^^^^^^^^^^
+
+Particle tracking information is parsed using the :class:`~.fpost.fptrk` class, which is a derived class of 
+:class:`~fpost.fhistory`. Where identical, methods and attributes are shown only for :class:`~.fpost.fhistory`.
+
+.. autoclass:: fpost.fptrk
+
 Attributes
 ^^^^^^^^^^
 

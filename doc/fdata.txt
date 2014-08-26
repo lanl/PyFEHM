@@ -626,11 +626,23 @@ For reference, the available macro lists and dictionaries are given below.
 .. autoattribute:: fdata.fdata.permmodel
 .. autoattribute:: fdata.fdata.permmodellist
 
+.. autoattribute:: fdata.fdata.plasticmodel
+.. autoattribute:: fdata.fdata.plasticmodellist
+
 .. autoattribute:: fdata.fdata.rlp
 .. autoattribute:: fdata.fdata.rlplist
 
 .. autoattribute:: fdata.fdata.rlpm
 .. autoattribute:: fdata.fdata.rlpmlist
+
+.. autoattribute:: fdata.fdata.tpor
+.. autoattribute:: fdata.fdata.tporlist
+
+.. autoattribute:: fdata.fdata.vcon
+.. autoattribute:: fdata.fdata.vconlist
+
+.. autoattribute:: fdata.fdata.ppor
+.. autoattribute:: fdata.fdata.pporlist
 
 Attributes: parameter dictionaries
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -785,6 +797,7 @@ Methods
 .. automethod:: fdata.fdata.write
 .. automethod:: fdata.fdata.run
 .. automethod:: fdata.fdata.paraview
+.. automethod:: fdata.fdata.picklable
 .. automethod:: fdata.fdata.write_vtk
 .. automethod:: fdata.fdata.add
 .. automethod:: fdata.fdata.delete
@@ -1169,8 +1182,6 @@ Species transport module
 Support of FEHM's trac macro is currently at 'stupid' level. The user supplies a list of zones required by the 
 macro and a file path to an auxiliary text file which contains the macro definition verbatim.
 
-Full support is in development.
-
 .. autoclass:: fdata.ftrac
 
 ftrac attributes
@@ -1215,3 +1226,31 @@ ftrac attributes
 .. .. automethod:: fdata.fspecies.add_tracer_concentration
 .. .. automethod:: fdata.fspecies.delete_tracer_concentration
   
+FEHM screen output
+------------------
+
+FEHM prints output information to the screen and to an output '*.outp' file. These output files can be parsed for information
+using :class:`.foutput` objects. Optional information such as FEHM input and grid file paths may be required.
+
+.. autoclass:: fdata.foutput
+
+Methods
+^^^^^^^
+
+.. autoattribute:: fdata.foutput.what
+
+foutput attributes
+^^^^^^^^^^^^^^^^^^
+
+.. autoattribute:: fdata.foutput.node
+.. autoattribute:: fdata.foutput.times
+.. autoattribute:: fdata.foutput.variables
+.. autoattribute:: fdata.foutput.components
+.. autoattribute:: fdata.foutput.filename
+
+Examples
+^^^^^^^^
+
+Read an FEHM output file
+
+  ``out=foutput('fehm.outp',input='fehmn.dat',grid='fehmn.grid')``
