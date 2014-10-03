@@ -2216,6 +2216,20 @@ class fVtkData(pv.VtkData):
 			f.close()
 			written_files.append(filename_int)
 		return written_files
+	def tofilewell(self,filename,format = 'ascii'):
+		"""Save VTK data to file.
+		"""
+		written_files = []
+		if not pv.common.is_string(filename):
+			raise TypeError,'argument filename must be string but got %s'%(type(filename))
+		if format not in ['ascii','binary']:
+			raise TypeError,'argument format must be ascii | binary'
+		filename = filename.strip()
+		
+		# first write material properties file
+		f = open(filename,'wb')
+		f.write(self.to_string(format=format,material=True))
+		f.close()
 class fvtk(object):
 	def __init__(self,parent,filename,contour,diff,zscale,spatial_derivatives,time_derivatives):
 		self.parent = parent
@@ -2383,13 +2397,15 @@ class fvtk(object):
 	def write_wells(self,wells):
 		"""Receives a dictionary of well track objects, creates the corresping vtk grid.
 		"""		
+		nds = np.array([nd.position for nd in self.parent.grid.nodelist])
+		zmin = np.min(nds[:,2])
 		for k in wells.keys():
 			well = wells[k]
-			nds = np.array([[well.location[0],well.location[1],z] for z in well.data[:,0]])
+			nds = np.array([[well.location[0],well.location[1],(z-zmin)*self.zscale+zmin] for z in well.data[:,0]])
 			cns = [[i,i+1] for i in range(np.shape(nds)[0]-1)]
 			grid = fVtkData(fUnstructuredGrid(nds,line=cns),'RAGE well track: %s'%well.name)
-			filename=k+'_wells.vtu'
-			grid.tofile(filename)
+			filename=k+'_wells.vtk'
+			grid.tofilewell(filename)
 		self.wells = wells.keys()
 	def initial_display(self,show):
 		"""Determines what variable should be initially displayed."""
@@ -2746,7 +2762,7 @@ class fvtk(object):
 			lns += ['model_rep.Representation = \'Outline\'']
 			for well in self.wells:	
 			
-				lns += ['%s=XMLUnstructuredGridReader(FileName=[r\'%s\'])'%(well,os.getcwd()+os.sep+well+'_wells.vtu')]
+				lns += ['%s=LegacyVTKReader(FileName=[r\'%s\'])'%(well,os.getcwd()+os.sep+well+'_wells.vtk')]
 				lns += ['RenameSource("%s", %s)'%(well,well)]
 				lns += ['SetActiveSource(%s)'%well]
 				lns += ['dr = Show()']
