@@ -2746,7 +2746,7 @@ class fvtk(object):
 			lns += ['model_rep.Representation = \'Outline\'']
 			for well in self.wells:	
 			
-				lns += ['%s=XMLUnstructuredGridReader(FileName=[\'%s\'])'%(well,os.getcwd().replace('\\','\\\\')+'\\\\'+well+'_wells.vtu')]
+				lns += ['%s=XMLUnstructuredGridReader(FileName=[r\'%s\'])'%(well,os.getcwd()+os.sep+well+'_wells.vtu')]
 				lns += ['RenameSource("%s", %s)'%(well,well)]
 				lns += ['SetActiveSource(%s)'%well]
 				lns += ['dr = Show()']
