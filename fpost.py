@@ -2404,6 +2404,8 @@ class fvtk(object):
 			nds = np.array([[well.location[0],well.location[1],(z-zmin)*self.zscale+zmin] for z in well.data[:,0]])
 			cns = [[i,i+1] for i in range(np.shape(nds)[0]-1)]
 			grid = fVtkData(fUnstructuredGrid(nds,line=cns),'RAGE well track: %s'%well.name)
+			grid.material.append(pv.Scalars(well.data[:,1] ,name='T',lookup_table='default'))
+		
 			filename=k+'_wells.vtk'
 			grid.tofilewell(filename)
 		self.wells = wells.keys()
@@ -2762,18 +2764,14 @@ class fvtk(object):
 			lns += ['model_rep.Representation = \'Outline\'']
 			for well in self.wells:	
 			
-				lns += ['%s=LegacyVTKReader(FileName=[r\'%s\'])'%(well,os.getcwd()+os.sep+well+'_wells.vtk')]
+				lns += ['%s=LegacyVTKReader(FileNames=[r\'%s\'])'%(well,os.getcwd()+os.sep+well+'_wells.vtk')]
 				lns += ['RenameSource("%s", %s)'%(well,well)]
 				lns += ['SetActiveSource(%s)'%well]
 				lns += ['dr = Show()']
 				lns += ['dr.ScaleFactor = 1366.97490234375']
-				#lns += ['dr.ScalarOpacityUnitDistance = 13669.7490234375']
-				#lns += ['dr.EdgeColor = [0.0, 0.0, 0.5000076295109483]']
 				lns += ['dr.SelectionCellFieldDataArrayName = \'Name\'']
 				lns += ['mr = GetDisplayProperties(%s)'%well]
 				lns += ['mr.LineWidth=4.0']
-				lns += ['%s.PointArrayStatus = []'%well]
-				lns += ['%s.CellArrayStatus = [\'Name\']'%well]
 
 		f.writelines('\n'.join(lns))
 		f.close()
