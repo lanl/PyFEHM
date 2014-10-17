@@ -336,6 +336,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 				if '_sca_node' in file and 'sca' not in file_types: file_types.append('sca')
 				if '_vec_node' in file and 'vec' not in file_types: file_types.append('vec')
 				if '_con_node' in file and 'con' not in file_types: file_types.append('con')
+				if '_hf_node' in file and 'hf' not in file_types: file_types.append('hf')
 				if 'mat_node' in file: mat_file = file
 			
 			if self._nearest or latest or first:
@@ -363,6 +364,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 						file = file.split('_sca')[0]
 						file = file.split('_con')[0]
 						file = file.split('_vec')[0]
+						file = file.split('_hf')[0]
 						file = file.split('_days')[0]						
 						file = file.split('.')
 						file = [fl for fl in file if fl.isdigit()]
@@ -547,6 +549,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 				file = file.split('_sca')[0]
 				file = file.split('_con')[0]
 				file = file.split('_vec')[0]
+				file = file.split('_hf')[0]
 				file = file.split('_days')[0]						
 				file = file.split('.')
 				file = [fl for fl in file if fl.isdigit() or 'E-' in fl]
@@ -582,6 +585,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 				file = file.split('_sca')[0]
 				file = file.split('_con')[0]
 				file = file.split('_vec')[0]
+				file = file.split('_hf')[0]
 				file = file.split('_days')[0]						
 				file = file.split('.')
 				file = [fl for fl in file if fl.isdigit() or 'E-' in fl]
@@ -3031,7 +3035,7 @@ def sort_tec_files(files):
 	
 	times = []
 	for file in files: 
-		for type in ['_days_sca_node','_days_vec_node','_days_con_node','_sca_node','_vec_node','_con_node']:
+		for type in ['_days_sca_node','_days_vec_node','_days_hf_node','_days_con_node','_sca_node','_vec_node','_hf_node','_con_node']:
 			if type in file: 				
 				times.append(float(join(file.split(type)[0].split('.')[1:],'.')))
 				break
