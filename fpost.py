@@ -2385,9 +2385,12 @@ class fvtk(object):
 						f2 = self.contour[self.contour.times[ind+1]][var]
 						dat = -dt2/(dt1*(dt1+dt2))*f0 + (dt2-dt1)/(dt1*dt2)*f1 + dt1/(dt2*(dt1+dt2))*f2
 					self.data.contour[time].append(pv.Scalars(dat,name='d_'+var+'_dt',lookup_table='default'))
-			#if 'flux_x' in self.contour.variables and 'flux_y' in self.contour.variables and 'flux_z' in self.contour.variables:
-			#	flux = [(self.contour[time]['flux_x'][i],self.contour[time]['flux_y'][i],self.contour[time]['flux_z'][i]) for i in range(len(self.contour[time]['flux_x']))]
-			#	self.data.contour[time].append(pv.Vectors(flux,name='flux'))
+			if 'flux_x' in self.contour.variables and 'flux_y' in self.contour.variables and 'flux_z' in self.contour.variables:
+				flux = [(self.contour[time]['flux_x'][i],self.contour[time]['flux_y'][i],self.contour[time]['flux_z'][i]) for i in range(len(self.contour[time]['flux_x']))]
+				self.data.contour[time].append(pv.Vectors(flux,name='flux'))
+			if 'flux_x_vap' in self.contour.variables and 'flux_y_vap' in self.contour.variables and 'flux_z_vap' in self.contour.variables:
+				flux = [(self.contour[time]['flux_x_vap'][i],self.contour[time]['flux_y_vap'][i],self.contour[time]['flux_z_vap'][i]) for i in range(len(self.contour[time]['flux_x_vap']))]
+				self.data.contour[time].append(pv.Vectors(flux,name='flux_vap'))
 
 	def write(self):	
 		"""Call to write out vtk files."""
