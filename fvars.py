@@ -23,6 +23,7 @@ Public License for more details.
 
 import numpy as np
 from ftool import*
+from scipy import interpolate
 
 from fdflt import*
 dflt = fdflt()
@@ -112,6 +113,41 @@ if co2Vars:
 			array = list(flatten(array))
 			array = np.array([float(a) for a in array])	
 			arrays.update(dict(((arrayname,array),)))
+		while keepReading:
+			line = f.readline()
+			if 'Number of saturation line vertices' in line: 
+				n_sv = line.split()[0]
+				break
+		f.readline
+		# read in saturation line vertices
+		for n in n_sv:
+			sat_vertices_i = f.readline().split()[4]
+		while keepReading:
+			line = f.readline()
+			if '>' in line: break
+		f.readline()
+		co2l_arrays = {}
+		array = []
+		for n in n_sv:
+			array.append([float(v) for v in f.readline().strip().split()])
+		array = np.array(array)
+		for i,arrayname in enumerate(arraynames):
+			co2l_arrays[arrayname] = array[:,i]
+		while keepReading:
+			line = f.readline()
+			if '>' in line: break
+		f.readline()
+		co2g_arrays = {}
+		array = []
+		for n in n_sv:
+			array.append([float(v) for v in f.readline().strip().split()])
+		array = np.array(array)
+		for i,arrayname in enumerate(arraynames):
+			co2g_arrays[arrayname] = array[:,i]
+
+
+		
+
 	
 def dens(P,T,derivative=''):
 	"""Return liquid water, vapor water and CO2 density, or derivatives with respect to temperature or pressure, for specified temperature and pressure.
@@ -318,49 +354,10 @@ def dens(P,T,derivative=''):
 	elif derivative in ['P','pressure']: k = 'dddp'
 	elif derivative in ['T','temperature']: k = 'dddt'
 	
-	if not P.shape: P = np.array([P])
-	if not T.shape: T = np.array([T])
-	if P.size == 1 and not T.size == 1: P = P*np.ones((1,len(T)))[0]
-	elif T.size == 1 and not P.size == 1: T = T*np.ones((1,len(P)))[0]
-	# calculate bounding values of P
-	dens_c = []
-	for Pi, Ti in zip(P,T):
-		if Pi<=Pval[0]: p0 = Pval[0]; p1 = Pval[0]
-		elif Pi>=Pval[-1]: p0 = Pval[-1]; p1 = Pval[-1]
-		else:
-			p0 = Pval[0]
-			for p in Pval[1:]:
-				if Pi<=p: 
-					p1 = p; break
-				else: 
-					p0 = p
-		#print Pi,Pval[0],Pval[-1],p0,p1
-		# calculate bounding values of T
-		if Ti<=Tval[0]: t0 = Tval[0]; t1 = Tval[0]
-		elif Ti>=Tval[-1]: t0 = Tval[-1]; t1 = Tval[-1]
-		else:
-			t0 = Tval[0]
-			for t in Tval[1:]:
-				if Ti<=t: 
-					t1 = t; break
-				else: 
-					t0 = t
-		# calculate four indices
-		t0 = Tdict[t0]; t1 = Tdict[t1]; p0 = Pdict[p0]; p1 = Pdict[p1]
-		i1 = p0*tn+t0
-		i2 = p0*tn+t1
-		i3 = p1*tn+t0
-		i4 = p1*tn+t1
-		# locate value in array
-		v1 = arrays[k][i1]
-		v2 = arrays[k][i2]
-		v3 = arrays[k][i3]
-		v4 = arrays[k][i4]
-		if p0 == 0 and p1 == 0:
-			dens_c.append((0.5*(t1*v3+t0*v4)/(t1+t0) + 0.5*(t1*v1+t0*v2)/(t1+t0)))
-		else:
-			dens_c.append((p0*(t1*v3+t0*v4)/(t1+t0) + p1*(t1*v1+t0*v2)/(t1+t0))/(p0+p1))
-	
+	arr_z = arrays[k][0:len(Pval)*len(Tval)].reshape(len(Pval),len(Tval)) 
+	fdens = interpolate.interp2d( Tval, Pval, arr_z )
+	dens_c = [fdens(t,p)[0] for t,p in zip(T,P)] 
+
 	return (dens_l,dens_v,np.array(dens_c))
 def enth(P,T,derivative=''):
 	"""Return liquid water, vapor water and CO2 enthalpy, or derivatives with respect to temperature or pressure, for specified temperature and pressure.
