@@ -24,7 +24,6 @@ Public License for more details.
 import numpy as np
 from ftool import*
 from scipy import interpolate
-from shapely.geometry import LineString, Point
 
 from fdflt import*
 dflt = fdflt()
