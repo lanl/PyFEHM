@@ -24,6 +24,7 @@ Public License for more details.
 import numpy as np
 from ftool import*
 from scipy import interpolate
+from shapely.geometry import LineString, Point
 
 from fdflt import*
 dflt = fdflt()
@@ -116,19 +117,25 @@ if co2Vars:
 		while keepReading:
 			line = f.readline()
 			if 'Number of saturation line vertices' in line: 
-				n_sv = line.split()[0]
+				n_sv = int(line.split()[0])
 				break
-		f.readline
+		f.readline()
 		# read in saturation line vertices
-		for n in n_sv:
-			sat_vertices_i = f.readline().split()[4]
+		co2_sat_P = []
+		co2_sat_T = []
+		co2_sat_i = []
+		for n in range(n_sv):
+			vs = f.readline().split()
+			co2_sat_i.append(int(vs[3]))
+			co2_sat_P.append(float(vs[0]))
+			co2_sat_T.append(float(vs[1]))
 		while keepReading:
 			line = f.readline()
 			if '>' in line: break
 		f.readline()
 		co2l_arrays = {}
 		array = []
-		for n in n_sv:
+		for n in range(n_sv):
 			array.append([float(v) for v in f.readline().strip().split()])
 		array = np.array(array)
 		for i,arrayname in enumerate(arraynames):
@@ -139,14 +146,11 @@ if co2Vars:
 		f.readline()
 		co2g_arrays = {}
 		array = []
-		for n in n_sv:
+		for n in range(n_sv):
 			array.append([float(v) for v in f.readline().strip().split()])
 		array = np.array(array)
 		for i,arrayname in enumerate(arraynames):
 			co2g_arrays[arrayname] = array[:,i]
-
-
-		
 
 	
 def dens(P,T,derivative=''):
@@ -973,4 +977,31 @@ def fluid_column(z,Tgrad,Tsurf,Psurf,iterations = 3):
 		return (np.array([Ph,T,rhoh[0],Hh[0],muh[0]]).T,np.array([Ph,T,rhoh[1],Hh[1],muh[1]]).T,np.array([Pco2,T,rho[2],H[2],mu[2]]).T)
 	else:
 		return (np.array([Ph,T,rhoh[0],Hh[0],muh[0]]).T,np.array([Ph,T,rhoh[1],Hh[1],muh[1]]).T,np.array([]))
+
+def co2_dens_sat_line(derivative=''):
+	"""Return CO2 density, or derivatives with respect to temperature or pressure, for specified temperature and pressure near the CO2 saturation line.
 	
+	:param P: Pressure (MPa). 
+	:type P: fl64
+	:param T: Temperature (degC)
+	:type T: fl64
+	:param derivative: Supply 'T' or 'temperature' for derivatives with respect to temperature, or 'P' or 'pressure' for derivatives with respect to pressure.
+	:type T: str
+	:returns: Three element tuple containing (liquid, vapor, CO2) density or derivatives if requested.
+	
+	"""
+
+	if not co2Vars: 
+		print "Error: CO2 property table not found"
+		return
+	
+	# calculate co2 properties
+	if not derivative: k = 'density'
+	elif derivative in ['P','pressure']: k = 'dddp'
+	elif derivative in ['T','temperature']: k = 'dddt'
+	
+	print 'P T liquid-'+k+' gas-'+k
+	for p,t,l,g in zip(co2_sat_P, co2_sat_T, co2l_arrays[k], co2g_arrays[k]):
+		print p,t,l,g
+
+	return zip(co2_sat_P, co2_sat_T, co2l_arrays[k], co2g_arrays[k])
