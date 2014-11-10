@@ -164,8 +164,14 @@ def dens(P,T,derivative=''):
 	:returns: Three element tuple containing (liquid, vapor, CO2) density or derivatives if requested.
 	
 	"""
-	P = np.array(P)
-	T = np.array(T)
+	if hasattr(P, "__len__"): 
+		P = np.array(P)
+	else:
+		P = np.array([P])
+	if hasattr(T, "__len__"): 
+		T = np.array(T)
+	else:
+		T = np.array([T])
 	# calculate water properties
 	if not derivative:
 		YL0 = (YDL[0] +
