@@ -49,6 +49,7 @@
 # set this to the fehm executable to be used if no default assigned
 #	fehm_path 				&	c:\\path\\to\\fehm\\fehm.exe
 #	paraview_path			&	paraview.exe
+#	visi_path				&	visit.exe
 #	lagrit_path				&	c:\\path\\to\\lagrit\\lagrit_win.exe
 #	files 					&	[outp,hist,check]
 #	co2_interp_path 		& 	c:\\path\\to\\co2\\co2_interp_table.txt
