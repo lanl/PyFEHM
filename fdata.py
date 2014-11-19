@@ -4455,8 +4455,9 @@ class fdata(object):						#FEHM data file.
 			nds = []
 			for nd in nodelist:
 				if isinstance(nd,int):
-					if nd in self.grid.node.keys(): nds.append(self.grid.node[nd])
-				elif isinstance(nd,fnode): nds.append(nd)
+					nds.append(self.grid.node[nd])
+				elif isinstance(nd,fnode): 
+					nds.append(nd)
 			zn.nodelist = nds
 		self.add(zn)
 		# add permeability property macros

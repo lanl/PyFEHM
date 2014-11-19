@@ -52,7 +52,7 @@
 #	visi_path				&	visit.exe
 #	lagrit_path				&	c:\\path\\to\\lagrit\\lagrit_win.exe
 #	files 					&	[outp,hist,check]
-#	co2_interp_path 		& 	c:\\path\\to\\co2\\co2_interp_table.txt
+	co2_interp_path 		& 	co2_interp_table.txt
 #	co2_interp_path_2 		& 	/alternate/path/to/co2/co2_interp_table.txt
 	
 # fdata booleans

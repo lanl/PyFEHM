@@ -269,7 +269,8 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 	
 	'''
 	def __init__(self,filename=None,latest=False,first=False,nearest=None):
-		self._filename=os_path(filename)
+		if not isinstance(filename,list):
+			self._filename=os_path(filename)
 		self._silent = dflt.silent
 		self._times=[]   
 		self._format = ''
@@ -297,7 +298,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 		self._nearest = nearest
 		if isinstance(self._nearest,(float,int)): self._nearest = [self._nearest]
 		self._nkeys=1
-		if self._filename: self.read(filename,self._latest,self._first,self._nearest)
+		if filename is not None: self.read(filename,self._latest,self._first,self._nearest)
 	def __getitem__(self,key):
 		if key in self.times:
 			return self._data[key]
@@ -317,86 +318,86 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 		:param nearest: Read in the file with date closest to the day supplied. List input will parse multiple output files.
 		:type nearest: fl64,list
 		'''
-		filename = os_path(filename)
 		from glob import glob
 		if isinstance(filename,list):
 			files = filename
 		else:
+			filename = os_path(filename)
 			files=glob(filename)
-			if len(files)==0: 	
-				pyfehm_print('ERROR: '+filename+' not found',self._silent)
-				return
-			# decision-making
-			mat_file = None
-			multi_type = None
-			# are there multiple file types? e.g., _con_ and _sca_?
-			# is there a material properties file? e.g., 'mat_nodes'?
-			file_types = []
-			for file in files:
-				if '_sca_node' in file and 'sca' not in file_types: file_types.append('sca')
-				if '_vec_node' in file and 'vec' not in file_types: file_types.append('vec')
-				if '_con_node' in file and 'con' not in file_types: file_types.append('con')
-				if '_hf_node' in file and 'hf' not in file_types: file_types.append('hf')
-				if 'mat_node' in file: mat_file = file
+		if len(files)==0: 	
+			pyfehm_print('ERROR: '+filename+' not found',self._silent)
+			return
+		# decision-making
+		mat_file = None
+		multi_type = None
+		# are there multiple file types? e.g., _con_ and _sca_?
+		# is there a material properties file? e.g., 'mat_nodes'?
+		file_types = []
+		for file in files:
+			if '_sca_node' in file and 'sca' not in file_types: file_types.append('sca')
+			if '_vec_node' in file and 'vec' not in file_types: file_types.append('vec')
+			if '_con_node' in file and 'con' not in file_types: file_types.append('con')
+			if '_hf_node' in file and 'hf' not in file_types: file_types.append('hf')
+			if 'mat_node' in file: mat_file = file
+		
+		if self._nearest or latest or first:
+			files = filter(os.path.isfile, glob(filename))
+			if mat_file: files.remove(mat_file)
+			files.sort(key=lambda x: os.path.getmtime(x))
+			files2 = []
 			
-			if self._nearest or latest or first:
-				files = filter(os.path.isfile, glob(filename))
-				if mat_file: files.remove(mat_file)
-				files.sort(key=lambda x: os.path.getmtime(x))
-				files2 = []
-				
-				# retrieve first created and same time in group
-				if first:
-					files2.append(files[0])
-					for file_type in file_types:
-						tag = '_'+file_type+'_node'
-						if tag in files2[-1]:
-							prefix = files2[-1].split(tag)[0]
-							break						
-					for file in files:
-						if file.startswith(prefix) and tag not in file: files2.append(file)
-						
-				# retrieve files nearest in time to given (and same time in group)
-				if self._nearest:
-					ts = []
-					for file in files:
-						file = file.split('_node')[0]
-						file = file.split('_sca')[0]
-						file = file.split('_con')[0]
-						file = file.split('_vec')[0]
-						file = file.split('_hf')[0]
-						file = file.split('_days')[0]						
-						file = file.split('.')
-						file = [fl for fl in file if fl.isdigit()]
-						ts.append(float('.'.join(file)))
-					ts = np.unique(ts)
+			# retrieve first created and same time in group
+			if first:
+				files2.append(files[0])
+				for file_type in file_types:
+					tag = '_'+file_type+'_node'
+					if tag in files2[-1]:
+						prefix = files2[-1].split(tag)[0]
+						break						
+				for file in files:
+					if file.startswith(prefix) and tag not in file: files2.append(file)
 					
-					for near in self._nearest:
-						tsi = min(enumerate(ts), key=lambda x: abs(x[1]-near))[0]
-						files2.append(files[tsi])
-						for file_type in file_types:
-							tag = '_'+file_type+'_node'
-							if tag in files2[-1]:
-								prefix = files2[-1].split(tag)[0]
-								break
-						for file in files:
-							if file.startswith(prefix) and tag not in file: files2.append(file)						
-							
-				# retrieve last created and same time in group
-				if latest:
-					files2.append(files[-1])
+			# retrieve files nearest in time to given (and same time in group)
+			if self._nearest:
+				ts = []
+				for file in files:
+					file = file.split('_node')[0]
+					file = file.split('_sca')[0]
+					file = file.split('_con')[0]
+					file = file.split('_vec')[0]
+					file = file.split('_hf')[0]
+					file = file.split('_days')[0]						
+					file = file.split('.')
+					file = [fl for fl in file if fl.isdigit()]
+					ts.append(float('.'.join(file)))
+				ts = np.unique(ts)
+				
+				for near in self._nearest:
+					tsi = min(enumerate(ts), key=lambda x: abs(x[1]-near))[0]
+					files2.append(files[tsi])
 					for file_type in file_types:
 						tag = '_'+file_type+'_node'
 						if tag in files2[-1]:
 							prefix = files2[-1].split(tag)[0]
 							break
 					for file in files:
-						if file.startswith(prefix) and tag not in file: files2.append(file)
+						if file.startswith(prefix) and tag not in file: files2.append(file)						
 						
-				# removes duplicates
-				files = []
-				for file in files2:
-					if file not in files: files.append(file)
+			# retrieve last created and same time in group
+			if latest:
+				files2.append(files[-1])
+				for file_type in file_types:
+					tag = '_'+file_type+'_node'
+					if tag in files2[-1]:
+						prefix = files2[-1].split(tag)[0]
+						break
+				for file in files:
+					if file.startswith(prefix) and tag not in file: files2.append(file)
+					
+			# removes duplicates
+			files = []
+			for file in files2:
+				if file not in files: files.append(file)
 		
 		# group files into their types
 		FILES = []
@@ -2406,17 +2407,22 @@ class fvtk(object):
 			self.contour_files = fls[1:]
 		return fls
 	def write_wells(self,wells):
-		"""Receives a dictionary of well track objects, creates the corresping vtk grid.
+		"""Receives a dictionary of well track objects, creates the corresponding vtk grid.
 		"""		
 		nds = np.array([nd.position for nd in self.parent.grid.nodelist])
 		zmin = np.min(nds[:,2])
 		for k in wells.keys():
 			well = wells[k]
-			nds = np.array([[well.location[0],well.location[1],(z-zmin)*self.zscale+zmin] for z in well.data[:,0]])
-			cns = [[i,i+1] for i in range(np.shape(nds)[0]-1)]
-			grid = fVtkData(fUnstructuredGrid(nds,line=cns),'RAGE well track: %s'%well.name)
-			grid.material.append(pv.Scalars(well.data[:,1] ,name='T',lookup_table='default'))
-		
+			if isinstance(well,np.ndarray):
+				nds = well
+				cns = [[i,i+1] for i in range(np.shape(nds)[0]-1)]
+				grid = fVtkData(fUnstructuredGrid(nds,line=cns),'Well track: %s'%k)
+				grid.material.append(pv.Scalars(np.ones((1,len(nds[:,2])))[0],name='T',lookup_table='default'))				
+			else:
+				nds = np.array([[well.location[0],well.location[1],(z-zmin)*self.zscale+zmin] for z in well.data[:,0]])
+				cns = [[i,i+1] for i in range(np.shape(nds)[0]-1)]
+				grid = fVtkData(fUnstructuredGrid(nds,line=cns),'RAGE well track: %s'%well.name)
+				grid.material.append(pv.Scalars(well.data[:,1] ,name='T',lookup_table='default'))
 			filename=k+'_wells.vtk'
 			grid.tofilewell(filename)
 		self.wells = wells.keys()
