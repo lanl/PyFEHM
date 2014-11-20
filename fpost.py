@@ -98,7 +98,7 @@ if True: 					# output variable dictionaries defined in here, indented for code 
 	('Capillary Pressure (MPa)','P_cap'),
 	('Saturation','saturation'),
 	('Water Saturation','water'),
-	('Super-Critical/Liquid CO2 Saturation','co2_liquid'),
+	('Super-Critical/Liquid CO2 Saturation','co2_sc_liquid'),
 	('Gaseous CO2 Saturation','co2_gas'),
 	('Dissolved CO2 Mass Fraction','co2_aq'),
 	('CO2 Phase State','co2_phase'),
@@ -737,7 +737,8 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 			pyfehm_print('ERROR: there is already a variable called \''+name+'\', please choose a different name',self._silent)
 			return
 		self._data[time][name] = data
-		self._user_variables.append(name)
+		if name not in self._user_variables:
+			self._user_variables.append(name)
 	def slice(self, variable, slice, divisions, time=None, method='nearest'):
 		'''Returns mesh data for a specified slice orientation from 3-D contour output data.
 		
@@ -1519,6 +1520,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 		print prntStr[:-2]+' days'
 		prntStr = '	variables: '
 		for var in self.variables: prntStr += str(var)+', '
+		for var in self.user_variables: prntStr += str(var)+', '
 		print prntStr
 	what = property(_get_information) #:(*str*) Print out information about the fcontour object.
 class fhistory(object):						# Reading and plotting methods associated with history output data.
@@ -1757,7 +1759,8 @@ class fhistory(object):						# Reading and plotting methods associated with hist
 			return
 		if name not in self._user_variables:
 			self._data.update({name:dict([(nd,None) for nd in self.nodes])})
-			self._user_variables.append(name)
+			if name not in self._user_variables:
+				self._user_variables.append(name)
 		self._data[name][node] = data
 	def _get_variables(self): return self._variables
 	variables = property(_get_variables)#: (*lst[str]*) List of variables for which output data are available.
