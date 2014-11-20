@@ -102,6 +102,8 @@ if True: 					# output variable dictionaries defined in here, indented for code 
 	('Gaseous CO2 Saturation','co2_gas'),
 	('Dissolved CO2 Mass Fraction','co2_aq'),
 	('CO2 Phase State','co2_phase'),
+	('CO2 Gas Density (kg/m**3)','density_co2_gas'),
+	('CO2 Liquid Density (kg/m**3)','density_co2_sc_liquid'),
 	('Temperature (<sup>o</sup>C)','T'),
 	('Temperature (deg C)','T'),
 	('Porosity','por'),
@@ -620,7 +622,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 			header = header.split(' "')
 			for key in header[1:]: 
 				varname = key.split('"')[0].strip()
-				if varname in cont_var_names_surf.keys():
+				if varname in cont_var_names_tec.keys():
 					var = cont_var_names_tec[varname]
 				else: var = varname
 				
