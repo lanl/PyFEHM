@@ -356,8 +356,8 @@ class fzone(object):						#FEHM zone object.
 		if len(p1) == 2:
 			xmax,xmin = np.max([p1[0],p2[0]]),np.min([p1[0],p2[0]])
 			ymax,ymin = np.max([p1[1],p2[1]]),np.min([p1[1],p2[1]])
-			self.points=[[xmin,xmax,xmax,xmin,xmin,xmax,xmax,xmin],
-						 [ymax,ymax,ymin,ymin,ymax,ymax,ymin,ymin],
+			self.points=[[xmin,xmax,xmax,xmin],
+						 [ymax,ymax,ymin,ymin],
 						 #[0., 0., 0., 0., 0., 0., 0., 0.]
 						 ]
 		elif len(p1) == 3:
@@ -741,20 +741,24 @@ class fzone(object):						#FEHM zone object.
 			else: pts = pts.reshape(2,4)			
 			xmin, xmax = np.min(pts[0,:]), np.max(pts[0,:])
 			ymin, ymax = np.min(pts[1,:]), np.max(pts[1,:])
-			zmin, zmax = np.min(pts[2,:]), np.max(pts[2,:])
-			dx,dy,dz = [xmax-xmin,ymax-ymin,zmax-zmin]
-			ws += '  dimensions: ['+str(dx)+', '+str(dy)+', '+str(dz)+']'
-			if 100*dz<dx and 100*dz<dy: ws += '  (plane at z = '+str((zmin+zmax)/2)+')'
-			elif 100*dx<dy and 100*dx<dz: ws += '  (plane at x = '+str((xmin+xmax)/2)+')'
-			elif 100*dy<dz and 100*dy<dz: ws += '  (plane at y = '+str((ymin+ymax)/2)+')'
-			elif 100*dz<dx and 100*dy<dx: ws += '  (column at x = '+str((xmin+xmax)/2)+')'
-			elif 100*dx<dy and 100*dz<dy: ws += '  (column at y = '+str((ymin+ymax)/2)+')'
-			elif 100*dx<dz and 100*dy<dz: ws += '  (column at z = '+str((zmin+zmax)/2)+')'
-			ws += '\n'
+			if pts.shape[1] == 3:
+				zmin, zmax = np.min(pts[2,:]), np.max(pts[2,:])
+				dx,dy,dz = [xmax-xmin,ymax-ymin,zmax-zmin]
+				ws += '  dimensions: ['+str(dx)+', '+str(dy)+', '+str(dz)+']'
+				if 100*dz<dx and 100*dz<dy: ws += '  (plane at z = '+str((zmin+zmax)/2)+')'
+				elif 100*dx<dy and 100*dx<dz: ws += '  (plane at x = '+str((xmin+xmax)/2)+')'
+				elif 100*dy<dz and 100*dy<dz: ws += '  (plane at y = '+str((ymin+ymax)/2)+')'
+				elif 100*dz<dx and 100*dy<dx: ws += '  (column at x = '+str((xmin+xmax)/2)+')'
+				elif 100*dx<dy and 100*dz<dy: ws += '  (column at y = '+str((ymin+ymax)/2)+')'
+				elif 100*dx<dz and 100*dy<dz: ws += '  (column at z = '+str((zmin+zmax)/2)+')'
+				ws += '\n'
 			ws += '  x-range: '+str(xmin)+' - '+str(xmax)+'\n'
 			ws += '  y-range: '+str(ymin)+' - '+str(ymax)+'\n'
-			ws += '  z-range: '+str(zmin)+' - '+str(zmax)+'\n'
-			ws += '  mid-point: ['+str((xmin+xmax)/2.)+', '+str((ymin+ymax)/2.)+', '+str((zmin+zmax)/2.)+']\n'
+			if pts.shape[1] == 3:
+				ws += '  z-range: '+str(zmin)+' - '+str(zmax)+'\n'
+				ws += '  mid-point: ['+str((xmin+xmax)/2.)+', '+str((ymin+ymax)/2.)+', '+str((zmin+zmax)/2.)+']\n'
+			elif pts.shape[1] ==1:
+				ws += '  mid-point: ['+str((xmin+xmax)/2.)+', '+str((ymin+ymax)/2.)+']\n'
 		elif self.type == 'list':
 			#ws = 'Zone '+str(self.index)+'\n'
 			#ws+='\nGeometric properties.......\n'
