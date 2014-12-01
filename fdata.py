@@ -5985,6 +5985,7 @@ class fdata(object):						#FEHM data file.
 			parList = ['param'+str(i+1) for i in range(len(parVector))]
 		m.param = dict(zip(parList,parVector)) 	# make dictionary
 		self._add_model(m)
+		line = infile.readline().strip()
 	def _add_model(self,model):
 		model._parent = self
 		if isinstance(model.zonelist,list) and len(model.zonelist)==0: model.zonelist = [self.zone[0]] 	# assign everywhere zone
@@ -6359,7 +6360,9 @@ class fdata(object):						#FEHM data file.
 		if isinstance(self._output_times,(int,float)): self._output_times = [self._output_times]
 		if isinstance(self._output_times,(list,tuple)): self._output_times = np.array(self._output_times)
 		self._times = []
-		for t in self._output_times: self.change_timestepping(t)
+		for t in self._output_times: 
+			self.change_timestepping(t)
+		self._output_times = value
 		if len(self._output_times) == 0: return
 		if np.max(self._output_times)>self.tf:
 			_buildWarnings('WARNING: output requested for times after the simulation end time.')
