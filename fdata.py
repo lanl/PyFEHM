@@ -2951,6 +2951,7 @@ class fdata(object):						#FEHM data file.
 				self._read_ctrl(infile)
 				more = False				
 		infile.close()
+		
 		infile = open(self._path.full_path,'r')
 		more = True
 		precedingKey='start'
@@ -5145,28 +5146,24 @@ class fdata(object):						#FEHM data file.
 						if not pts: morePoints = False
 						else: new_zone.nodelist.append(self.grid.node_nearest_point([float(pt) for pt in pts]))
 				elif line[0:4] == 'nnum':
-					new_zone.type='nnum'
-					#nextval = valgen(infile)
-					#N = int(nextval.next())
-					
-					line=infile.readline().strip()#; block.append(line+'\n')		
+					new_zone.type='nnum'					
+					line=infile.readline().strip()
 					nums = line.split()
 					number_nodes = int(nums[0])		
-					#new_zone.nodelist = [self._grid._nodelist[int(nextval.next())-1] for i in range(N)]
 					new_zone.nodelist = [None]*number_nodes
 					i = 0
 					for num in nums[1:]: 
 						new_zone.nodelist[i] = self.grid.node[int(num)]
 						i +=1
 					while i!=number_nodes:
-						line=infile.readline().strip()#; block.append(line+'\n')		
+						line=infile.readline().strip()
 						nums = line.split()
 						for num in nums: 
 							new_zone.nodelist[i]=self.grid.node[int(num)]
 							i +=1
 				else:
 					new_zone.type='rect'
-					if not self.ctrl['geometry_ICNL']: 		# 3-D geometry
+					if self.ctrl['geometry_ICNL'] == 0: 		# 3-D geometry
 						numPts = 24 						# number of points to define rect
 					else: 									# 2-D geometry
 						numPts = 8							# number of points to define rect
@@ -5193,15 +5190,16 @@ class fdata(object):						#FEHM data file.
 					if zn_old.type != new_zone.type:
 						_buildWarnings('WARNING: zone '+str(zind)+' was defined earlier in the input file. PyFEHM assumes unique zone definitions. This zone will be ignored.')
 					elif new_zone.type == 'rect':
-						x0n,x1n = np.min(new_zone.points[0]), np.max(new_zone.points[0])
-						y0n,y1n = np.min(new_zone.points[1]), np.max(new_zone.points[1])
-						z0n,z1n = np.min(new_zone.points[2]), np.max(new_zone.points[2])
-						x0o,x1o = np.min(zn_old.points[0]), np.max(zn_old.points[0])
-						y0o,y1o = np.min(zn_old.points[1]), np.max(zn_old.points[1])
-						z0o,z1o = np.min(zn_old.points[2]), np.max(zn_old.points[2])
-						
-						if (x0n != x0o) or (x1n != x1o) or (y0n != y0o) or (y1n != y1o) or (z0n != z0o) or (z1n != z1o):
-							_buildWarnings('WARNING: zone '+str(zind)+' was defined earlier in the input file. PyFEHM assumes unique zone definitions. This zone will be ignored.')
+						if self.ctrl['geometry_ICNL'] == 0:
+							x0n,x1n = np.min(new_zone.points[0]), np.max(new_zone.points[0])
+							y0n,y1n = np.min(new_zone.points[1]), np.max(new_zone.points[1])
+							z0n,z1n = np.min(new_zone.points[2]), np.max(new_zone.points[2])
+							x0o,x1o = np.min(zn_old.points[0]), np.max(zn_old.points[0])
+							y0o,y1o = np.min(zn_old.points[1]), np.max(zn_old.points[1])
+							z0o,z1o = np.min(zn_old.points[2]), np.max(zn_old.points[2])
+							
+							if (x0n != x0o) or (x1n != x1o) or (y0n != y0o) or (y1n != y1o) or (z0n != z0o) or (z1n != z1o):
+								_buildWarnings('WARNING: zone '+str(zind)+' was defined earlier in the input file. PyFEHM assumes unique zone definitions. This zone will be ignored.')
 					else:
 						different_zone = False
 						if len(set(zn_old.nodelist).symmetric_difference(new_zone.nodelist)) != 0:
