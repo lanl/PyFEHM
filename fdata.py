@@ -356,8 +356,8 @@ class fzone(object):						#FEHM zone object.
 		if len(p1) == 2:
 			xmax,xmin = np.max([p1[0],p2[0]]),np.min([p1[0],p2[0]])
 			ymax,ymin = np.max([p1[1],p2[1]]),np.min([p1[1],p2[1]])
-			self.points=[[xmin,xmax,xmax,xmin,xmin,xmax,xmax,xmin],
-						 [ymax,ymax,ymin,ymin,ymax,ymax,ymin,ymin],
+			self.points=[[xmin,xmax,xmax,xmin],
+						 [ymax,ymax,ymin,ymin],
 						 #[0., 0., 0., 0., 0., 0., 0., 0.]
 						 ]
 		elif len(p1) == 3:
@@ -741,20 +741,24 @@ class fzone(object):						#FEHM zone object.
 			else: pts = pts.reshape(2,4)			
 			xmin, xmax = np.min(pts[0,:]), np.max(pts[0,:])
 			ymin, ymax = np.min(pts[1,:]), np.max(pts[1,:])
-			zmin, zmax = np.min(pts[2,:]), np.max(pts[2,:])
-			dx,dy,dz = [xmax-xmin,ymax-ymin,zmax-zmin]
-			ws += '  dimensions: ['+str(dx)+', '+str(dy)+', '+str(dz)+']'
-			if 100*dz<dx and 100*dz<dy: ws += '  (plane at z = '+str((zmin+zmax)/2)+')'
-			elif 100*dx<dy and 100*dx<dz: ws += '  (plane at x = '+str((xmin+xmax)/2)+')'
-			elif 100*dy<dz and 100*dy<dz: ws += '  (plane at y = '+str((ymin+ymax)/2)+')'
-			elif 100*dz<dx and 100*dy<dx: ws += '  (column at x = '+str((xmin+xmax)/2)+')'
-			elif 100*dx<dy and 100*dz<dy: ws += '  (column at y = '+str((ymin+ymax)/2)+')'
-			elif 100*dx<dz and 100*dy<dz: ws += '  (column at z = '+str((zmin+zmax)/2)+')'
-			ws += '\n'
+			if pts.shape[1] == 3:
+				zmin, zmax = np.min(pts[2,:]), np.max(pts[2,:])
+				dx,dy,dz = [xmax-xmin,ymax-ymin,zmax-zmin]
+				ws += '  dimensions: ['+str(dx)+', '+str(dy)+', '+str(dz)+']'
+				if 100*dz<dx and 100*dz<dy: ws += '  (plane at z = '+str((zmin+zmax)/2)+')'
+				elif 100*dx<dy and 100*dx<dz: ws += '  (plane at x = '+str((xmin+xmax)/2)+')'
+				elif 100*dy<dz and 100*dy<dz: ws += '  (plane at y = '+str((ymin+ymax)/2)+')'
+				elif 100*dz<dx and 100*dy<dx: ws += '  (column at x = '+str((xmin+xmax)/2)+')'
+				elif 100*dx<dy and 100*dz<dy: ws += '  (column at y = '+str((ymin+ymax)/2)+')'
+				elif 100*dx<dz and 100*dy<dz: ws += '  (column at z = '+str((zmin+zmax)/2)+')'
+				ws += '\n'
 			ws += '  x-range: '+str(xmin)+' - '+str(xmax)+'\n'
 			ws += '  y-range: '+str(ymin)+' - '+str(ymax)+'\n'
-			ws += '  z-range: '+str(zmin)+' - '+str(zmax)+'\n'
-			ws += '  mid-point: ['+str((xmin+xmax)/2.)+', '+str((ymin+ymax)/2.)+', '+str((zmin+zmax)/2.)+']\n'
+			if pts.shape[1] == 3:
+				ws += '  z-range: '+str(zmin)+' - '+str(zmax)+'\n'
+				ws += '  mid-point: ['+str((xmin+xmax)/2.)+', '+str((ymin+ymax)/2.)+', '+str((zmin+zmax)/2.)+']\n'
+			elif pts.shape[1] ==1:
+				ws += '  mid-point: ['+str((xmin+xmax)/2.)+', '+str((ymin+ymax)/2.)+']\n'
 		elif self.type == 'list':
 			#ws = 'Zone '+str(self.index)+'\n'
 			#ws+='\nGeometric properties.......\n'
@@ -4853,8 +4857,9 @@ class fdata(object):						#FEHM data file.
 		# write vtk files for contour output data
 		self._vtk.csv = fcsv(parent=self,filename=filename,history=history,diff=diff,time_derivatives = time_derivatives)
 		self._vtk.csv.write()
-	def visit(self,exe = 'visit',filename = 'temp.vtk',contour = None):
-		'''Exports the model object to VTK and loads in paraview.
+	def visit(self,exe = dflt.visit_path,filename = 'temp.vtk',contour = None, history = None, show='kx',zones = 'none',diff = True,zscale = 1.,
+		spatial_derivatives = False, time_derivatives = False, nodes = False, wells = None):
+		'''Exports the model object to VTK and loads in visit
 		
 		:param exe: Path to VisIt executable.
 		:type exe: str
@@ -4862,17 +4867,43 @@ class fdata(object):						#FEHM data file.
 		:type filename: str
 		:param contour: Contout output data object loaded using fcontour().
 		:type contour: fcontour
+		:param history: History output data object loaded using fhistory().
+		:type history: fhistory
+		:param show: Variable to show when Paraview starts up (default = 'kx').
+		:type show: str
+		:param zones: Zones to plot: 'user' = user-defined zones, 'all' = all zones except zone[0], 'none' (default), or list of zone objects.
+		:type zones: str
+		:param diff: Flag to request PyFEHM to also plot differences of contour variables (from initial state) with time.
+		:type diff: bool
+		:param zscale: Factor by which to scale z-axis. Useful for visualising laterally extensive flow systems.
+		:type zscale: fl64
+		:param spatial_derivatives: Calculate new fields for spatial derivatives of contour data. 
+		:type spatial_derivatives: bool
+		:param time_derivatives: Calculate new fields for time derivatives of contour data. For precision reasons, derivatives are calculated with units of 'per day'.
+		:type time_derivatives: bool
+		:param nodes: Show node locations (default False).
+		:type nodes: bool
+		:param wells: Dictionary of well tracks ([x,y,z] column list), keyed by name.
+		:type wells: dict
 		'''
-		self._vtk = fvtk(parent=self,filename=filename,contour=contour)
-		self._vtk.assemble()
-		fls = self._vtk.write()
-		#self._vtk.startup_script()
-		if self.work_dir: wd = self.work_dir
-		else: wd = self._path.absolute_to_file		
-		if len(fls)>1:
-			p = Popen(exe+' -o '+wd+os.sep+self._vtk.path.filename[:-4]+'*.vtk',shell=(not WINDOWS))		
-		else:
-			p = Popen(exe+' -o '+wd+os.sep+self._vtk.path.filename,shell=(not WINDOWS))		
+		# check for empty contour object
+		self.write_vtk(filename=filename,contour=contour,diff=diff,zscale=zscale,spatial_derivatives=spatial_derivatives,time_derivatives=time_derivatives)
+		if history is not None:
+			from string import join
+			filename_csv = join(filename.split('.')[:-1],'.')+'.csv'
+			self.write_csv(filename=filename_csv,history=history,diff=diff,time_derivatives=time_derivatives)
+		self._vtk.show_zones=zones
+		if wells: 
+			# check dictionary keys have no spaces, dashed
+			wells2 = []
+			for k in wells.keys():
+				knew = k.replace(' ','_')
+				knew = knew.replace('-','_')
+				wells2.append((knew,wells[k]))
+			self._vtk.write_wells(dict(wells2))
+		self._vtk.initial_display(show)
+		#self._vtk.startup_script(nodes)
+		p = Popen(exe+' -o '+self._vtk.path.filename[:-4]+'*.vtk',shell=(not WINDOWS))		
 	def _summary(self):		
 		L = 62
 		s = ['']

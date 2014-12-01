@@ -69,6 +69,10 @@ class fdflt(object):
 			self.paraview_path 			=	'paraview.exe'
 		else:
 			self.paraview_path 			=	'paraview'
+		if os.name is not 'posix':
+			self.visit_path 			=	'visit.exe'
+		else:
+			self.visit_path 			=	'visit'
 		self.lagrit_path			=	'c:\\path\\to\\lagrit\\lagrit.exe'
 		self.files 					=	['outp','hist','check']
 		self.co2_interp_path 		= 	'c:\\path\\to\\co2\\co2_interp_table.txt'

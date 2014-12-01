@@ -10,5 +10,5 @@ setup(name='PyFEHM',
 	license='LGPL',
 	py_modules=['ftool','fgrid','fdata','fpost','fvars','fdflt','fhelp','ftemp'],
 	packages=['pyvtk'],
-	scripts = ['scripts/diagnose.py','scripts/fehm_paraview.py']
+	scripts = ['scripts/diagnose.py','scripts/fehm_paraview.py','scripts/fehm_visit.py']
 	)
