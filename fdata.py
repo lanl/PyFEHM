@@ -4661,8 +4661,9 @@ class fdata(object):						#FEHM data file.
 		exe_path.filename = exe
 		
 		if not os.path.isfile(exe_path.full_path): 	# if can't find the executable, halt
-			raise NameError('No executable at location '+exe)
-			return
+			if not os.path.isfile(exe_path.full_path.split()[-1]): 	# Also check if more complicated command is being used (e.g. mpirun -n 1 -H host xfehm)
+				raise NameError('No executable at location '+exe)
+				return
 						
 		# option to write input, grid, incon files to new names
 		if input: self._path.filename = input
@@ -4733,7 +4734,7 @@ class fdata(object):						#FEHM data file.
 			untilFlag = False
 			if diagnostic: self._diagnostic.refresh_nodes()
 			if until is None:
-				p = Popen(exe_path.full_path,stdout=PIPE)
+				p = Popen(exe_path.full_path.split(),stdout=PIPE)
 				if diagnostic:
 					self._diagnostic.stdout = p.stdout
 					self._diagnostic.poll = p.poll
@@ -4744,7 +4745,7 @@ class fdata(object):						#FEHM data file.
 				else:
 					p.communicate()
 			else:
-				p = Popen(exe_path.full_path)
+				p = Popen(exe_path.full_path.split())
 				self._running = True
 				while self._running:					# loop for checking if stop condition is met
 					sleep(dflt.sleep_time) 					# wait 
