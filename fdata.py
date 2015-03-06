@@ -1465,8 +1465,8 @@ class fincon(object): 						#FEHM restart object.
 		# write info
 		co2flag = (len(self._co2aq) != 0)
 		stressflag = (len(self._strs_xx) != 0)
-		if self._parent and co2flag:
-			if self._parent.carb.iprtype == 1: co2flag = False
+		#if self._parent and co2flag:
+		#	if self._parent.carb.iprtype == 1: co2flag = False
 		if self._parent and stressflag:
 			if self._parent.strs.param['ISTRS']==0: stressflag = False
 		
@@ -1866,13 +1866,13 @@ class fcarb(object):						#FEHM CO2 module.
 	
 	"""
 	__slots__=['_silent','_iprtype','_brine','_parent']
-	def __init__(self,iprtype=1,brine=False,parent=None):
+	def __init__(self,iprtype=0,brine=False,parent=None):
 		self._iprtype = iprtype 
 		self._silent = dflt.silent		
 		self._brine = brine			
 		self._parent =parent
 	def __repr__(self): 
-		if self.iprtype==1: return 'CO2 module inactive'
+		if self.iprtype==0: return 'CO2 module inactive'
 		else: return 'CO2 module active'
 	def __getstate__(self):
 		return dict((k, getattr(self, k)) for k in self.__slots__)
@@ -1891,13 +1891,14 @@ class fcarb(object):						#FEHM CO2 module.
 		"""Set parameters to turn CO2 calculations OFF.
 		
 		"""
-		self.iprtype = 1
+		self.iprtype = 0
 		self._parent.files._use_co2in = False
 	def _get_info(self):
-		if self.iprtype != 1: print 'CO2 module activated.'
+		if self.iprtype != 0: print 'CO2 module activated.'
 		else: print 'CO2 module inactive'; return
 		prntStr = 'Components:'
-		if self.iprtype == 2: prntStr += 'CO2 only'
+		if self.iprtype == 1: prntStr += 'Water only'
+		elif self.iprtype == 2: prntStr += 'CO2 only'
 		elif self.iprtype == 3:prntStr += 'CO2, water (no solubility)'
 		elif self.iprtype == 4:prntStr += 'CO2, water (with solubility)'
 		elif self.iprtype == 5:prntStr += 'CO2, water, air (with solubility)'		
@@ -2647,7 +2648,7 @@ class files(object):						#FEHM file constructor.
 			if not self.check: self.check = self.root+'.hst'
 			outfile.write('hist: '+self.hist+'\n')
 		
-		if self._parent.carb.iprtype != 1 and not self.co2in: 
+		if self._parent.carb.iprtype != 0 and not self.co2in: 
 			self._use_co2in = True
 			co2_path = fpath()
 			co2_path.filename = dflt.co2_interp_path
@@ -2682,7 +2683,7 @@ class files(object):						#FEHM file constructor.
 
 		# Set secret flag to use co2_inj.txt file to specify time to stop injection
 		if self.co2_inj_time:
-			if self._parent.carb.iprtype == 1: _buildWarnings('WARNING: CO2 injection flag requested but no carb macro specified, CO2 injection flag will be ignored.') 
+			if self._parent.carb.iprtype <= 1: _buildWarnings('WARNING: CO2 injection flag requested but no carb macro specified, CO2 injection flag will be ignored.') 
 			else:
 				outfile.write('999\n')
 
@@ -3068,7 +3069,7 @@ class fdata(object):						#FEHM data file.
 		if self.time: self._write_time(outfile); self._write_unparsed(outfile,'time')
 		if self.ctrl: self._write_ctrl(outfile); self._write_unparsed(outfile,'ctrl')
 		if self.iter: self._write_iter(outfile); self._write_unparsed(outfile,'iter')
-		if self.carb.iprtype!=1: self._write_carb(outfile); self._write_unparsed(outfile,'carb')
+		if self.carb.iprtype!=0: self._write_carb(outfile); self._write_unparsed(outfile,'carb')
 		if self.strs.param['ISTRS']: self._write_strs(outfile); self._write_unparsed(outfile,'strs')
 		if self.trac._on: self._write_trac(outfile); self._write_unparsed(outfile,'trac')
 		outfile.write('stop\n')
@@ -5001,7 +5002,7 @@ class fdata(object):						#FEHM data file.
 		for rlpm in self.rlpmlist:
 			for phase in rlpm.phases:
 				if phase.startswith('co2'): co2_rlpm_flag = True
-		if self.carb.iprtype == 1 and co2_rlpm_flag:
+		if self.carb.iprtype == 0 and co2_rlpm_flag:
 			checkWarnings.append('Specification of co2 relperm relationship without invoking the CARB module may cause crashes.')
 		# ERROR: check to see no new dictionary keys have been defined
 		ctrlFlag = dict_key_check(self.ctrl,dflt.ctrl.keys(),'ctrl')
@@ -5459,7 +5460,7 @@ class fdata(object):						#FEHM data file.
 			print 'Flow boundary conditions: zone INCOMPLETE'
 		if not self.flowlist and not self.bounlist and not self.co2flowlist:
 			print '%%%%% no boundary conditions assigned %%%%%'
-		if self.carb.iprtype !=1:		 								# co2 module
+		if self.carb.iprtype !=0:		 								# co2 module
 			co2model = dict([(1,'Water only'),(2,'CO2 only'),(3,'CO2-water, no solubility'),
 			(4,'CO2-water, with solubility'),(5,'CO2-water-air, with solubility')])
 			print 'CO2 module: ' + co2model[self.carb.iprtype]
@@ -6939,7 +6940,7 @@ class fdiagnostic(object):
 		""" Assembles axes on the screen.
 		"""
 		# set residual slots
-		if self.parent.carb.iprtype != 1:
+		if self.parent.carb.iprtype != 0:
 			self.ax2.slot0 = ['residual1','residual2','residual3']
 		elif self.parent.strs.param['ISTRS']==1:
 			self.ax2.slot0 = ['residual1','residual2','residual3']
