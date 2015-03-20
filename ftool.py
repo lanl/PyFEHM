@@ -91,7 +91,8 @@ def UTM_to_latlong(x,y,zone,hemisphere=1):
 	'''
 
 	x = np.array(x); y = np.array(y); zone = np.array(zone); hemisphere = np.array(hemisphere)
-
+	if hemisphere==-1:
+		y = 10000e3-y
 	x=500e3-x
 	k0 = 0.9996
 	M = y/k0
