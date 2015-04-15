@@ -2646,7 +2646,8 @@ class files(object):						#FEHM file constructor.
 		
 		if self._use_hist: 
 			if not self.check: self.check = self.root+'.hst'
-			outfile.write('hist: '+self.hist+'\n')
+			if self.hist:
+				outfile.write('hist: '+self.hist+'\n')
 		
 		if self._parent.carb.iprtype != 0 and not self.co2in: 
 			self._use_co2in = True
