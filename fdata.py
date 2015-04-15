@@ -5563,8 +5563,8 @@ class fdata(object):						#FEHM data file.
 			print ' '
 		if self.cont.variables:											# contour output
 			print 'Contour output ('+self.cont.format+' format) requested for - '
-			vars = list(itertools.chain(*self.cont.variables))
-			for var in vars: print '    '+var
+			#vars = list(itertools.chain(*self.cont.variables))
+			for var in self.cont.variables: print '    '+var
 		if self.hist.variables:											# history output
 			print 'History output ('+self.hist.format+' format) requested for - '			
 			vars = list(itertools.chain(*self.hist.variables))
