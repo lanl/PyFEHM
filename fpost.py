@@ -370,7 +370,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 					file = file.split('_hf')[0]
 					file = file.split('_days')[0]						
 					file = file.split('.')
-					file = [fl for fl in file if fl.isdigit()]
+					file = file[-2:]
 					ts.append(float('.'.join(file)))
 				ts = np.unique(ts)
 				
