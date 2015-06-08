@@ -430,6 +430,8 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 		# read in output data
 		for i in range(FILES.shape[1]):
 			files = FILES[:,i]
+			# Skip -1 file if present
+			if '-1' in files[0]: continue
 			for file in sort_tec_files(files): pyfehm_print(file,self._silent)
 			if not self._variables:
 				headers = []
