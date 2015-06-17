@@ -922,7 +922,7 @@ class fgrid(object):				#Grid object.
 				con._geom_coef = areas[1]/(con.distance/2.)
 			elif N[2]>N[1] and N[2]>N[0]:	
 				con._geom_coef = areas[2]/(con.distance/2.)
-	def make(self,gridfilename,x,y,z,full_connectivity=False,octree=False):
+	def make(self,gridfilename,x,y,z,full_connectivity=True,octree=False):
 		""" Generates an orthogonal mesh for input node positions. 
 		
 		The mesh is constructed using the ``fgrid.``\ **fmake** object and an FEHM grid file is written for the mesh.

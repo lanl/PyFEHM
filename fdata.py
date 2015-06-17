@@ -56,7 +56,7 @@ if not WINDOWS: has_ctypes = False
 # list of macros that might be encountered
 fdata_sections = ['cont','pres','zonn','zone','cond','time','ctrl','iter','rock','perm',
 					'boun','flow','strs','text','sol','nfin','hist','node','carb','rlp','grad','nobr',
-					'flxz','rlpm','hflx','trac','vcon','ppor','vapl','adif','ngas','flxo','head','flxn']
+					'flxz','rlpm','hflx','trac','vcon','ppor','vapl','adif','ngas','flxo','head','flxn','air','airwater']
 # list of potential CONTOUR output variables
 contour_variables=[['strain','stress'],
 				   ['co2'],
@@ -2752,7 +2752,7 @@ class fdata(object):						#FEHM data file.
 			'_bounlist','_cont','_ctrl','_grid','_incon','_hist','_iter','_nfinv','_nobr','_head','_flxn','_vapl','_adif','_rlpmlist','_sol',
 			'_time','text','_times','_zonelist','_writeSubFiles','_strs','_ngas','_carb','_trac','_files','_verbose',
 			'_tf','_ti','_dti','_dtmin','_dtmax','_dtn','_dtx','_sections','_help','_running','_unparsed_blocks','keep_unknown','_flxo',
-			'_output_times','_path','_vtk','_diagnostic','_storage']
+			'_output_times','_path','_vtk','_diagnostic','_storage','_air']
 	def __init__(self,filename='',gridfilename='',inconfilename='',sticky_zones=dflt.sticky_zones,associate=dflt.associate,work_dir = None,
 		full_connectivity=dflt.full_connectivity,skip=[],keep_unknown=dflt.keep_unknown):		#Initialise data file
 		from copy import copy
@@ -2775,7 +2775,8 @@ class fdata(object):						#FEHM data file.
 		self._iter=copy(dflt.iter)
 		self._nfinv = False
 		self._nobr = False		
-		self._head = False					
+		self._head = False		
+		self._air = None
 		self._flxn = False					
 		self._vapl = False					
 		self._adif = None
@@ -2943,7 +2944,7 @@ class fdata(object):						#FEHM data file.
 						self._read_nfinv,self._read_hist,self._read_histnode,self._read_carb,self._read_model,
 						 self._read_macro,self._read_nobr,self._read_flxz,self._read_rlpm,self._read_macro,
 						 self._read_trac,self._read_model,self._read_model,self._read_vapl,self._read_adif,
-						 self._read_ngas,self._read_flxo,self._read_head,self._read_flxn]))
+						 self._read_ngas,self._read_flxo,self._read_head,self._read_flxn, self._read_air, self._read_air]))
 		self._sections=[]
 		"""Need to first establish dimensionality of input file. Requires initial read through."""
 		more = True
@@ -3047,6 +3048,7 @@ class fdata(object):						#FEHM data file.
 		if self.sol: self._write_sol(outfile); self._write_unparsed(outfile,'sol')
 		if self.nfinv: self._write_nfinv(outfile); self._write_unparsed(outfile,'nfinv')
 		if self.nobr: self._write_nobr(outfile); self._write_unparsed(outfile,'nobr')
+		if self.air != None: self._write_air(outfile); self._write_unparsed(outfile,'air')
 		if self.head: self._write_head(outfile); self._write_unparsed(outfile,'head')
 		if self.flxn: self._write_flxn(outfile); self._write_unparsed(outfile,'flxn')
 		if self.vapl: self._write_vapl(outfile); self._write_unparsed(outfile,'vapl')
@@ -3229,6 +3231,19 @@ class fdata(object):						#FEHM data file.
 		if self.adif:
 			outfile.write('adif\n')
 			outfile.write(str(self.adif)+'\n')
+	def _read_air(self,infile):								#AIR: Reads AIR/AIRWATER macro.
+		line = infile.readline().strip().split()
+		ico2d = float(line[0])
+		nums = infile.readline().strip().split()
+		assert len(nums) == 2, "ERROR bro"
+		self._air = [ico2d, float(nums[0]), float(nums[1])]
+	def _write_air(self,outfile):								#Writes AIR/AIRWATER macro.
+		if self._air is not None:
+			outfile.write('air\n')
+			outfile.write('%i\n'%self._air[0])
+			outfile.write('%8.7f %8.7f\n'%(self._air[1], self._air[2]))
+	def set_air(self, ico2d, reference_temperature, reference_pressure):
+		self._air = [ico2d, reference_temperature, reference_pressure]
 	def _read_boun(self,infile):							#BOUN: Reads BOUN macro.
 		line=infile.readline().strip()	
 		new_bouns=[]
@@ -4310,6 +4325,7 @@ class fdata(object):						#FEHM data file.
 			else: self.time[param] = float(num)
 		line=infile.readline().strip()
 		while line.strip():
+			line = line.split('!')[0]
 			nums = line.split()
 			time = np.array([float(num) for num in nums])
 			self._times.append(time)
@@ -6294,6 +6310,9 @@ class fdata(object):						#FEHM data file.
 	def _get_head(self): return self._head
 	def _set_head(self,value): self._head = value
 	head = property(_get_head, _set_head) #: (*int*,*fl64*) Boolean integer calling for head inputs (instead of pressure) in FEHM. If assigned a float, then all input heads will be incremented by this amount.
+	def _get_air(self): return self._air
+	def _set_air(self,value): self._air = value
+	air = property(_get_air, _set_air) #: (*lst*) Three item list assigning (1) integer specifying type of airwater model, (2) reference temperature, (3) reference pressure.
 	def _get_flxn(self): return self._flxn
 	def _set_flxn(self,value): self._flxn = value
 	flxn = property(_get_flxn, _set_flxn) #: (*int*,*fl64*) Boolean integer calling for non-zero source/sink fluxes to be output to file source_sink.flux
