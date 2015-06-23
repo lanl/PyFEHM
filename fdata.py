@@ -4395,7 +4395,7 @@ class fdata(object):						#FEHM data file.
 				for t_cpt in time: outfile.write(str(t_cpt)+'\t')					
 				outfile.write('\n')
 		outfile.write('\n')
-			self._write_general_macro(outfile, 'time')
+		self._write_general_macro(outfile, 'time')
 	def print_time(self):										#Prints out variables contained in TIME.
 		'''Display contents of TIME macro.
 		'''
