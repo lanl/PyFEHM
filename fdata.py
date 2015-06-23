@@ -2146,6 +2146,31 @@ class _tracer_generator(object):
 	def _get_zone(self): return self._zone
 	def _set_zone(self,value): self._zone = value
 	zone = property(_get_zone,_set_zone) #: (**)
+class fgeneral(object): 					#PyFEHM general (undefined) macro class
+	def __init__(self, lines, insert_after, zonelist, parent):
+		self.lines = lines
+		self.zonelist = zonelist
+		self.insert_after = insert_after
+		self._parent = parent
+		
+		# check zonelist correct format
+		if type(self.zonelist) in [int, str]:
+			if self.zonelist in self._parent.zone.keys():
+				self.zonelist = [self._parent.zone[self.zonelist],]
+		zns = []
+		for zn in self.zonelist:
+			if type(zn) in [int, str]:
+				if zn in self._parent.zone.keys():
+					zns.append(self._parent.zone[zn])
+			else:
+				zns.append(zn)
+		self.zonelist = zns
+		
+		# check lines correct format
+		assert type(lines) in [list, tuple], "ERROR: bad type for lines, bro"
+		assert len(lines) > 0, "ERROR: lines are empty"
+		for line in lines:
+			assert type(line) is str, "ERROR: each entry in lines must be a string"
 class fstorage(object):
 	"""Storage object - allows user to save information to the dat file.
 	
@@ -2750,7 +2775,7 @@ class fdata(object):						#FEHM data file.
 	"""		
 	__slots__=['_silent','_gridfilename','_inconfilename','_sticky_zones','_allMacro','_allModel','_associate',
 			'_bounlist','_cont','_ctrl','_grid','_incon','_hist','_iter','_nfinv','_nobr','_head','_flxn','_vapl','_adif','_rlpmlist','_sol',
-			'_time','text','_times','_zonelist','_writeSubFiles','_strs','_ngas','_carb','_trac','_files','_verbose',
+			'_time','text','_times','_zonelist','_writeSubFiles','_strs','_ngas','_carb','_trac','_files','_verbose','_general_macrolist',
 			'_tf','_ti','_dti','_dtmin','_dtmax','_dtn','_dtx','_sections','_help','_running','_unparsed_blocks','keep_unknown','_flxo',
 			'_output_times','_path','_vtk','_diagnostic','_storage','_air']
 	def __init__(self,filename='',gridfilename='',inconfilename='',sticky_zones=dflt.sticky_zones,associate=dflt.associate,work_dir = None,
@@ -2781,6 +2806,7 @@ class fdata(object):						#FEHM data file.
 		self._vapl = False					
 		self._adif = None
 		self._rlpmlist=[]
+		self._general_macrolist = []
 		self._sol = copy(dflt.sol)
 		self.text=[]					#: (*str*) Information about the model printed at the top of the input file.
 		self._time=copy(dflt.time)
@@ -4648,6 +4674,17 @@ class fdata(object):						#FEHM data file.
 			self.zone[index]._Pi = Pi
 			self.zone[index]._Ti = Ti
 			self.zone[index]._Si = Si
+	def general_macro(self, lines, insert_after, zonelist = []):
+		self._general_macrolist.append(fgeneral(lines, insert_after, zonelist, parent = self))
+	def _write_general_macro(self, outfile, macro):
+		for general in self._general_macrolist:
+			if general.insert_after == macro:
+				# write out zones if defined
+				if self.sticky_zones:
+					self._write_zonn_one(outfile,general.zonelist)
+				# write out macro lines
+				for line in general.lines:
+					outfile.write(line.rstrip()+'\n')
 	def run(self,input='',grid = '',incon='',exe=dflt.fehm_path,files=dflt.files,verbose = None, until=None,autorestart=0,use_paths=False,write_files_only = False,diagnostic = False, clean = False):
 		'''Run an fehm simulation. This command first writes out the input file, *fehmn.files* and this incon file
 		if changes have been made. A command line call is then made to the FEHM executable at the specified path (defaults
@@ -5925,6 +5962,7 @@ class fdata(object):						#FEHM data file.
 					for macro in macros: macro.file = file_nm
 					macrofile.write('stop\n')
 					macrofile.close()
+		self._write_general_macro(outfile, macroName)
 		return True
 	def _get_macro(self,macro):									#Constructs macro lists and dictionaries
 		tempDict = []
@@ -6313,6 +6351,8 @@ class fdata(object):						#FEHM data file.
 	def _get_air(self): return self._air
 	def _set_air(self,value): self._air = value
 	air = property(_get_air, _set_air) #: (*lst*) Three item list assigning (1) integer specifying type of airwater model, (2) reference temperature, (3) reference pressure.
+	def _get_general_macrolist(self): return self._general_macrolist
+	general_macrolist = property(_get_general_macrolist) #: (*lst*) List of general macros. A general macro is one that has no explicit PyFEHM definition but is recognized by FEHM. General macros are written to the input file verbatim.
 	def _get_flxn(self): return self._flxn
 	def _set_flxn(self,value): self._flxn = value
 	flxn = property(_get_flxn, _set_flxn) #: (*int*,*fl64*) Boolean integer calling for non-zero source/sink fluxes to be output to file source_sink.flux
