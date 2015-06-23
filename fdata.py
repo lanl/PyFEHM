@@ -3257,6 +3257,7 @@ class fdata(object):						#FEHM data file.
 		if self.adif:
 			outfile.write('adif\n')
 			outfile.write(str(self.adif)+'\n')
+		self._write_general_macro(outfile, 'adif')
 	def _read_air(self,infile):								#AIR: Reads AIR/AIRWATER macro.
 		line = infile.readline().strip().split()
 		ico2d = float(line[0])
@@ -3268,6 +3269,7 @@ class fdata(object):						#FEHM data file.
 			outfile.write('air\n')
 			outfile.write('%i\n'%self._air[0])
 			outfile.write('%8.7f %8.7f\n'%(self._air[1], self._air[2]))
+		self._write_general_macro(outfile, 'air')
 	def set_air(self, ico2d, reference_temperature, reference_pressure):
 		self._air = [ico2d, reference_temperature, reference_pressure]
 	def _read_boun(self,infile):							#BOUN: Reads BOUN macro.
@@ -3382,6 +3384,7 @@ class fdata(object):						#FEHM data file.
 					outfile.write(str(nm)+'\n')
 			nm+=1
 		outfile.write('\n')
+		self._write_general_macro(outfile, 'boun')
 	def _add_boun(self,boun=fboun()):							#Adds a BOUN model.
 		boun._parent = self
 		if isinstance(boun.zone,(int,tuple,str)): boun.zone = [boun.zone]
@@ -3440,6 +3443,7 @@ class fdata(object):						#FEHM data file.
 		if self.carb.brine: outfile.write('brine\n')
 		self.sticky_zones = copy(sz)
 		outfile.write('endcarb\n')
+		self._write_general_macro(outfile, 'carb')
 	def _read_cont(self,infile):							#CONT: Reads CONT macro.
 		line=infile.readline().strip()
 		nums = line.split()
@@ -3499,6 +3503,7 @@ class fdata(object):						#FEHM data file.
 		for var in self.cont.variables:
 			outfile.write(var+'\n')
 		outfile.write('end\n')
+		self._write_general_macro(outfile, 'cont')
 	def _read_ctrl(self,infile):							#CTRL: Reads CTRL macro.
 		line=infile.readline().strip()
 		nums = line.split()
@@ -3566,6 +3571,7 @@ class fdata(object):						#FEHM data file.
 		if not self.ctrl['geometry_ICNL']==None: outfile.write(str(self.ctrl['geometry_ICNL'])+'\t')
 		if not self.ctrl['stor_file_LDA']==None: outfile.write(str(self.ctrl['stor_file_LDA'])+'\t')
 		outfile.write('\n')
+		self._write_general_macro(outfile, 'ctrl')
 	def print_ctrl(self):										#Prints out variables contained in CTRL.
 		'''Display contents of CTRL macro.
 		'''
@@ -3656,10 +3662,12 @@ class fdata(object):						#FEHM data file.
 			outfile.write('head\n')
 		else:
 			outfile.write('head\t'+str(self.head)+'\n')
+		self._write_general_macro(outfile, 'head')
 	def _read_flxn(self,infile,line):						#HEAD: Reads FLXN macro.
 		self.head=True
 	def _write_flxn(self,outfile):								#Writes FLXN macro.
 		outfile.write('flxn\n')
+		self._write_general_macro(outfile, 'flxn')
 	def _write_hist(self,outfile):								#Writes HIST macro.
 		if not self.hist.nodelist and not self.hist.zonelist and not self.hist.azonelist and not self.hist.zoneflux: _buildWarnings('WARNING: no zones or nodes specified for history output'); return
 		if not self.hist.variables: _buildWarnings('WARNING: no variables requested in hist')
@@ -3768,6 +3776,7 @@ class fdata(object):						#FEHM data file.
 		for var in vars:
 			outfile.write(var+'\n')
 		outfile.write('end\n')
+		self._write_general_macro(outfile, 'hist')
 	def _read_flxo(self,infile): 							#FLXO: Reads FLXO macro.
 		line=infile.readline().strip()
 		nums = line.split()
@@ -3802,6 +3811,7 @@ class fdata(object):						#FEHM data file.
 			if isinstance(nd1,fnode): nd1 = nd1.index
 			if isinstance(nd2,fnode): nd2 = nd2.index
 			outfile.write(str(nd1)+'\t'+str(nd2)+'\n') 
+		self._write_general_macro(outfile, 'flxo')
 	def _read_iter(self,infile):							#ITER: Reads ITER macro.
 		line=infile.readline().strip()
 		nums = line.split()
@@ -3833,6 +3843,7 @@ class fdata(object):						#FEHM data file.
 		if not self.iter['number_SOR_iterations_ICOUPL']==None: outfile.write(str(self.iter['number_SOR_iterations_ICOUPL'])+'\t')
 		if not self.iter['max_machine_time_RNMAX']==None: outfile.write(str(self.iter['max_machine_time_RNMAX'])+'\t')
 		outfile.write('\n')
+		self._write_general_macro(outfile, 'iter')
 	def print_iter(self):										#Prints out variables contained in ITER.
 		'''Display contents of ITER macro.
 		'''
@@ -3842,11 +3853,13 @@ class fdata(object):						#FEHM data file.
 	def _write_nfinv(self,outfile):								#Writes NFINV macro.
 		if self.nfinv:
 			outfile.write('nfinv\n')
+		self._write_general_macro(outfile, 'nfinv')
 	def _read_nobr(self,infile):							#NOBR: Reads NOBR macro.
 		self.nobr=True
 	def _write_nobr(self,outfile):								#Writes NOBR macro.
 		if self.nobr:
 			outfile.write('nobr\n')
+		self._write_general_macro(outfile, 'nobr')
 	def _read_rlpm(self,infile):							#RLPM: Reads RLPM macro.		
 		moreGroups=True
 		line=infile.readline().strip().split()
@@ -3933,6 +3946,7 @@ class fdata(object):						#FEHM data file.
 					outfile.write(str(zone[0])+'\t'+str(zone[1])+'\t'+str(zone[2])+'\t')
 					outfile.write(str(rlpm.group)+'\n')
 		outfile.write('\n')
+		self._write_general_macro(outfile, 'rlpm')
 	def _add_rlpm(self,rlpm=frlpm()):							
 		rlpm._parent = self
 		if rlpm.group == None: 
@@ -3956,6 +3970,7 @@ class fdata(object):						#FEHM data file.
 		if not self.sol['coupling_NTT']==None: outfile.write(str(self.sol['coupling_NTT'])+'\t')
 		if not self.sol['element_integration_INTG']==None: outfile.write(str(self.sol['element_integration_INTG'])+'\t')
 		outfile.write('\n')
+		self._write_general_macro(outfile, 'sol')
 	def _read_strs(self,infile):							#STRS: Reads STRS and associated macros.
 		from copy import deepcopy
 		line=infile.readline().strip()
@@ -4032,6 +4047,7 @@ class fdata(object):						#FEHM data file.
 		outfile.write('tolerance\n')
 		outfile.write(str(self.strs.tolerance)+'\n')
 		outfile.write('stressend\n')
+		self._write_general_macro(outfile, 'strs')
 	def _read_ngas(self,infile):							#NGAS: Reads NGAS and associated macros.
 		line = infile.readline().strip().split()
 		self.ngas.dof = int(float(line[0]))
@@ -4100,6 +4116,7 @@ class fdata(object):						#FEHM data file.
 			elif isinstance(k, int):
 				outfile.write('-'+str(k)+'\t0\t0\t'+str(self.ngas.source[k])+'\n')
 		outfile.write('\n')
+		self._write_general_macro(outfile, 'ngas')
 	def _read_text(self,infile):							#TEXT: Reads TEXT macro.
 		more=True
 		line=infile.readline().strip()
@@ -4114,6 +4131,7 @@ class fdata(object):						#FEHM data file.
 			outfile.write('text\n')
 			for line in text: outfile.write(line)			
 		outfile.write('\n\n')	
+		self._write_general_macro(outfile, 'text')
 	def _read_trac(self,infile):							#TRAC: Reads TRAC and associated macros.
 		self.trac._on = True
 		# group 1
@@ -4342,6 +4360,7 @@ class fdata(object):						#FEHM data file.
 				outfile.write(str(sp.density_modifier)+'\n')
 				outfile.write('\n')
 				break
+		self._write_general_macro(outfile, 'trac')
 	def _read_time(self,infile):							#TIME: Reads TIME macro.
 		line=infile.readline()
 		nums = line.split()
@@ -4376,6 +4395,7 @@ class fdata(object):						#FEHM data file.
 				for t_cpt in time: outfile.write(str(t_cpt)+'\t')					
 				outfile.write('\n')
 		outfile.write('\n')
+			self._write_general_macro(outfile, 'time')
 	def print_time(self):										#Prints out variables contained in TIME.
 		'''Display contents of TIME macro.
 		'''
@@ -4428,6 +4448,7 @@ class fdata(object):						#FEHM data file.
 	def _write_vapl(self,outfile):								#Writes VAPL macro.
 		if self.vapl:
 			outfile.write('vapl\n')
+			self._write_general_macro(outfile, 'vapl')
 	def new_zone(self,index=None,name=None,rect=None,nodelist=None,file=None,from_file = None,permeability=None,conductivity=None,density=None,
 		specific_heat=None,porosity=None,youngs_modulus=None,poissons_ratio=None,thermal_expansion=None,pressure_coupling=None,
 		Pi=None,Ti=None,Si=None,overwrite=False):
@@ -6159,6 +6180,7 @@ class fdata(object):						#FEHM data file.
 				outfile.write(str(model_count)+'\n')
 			model_count+=1
 		outfile.write('\n')	
+		self._write_general_macro(outfile, modelName)
 	def _write_model_ppor(self,outfile):
 		ws = _title_string(model_titles['ppor'],72)
 		outfile.write(ws)
