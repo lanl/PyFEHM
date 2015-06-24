@@ -4706,7 +4706,7 @@ class fdata(object):						#FEHM data file.
 				# write out macro lines
 				for line in general.lines:
 					outfile.write(line.rstrip()+'\n')
-	def run(self,input='',grid = '',incon='',exe=dflt.fehm_path,files=dflt.files,verbose = None, until=None,autorestart=0,use_paths=False,write_files_only = False,diagnostic = False, clean = False):
+	def run(self,input='',grid = '',incon='',exe=dflt.fehm_path,files=dflt.files,verbose = None, until=None,autorestart=0,use_paths=False,write_files_only = False,diagnostic = False, clean = False, writeSubFiles=True):
 		'''Run an fehm simulation. This command first writes out the input file, *fehmn.files* and this incon file
 		if changes have been made. A command line call is then made to the FEHM executable at the specified path (defaults
 		to *fehm.exe* in the working directory if not specified).
@@ -4733,6 +4733,8 @@ class fdata(object):						#FEHM data file.
 		:type diagnostic: bool
 		:param clean: Delete files after simulation 'nop.temp'
 		:type clean: bool
+		:param writeSubFiles: Write out subfiles when running
+		:type clean: bool
 		'''
 		
 		if verbose != None: self._verbose = verbose
@@ -4755,7 +4757,7 @@ class fdata(object):						#FEHM data file.
 		# ASSEMBLE FILES IN CORRECT DIRECTORIES
 		if self.work_dir: wd = self.work_dir + os.sep
 		else: wd = os.getcwd() + os.sep
-		returnFlag = self.write(wd+self._path.filename) 				# ALWAYS write input file
+		returnFlag = self.write(wd+self._path.filename,writeSubFiles=writeSubFiles) 				# ALWAYS write input file
 		if not returnFlag: 
 			pyfehm_print('ERROR: writing files',self._silent)
 			return
