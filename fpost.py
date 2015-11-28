@@ -2277,7 +2277,10 @@ class fvtk(object):
 		if self.zscale != 1.: 
 			zmin = np.min(nds[:,2])
 			nds[:,2] = (nds[:,2]-zmin)*self.zscale+zmin
-		cns = [[nd.index-1 for nd in el.nodes] for el in self.parent.grid.elemlist]
+		if isinstance(self.parent.grid.elemlist[0],list):
+			cns = [[nd-1 for nd in el] for el in self.parent.grid.elemlist]
+		else:
+			cns = [[nd.index-1 for nd in el.nodes] for el in self.parent.grid.elemlist]
 		
 		# make grid
 		if len(cns[0]) == 3:
