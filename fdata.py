@@ -2746,6 +2746,9 @@ class files(object):						#FEHM file constructor.
 	def _get_outp(self): return self._outp
 	def _set_outp(self,value):  self._outp = value; self._use_outp = True
 	outp = property(_get_outp,_set_outp)	#: (*str*) Name of output file.
+	def _get_nopf(self): return self._nopf
+	def _set_nopf(self,value):  self._nopf = value; self._use_nopf = True
+	nopf = property(_get_nopf,_set_nopf)	#: (*str*) Name of nopf file.
 	def _get_check(self): return self._check
 	def _set_check(self,value):  self._check = value
 	check = property(_get_check,_set_check)	#: (*str*) Name of check file.
