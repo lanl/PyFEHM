@@ -3221,11 +3221,10 @@ class fdata(object):						#FEHM data file.
 		names = [name for name,var in zip(names,vars) if isinstance(var,np.ndarray)]
 		if not self._running: names = [name+'i' for name in names]
 		vars = np.array([var for var in vars if isinstance(var,np.ndarray)])
-		
 		for nd,var in zip(self.grid.nodelist,vars.T):
 			for i,name in enumerate(names):
 				nd.__setattr__('_'+name,var[i])
-				
+			
 		names = ['strs','disp']
 		strs2D = False; strs3D = False
 		if isinstance(self.incon.strs_xx,np.ndarray):
@@ -4709,7 +4708,7 @@ class fdata(object):						#FEHM data file.
 				# write out macro lines
 				for line in general.lines:
 					outfile.write(line.rstrip()+'\n')
-	def run(self,input='',grid = '',incon='',exe=dflt.fehm_path,files=dflt.files,verbose = None, until=None,autorestart=0,use_paths=False,write_files_only = False,diagnostic = False, clean = False, writeSubFiles=True):
+	def run(self,input='',grid = '',incon='',exe=dflt.fehm_path,files=dflt.files,verbose = None, until=None,autorestart=0,use_paths=False,no_paths = False,write_files_only = False,diagnostic = False, clean = False, writeSubFiles=True):
 		'''Run an fehm simulation. This command first writes out the input file, *fehmn.files* and this incon file
 		if changes have been made. A command line call is then made to the FEHM executable at the specified path (defaults
 		to *fehm.exe* in the working directory if not specified).
@@ -4797,6 +4796,9 @@ class fdata(object):						#FEHM data file.
 			
 		if self.ctrl['stor_file_LDA']: self.files._use_stor = True 		# stor file requested?
 			
+		if no_paths: 
+			self.files.grid = self.grid.filename
+			self.files.incon = self.incon.filename
 		self.files.write()				# ALWAYS write fehmn.files
 		if write_files_only: return 		# return here if user requests only write out of files
 		self.files.exe = exe
