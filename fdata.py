@@ -3118,8 +3118,9 @@ class fdata(object):						#FEHM data file.
 		:param overwrite: Flag to overwrite macro if already exists for a particular zone.
 		:type overwrite: bool
 		'''
+		
 		if isinstance(obj,fmacro): self._add_macro(obj,overwrite)
-		if isinstance(obj,fmodel): self._add_model(obj)
+		elif isinstance(obj,fmodel): self._add_model(obj)
 		elif isinstance(obj,fzone): self._add_zone(obj,overwrite)
 		elif isinstance(obj,fboun): self._add_boun(obj)
 		elif isinstance(obj,frlpm): self._add_rlpm(obj)
@@ -5724,6 +5725,7 @@ class fdata(object):						#FEHM data file.
 		# check macro zone definition
 		macro._parent = self
 		if isinstance(macro.zone,list) and len(macro.zone)==0: macro.zone = self.zone[0] 	# assign everywhere zone
+		#elif isinstance(macro.zone,fnode): macro.zone = tuple([macro.zone.index, 1, 1])
 		elif isinstance(macro.zone,tuple): macro.zone = tuple([int(ls) for ls in macro.zone])
 		elif isinstance(macro.zone,(int,str)):
 			if macro.zone in self.zone.keys(): macro.zone = self.zone[macro.zone]
@@ -5773,15 +5775,39 @@ class fdata(object):						#FEHM data file.
 					if macro.type =='rlp': nd._rlpmodel = macro.index
 					elif macro.type =='permmodel': nd._permmodel = macro.index
 		elif isinstance(macro.zone,tuple):
-			'placeholder'
+			nd = self.grid.node[macro.zone[0]]
+			if macro.type == 'pres':
+				if macro.param['saturation'] == 1:
+					nd._Pi = macro.param['pressure']
+					nd._Ti = macro.param['temperature']
+					nd._Si = 1.
+				elif macro.param['saturation'] == 2:
+					nd._Pi = macro.param['pressure']
+					nd._Ti = tsat(macro.param['pressure'])
+					nd._Si = macro.param['temperature']
+				elif macro.param['saturation'] == 3:
+					nd._Pi = macro.param['pressure']
+					nd._Ti = macro.param['temperature']
+					nd._Si = 0.
+			elif macro.type == 'rock':
+				nd._density = macro.param['density']
+				nd._specific_heat = macro.param['specific_heat']
+				nd._porosity = macro.param['porosity']
+			elif macro.type == 'elastic':
+				nd._youngs_modulus = macro.param['youngs_modulus']
+				nd._poissons_ratio = macro.param['poissons_ratio']
+			elif macro.type == 'biot':
+				nd._thermal_expansion = macro.param['thermal_expansion']
+				nd._pressure_coupling = macro.param['pressure_coupling']
+			elif macro.type == 'cond':
+				nd._conductivity = np.array([macro.param['cond_x'],macro.param['cond_x'],macro.param['cond_x']])
+			elif macro.type == 'perm':
+				nd._permeability = np.array([macro.param['kx'],macro.param['ky'],macro.param['kz']])
+			
 		elif isinstance(macro.zone,fzone) or isinstance(macro.zone,int) or isinstance(macro.zone,str):
 			zn = macro.zone
 			if isinstance(macro.zone,int) or isinstance(macro.zone,str): zn = self.zone[zn]
 			for nd in zn.nodelist:	
-				#keys = macro.param.keys()
-				# add material properties
-				#addToNode = dict([(k,macro.param[k]) for k in keys if k in node_props])
-				#nd._material.update(addToNode)
 				# add generator properties
 				if macro.type =='flow':
 					addToNode = macro.param
@@ -5789,10 +5815,6 @@ class fdata(object):						#FEHM data file.
 				if macro.type =='co2flow':
 					addToNode = {'co2rate':macro.param['rate'],'co2energy':macro.param['energy'],'co2impedance':macro.param['impedance'],'co2bc_flag':macro.param['bc_flag']}
 					nd._generator.update(addToNode)
-				# add initial condition properties
-				#if macro.type =='pres' and not self.inconfilename:
-				#	addToNode = {'P':macro.param['pressure'],'T':macro.param['temperature'],'S':macro.param['saturation']}
-				#	nd._variable.update(addToNode)
 			zn._updateFlag = False
 			if macro.type == 'pres':
 				if macro.param['saturation'] == 1:
@@ -7056,8 +7078,8 @@ class fdiagnostic(object):
 			user32 = ctypes.windll.user32
 			screensize = np.array([user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)])
 			self.fig = plt.figure(figsize = screensize/120.,dpi = 100)
-			mng = plt.get_current_fig_manager()
-			mng.window.wm_geometry('+%04i+%04i'%(screensize[0]/20.,screensize[1]/20.))
+			#mng = plt.get_current_fig_manager()
+			#mng.window.wm_geometry('+%04i+%04i'%(screensize[0]/20.,screensize[1]/20.))
 		else:
 			self.fig = plt.figure()
 

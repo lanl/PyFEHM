@@ -67,8 +67,9 @@ dat.tf=10.
 #dat.iter['machine_tolerance_TMCH'] = -0.5e-5
 
 dat.files.root = root
-dat.run(root+'_INPUT.dat', verbose=True) 		# note, because no executable path is specified, PyFEHM retrieves the executable specified in the default path
-print "hi"
+dat.run(root+'_INPUT.dat', verbose=True, diagnostic = True) 		# note, because no executable path is specified, PyFEHM retrieves the executable specified in the default path
+
+asdf
 # 7.1.7 Visualisation
 c = fcontour(dat.work_dir+'\\*.csv')
 

@@ -183,8 +183,7 @@ class fdflt(object):
 		elif os.path.isfile(rc_home2): fp = open(rc_home2)
 		elif os.path.isfile(rc_lib1): fp = open(rc_lib1)
 		elif os.path.isfile(rc_lib2): fp = open(rc_lib2)
-		else: return
-		
+		else: return		
 		lns = fp.readlines()
 		for ln in lns:
 			ln = ln.split('#')[0]		# strip off the comment
