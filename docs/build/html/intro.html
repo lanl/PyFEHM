@@ -1,0 +1,249 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  
+  <!-- Licensed under the Apache 2.0 License -->
+  <link rel="stylesheet" type="text/css" href="_static/fonts/open-sans/stylesheet.css" />
+  <!-- Licensed under the SIL Open Font License -->
+  <link rel="stylesheet" type="text/css" href="_static/fonts/source-serif-pro/source-serif-pro.css" />
+  <link rel="stylesheet" type="text/css" href="_static/css/bootstrap.min.css" />
+  <link rel="stylesheet" type="text/css" href="_static/css/bootstrap-theme.min.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+    <title>Introduction &#8212; PyFEHM 1.0.4 documentation</title>
+    <link rel="stylesheet" href="_static/guzzle.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="fgrid: FEHM grid manipulation" href="fgrid.html" />
+    <link rel="prev" title="Welcome to PyFEHM’s documentation!" href="index.html" />
+  
+   
+
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="fgrid.html" title="fgrid: FEHM grid manipulation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to PyFEHM’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">PyFEHM 1.0.4 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="container-wrapper">
+
+      <div id="mobile-toggle">
+        <a href="#"><span class="glyphicon glyphicon-align-justify" aria-hidden="true"></span></a>
+      </div>
+  <div id="left-column">
+    <div class="sphinxsidebar"><a href="
+    index.html" class="text-logo">PyFEHM</a>
+<div class="sidebar-block">
+  <div class="sidebar-wrapper">
+    <h2>Table Of Contents</h2>
+  </div>
+  <div class="sidebar-toc">
+    
+    
+      <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fgrid.html">fgrid: FEHM grid manipulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fdata.html">fdata: FEHM input file manipulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fpost.html">fpost: FEHM output file manipulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fvars.html">fvars: FEHM thermodynamic calculations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorials</a></li>
+</ul>
+
+    
+  </div>
+</div>
+<div class="sidebar-block">
+  <div class="sidebar-wrapper">
+    <h2>Contents</h2>
+    <div class="sidebar-localtoc">
+      <ul>
+<li><a class="reference internal" href="#">Introduction</a><ul>
+<li><a class="reference internal" href="#installation">Installation</a><ul>
+<li><a class="reference internal" href="#python">Python</a></li>
+<li><a class="reference internal" href="#pyfehm">PyFEHM</a></li>
+<li><a class="reference internal" href="#fehm">FEHM</a></li>
+<li><a class="reference internal" href="#paraview">Paraview</a></li>
+<li><a class="reference internal" href="#lagrit">LaGriT</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#using-pyfehm">Using PyFEHM</a></li>
+<li><a class="reference internal" href="#using-this-manual">Using this manual</a></li>
+</ul>
+</li>
+</ul>
+
+    </div>
+  </div>
+</div>
+<div class="sidebar-block">
+  <div class="sidebar-wrapper">
+    <div id="main-search">
+      <form class="form-inline" action="search.html" method="GET" role="form">
+        <div class="input-group">
+          <input name="q" type="text" class="form-control" placeholder="Search...">
+        </div>
+        <input type="hidden" name="check_keywords" value="yes" />
+        <input type="hidden" name="area" value="default" />
+      </form>
+    </div>
+  </div>
+</div>
+      
+    </div>
+  </div>
+        <div id="right-column">
+          
+          <div role="navigation" aria-label="breadcrumbs navigation">
+            <ol class="breadcrumb">
+              <li><a href="index.html">Docs</a></li>
+              
+              <li>Introduction</li>
+            </ol>
+          </div>
+          
+          <div class="document clearer body">
+            
+  <div class="section" id="introduction">
+<h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
+<p>Python is an open-source, object-oriented scripting language with extensive functionality, a large, active
+development community and loads of online resources for troubleshooting. PyFEHM is a set of classes and
+methods to enable use of FEHM and auxiliary tasks within the Python scripting environment. Briefly, PyFEHM functionality includes</p>
+<ol class="arabic simple">
+<li>Unstructured/structure grid parsing, structured grid generation and manipulation (see Chapter <a class="reference internal" href="fgrid.html#fgrid-chapter"><span class="std std-ref">2</span></a>).</li>
+<li>FEHM input file construction. Support for many macros, restart files, stress and carbon dioxide modules
+(see Chapter <a class="reference internal" href="fdata.html#fdata-chapter"><span class="std std-ref">3</span></a>).</li>
+<li>Post-processing of output (see Chapter <a class="reference internal" href="fpost.html#fpost-chapter"><span class="std std-ref">4</span></a>), including visualisation in Paraview.</li>
+<li>Scripting tools that supports Python’s built-in multi-processing capabilities for batch simulations.</li>
+</ol>
+<p>Introductory <a class="reference internal" href="tutorial.html#ftutorial-chapter"><span class="std std-ref">tutorials</span></a> to PyFEHM are also provided.</p>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="python">
+<h3>Python<a class="headerlink" href="#python" title="Permalink to this headline">¶</a></h3>
+<p>PyFEHM is supported on Python 2.6 and 2.7, but NOT 3.x. Instructions for downloading and installing Python can be
+found at www.python.org</p>
+<p>PyFEHM requires the following Python modules to be installed: NumPy, SciPy, Matplotlib. For windows users, 32- and 64-bit installers (for several
+Python versions) of these modules can be obtained from <a class="reference external" href="http://www.lfd.uci.edu/~gohlke/pythonlibs/">http://www.lfd.uci.edu/~gohlke/pythonlibs/</a></p>
+</div>
+<div class="section" id="pyfehm">
+<h3>PyFEHM<a class="headerlink" href="#pyfehm" title="Permalink to this headline">¶</a></h3>
+<p>A download link for the latest release version of <a class="reference external" href="pyfehm.lanl.gov">PyFEHM</a> can be found at <a class="reference external" href="pyfehm.lanl.gov">pyfehm.lanl.gov</a></p>
+<p>To install, download and extract the zip file, and run the setup script at the command line:</p>
+<p><code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">setup.py</span> <span class="pre">install</span></code></p>
+</div>
+<div class="section" id="fehm">
+<h3>FEHM<a class="headerlink" href="#fehm" title="Permalink to this headline">¶</a></h3>
+<p>The purpose of PyFEHM is construction of input and grid files for running FEHM simulations. Therefore, if the user does
+not have a copy of FEHM, their experience with PyFEHM is likely to be short and unsatisfactory.</p>
+<p>Downloading PyFEHM does not provide the user with an FEHM executable. <a class="reference external" href="https://fehm.lanl.gov/">FEHM</a> is free, but controlled, software and must
+be obtained by registering as a user at <a class="reference external" href="https://fehm.lanl.gov/">fehm.lanl.gov</a></p>
+</div>
+<div class="section" id="paraview">
+<h3>Paraview<a class="headerlink" href="#paraview" title="Permalink to this headline">¶</a></h3>
+<p>Paraview is a parallel, open-source visualisation software. PyFEHM supports a bridge with Paraview; information about the grid,
+model, and output data can be automatically exported and viewed in this program.</p>
+<p>Instructions for downloading and installing <a class="reference external" href="www.paraview.org">Paraview</a> can be found at <a class="reference external" href="www.paraview.org">www.paraview.org</a></p>
+<p>After installation, make sure to include the path to paraview.exe in you PATH environment variable. This will ensure
+PyFEHM can find Paraview and make full use of its capabilities.</p>
+</div>
+<div class="section" id="lagrit">
+<h3>LaGriT<a class="headerlink" href="#lagrit" title="Permalink to this headline">¶</a></h3>
+<p>LaGriT is a mesh generation package, developed at Los Alamos, with a variety of tools for creating and modifying tetrahedral
+meshes. PyFEHM requires an executable of LaGriT to perform some specialised tasks. For more information on obtaining a <a class="reference external" href="https://lagrit.lanl.gov/">LaGriT</a>
+executable, visit <a class="reference external" href="https://lagrit.lanl.gov/">lagrit.lanl.gov</a></p>
+</div>
+</div>
+<div class="section" id="using-pyfehm">
+<h2>Using PyFEHM<a class="headerlink" href="#using-pyfehm" title="Permalink to this headline">¶</a></h2>
+<p>PyFEHM consists of several Python modules. To access their functionality, the user must include the following line at the
+top of any Python script</p>
+<p><code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">fdata</span> <span class="pre">import*</span></code></p>
+<p>A configuration file, pyfehmrc, can be used to customise your installation of PyFEHM. For instance, default paths to FEHM or Paraview
+can be defined in the config file to avoid having to write these out in scripts. Other default behaviour in PyFEHM can also
+be modified by making changes to the config file.</p>
+<p>A sample configuration file, pyfehmrc_example, is included with the PyFEHM download. Copy this file to the
+site-packages folder in your Python installation, rename it to ‘pyfehmrc’ or ‘.pyfehmrc’, and modify according to the
+instructions inside.</p>
+</div>
+<div class="section" id="using-this-manual">
+<h2>Using this manual<a class="headerlink" href="#using-this-manual" title="Permalink to this headline">¶</a></h2>
+<p>This manual comprises sections for each of the important PyFEHM modules: <a class="reference internal" href="fgrid.html#fgrid-chapter"><span class="std std-ref">fgrid</span></a>,
+<a class="reference internal" href="fdata.html#fdata-chapter"><span class="std std-ref">fdata</span></a>, <a class="reference internal" href="fpost.html#fpost-chapter"><span class="std std-ref">fpost</span></a>, and <a class="reference internal" href="fvars.html#fvars-chapter"><span class="std std-ref">fvars</span></a>. In these, the important
+classes and their methods are documented, and example usage provided.</p>
+<p>One way to get acquainted with PyFEHM is to work through the <a class="reference internal" href="tutorial.html#ftutorial-chapter"><span class="std std-ref">tutorials</span></a> provided. These provide an
+introduction to the basic workflow of creating, running and visualising an FEHM simulation. They also document some of the more
+specialised capabilities of PyFEHM.</p>
+</div>
+</div>
+
+
+          </div>
+            
+  <div class="footer-relations">
+    
+      <div class="pull-left">
+        <a class="btn btn-default" href="index.html" title="previous chapter (use the left arrow)">Welcome to PyFEHM’s documentation!</a>
+      </div>
+    
+      <div class="pull-right">
+        <a class="btn btn-default" href="fgrid.html" title="next chapter (use the right arrow)">fgrid: FEHM grid manipulation</a>
+      </div>
+    </div>
+    <div class="clearer"></div>
+  
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="fgrid.html" title="fgrid: FEHM grid manipulation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to PyFEHM’s documentation!"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">PyFEHM 1.0.4 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+<script type="text/javascript">
+  $("#mobile-toggle a").click(function () {
+    $("#left-column").toggle();
+  });
+</script>
+<script type="text/javascript" src="_static/js/bootstrap.js"></script>
+  <div class="footer">
+    &copy; Copyright 2018, Los Alamos National Laboratory. Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+  </div>
+  </body>
+</html>

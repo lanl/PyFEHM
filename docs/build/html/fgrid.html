@@ -1,0 +1,837 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  
+  <!-- Licensed under the Apache 2.0 License -->
+  <link rel="stylesheet" type="text/css" href="_static/fonts/open-sans/stylesheet.css" />
+  <!-- Licensed under the SIL Open Font License -->
+  <link rel="stylesheet" type="text/css" href="_static/fonts/source-serif-pro/source-serif-pro.css" />
+  <link rel="stylesheet" type="text/css" href="_static/css/bootstrap.min.css" />
+  <link rel="stylesheet" type="text/css" href="_static/css/bootstrap-theme.min.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+    <title>fgrid: FEHM grid manipulation &#8212; PyFEHM 1.0.4 documentation</title>
+    <link rel="stylesheet" href="_static/guzzle.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="fdata: FEHM input file manipulation" href="fdata.html" />
+    <link rel="prev" title="Introduction" href="intro.html" />
+  
+   
+
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="fdata.html" title="fdata: FEHM input file manipulation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="intro.html" title="Introduction"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">PyFEHM 1.0.4 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="container-wrapper">
+
+      <div id="mobile-toggle">
+        <a href="#"><span class="glyphicon glyphicon-align-justify" aria-hidden="true"></span></a>
+      </div>
+  <div id="left-column">
+    <div class="sphinxsidebar"><a href="
+    index.html" class="text-logo">PyFEHM</a>
+<div class="sidebar-block">
+  <div class="sidebar-wrapper">
+    <h2>Table Of Contents</h2>
+  </div>
+  <div class="sidebar-toc">
+    
+    
+      <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">fgrid: FEHM grid manipulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fdata.html">fdata: FEHM input file manipulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fpost.html">fpost: FEHM output file manipulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fvars.html">fvars: FEHM thermodynamic calculations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorials</a></li>
+</ul>
+
+    
+  </div>
+</div>
+<div class="sidebar-block">
+  <div class="sidebar-wrapper">
+    <h2>Contents</h2>
+    <div class="sidebar-localtoc">
+      <ul>
+<li><a class="reference internal" href="#">fgrid: FEHM grid manipulation</a><ul>
+<li><a class="reference internal" href="#nodes">Nodes</a><ul>
+<li><a class="reference internal" href="#geometry-attributes">Geometry attributes</a></li>
+<li><a class="reference internal" href="#material-property-attributes">Material property attributes</a></li>
+<li><a class="reference internal" href="#state-attributes">State attributes</a></li>
+<li><a class="reference internal" href="#other-attributes">Other attributes</a></li>
+<li><a class="reference internal" href="#methods">Methods</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#connections">Connections</a><ul>
+<li><a class="reference internal" href="#attributes">Attributes</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#elements">Elements</a><ul>
+<li><a class="reference internal" href="#id1">Attributes</a></li>
+<li><a class="reference internal" href="#id2">Methods</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#grids">Grids</a><ul>
+<li><a class="reference internal" href="#attributes-object-lists">Attributes: object lists</a></li>
+<li><a class="reference internal" href="#attributes-grid-properties">Attributes: grid properties</a></li>
+<li><a class="reference internal" href="#id3">Methods</a></li>
+<li><a class="reference internal" href="#examples">Examples</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+    </div>
+  </div>
+</div>
+<div class="sidebar-block">
+  <div class="sidebar-wrapper">
+    <div id="main-search">
+      <form class="form-inline" action="search.html" method="GET" role="form">
+        <div class="input-group">
+          <input name="q" type="text" class="form-control" placeholder="Search...">
+        </div>
+        <input type="hidden" name="check_keywords" value="yes" />
+        <input type="hidden" name="area" value="default" />
+      </form>
+    </div>
+  </div>
+</div>
+      
+    </div>
+  </div>
+        <div id="right-column">
+          
+          <div role="navigation" aria-label="breadcrumbs navigation">
+            <ol class="breadcrumb">
+              <li><a href="index.html">Docs</a></li>
+              
+              <li>fgrid: FEHM grid manipulation</li>
+            </ol>
+          </div>
+          
+          <div class="document clearer body">
+            
+  <div class="section" id="fgrid-fehm-grid-manipulation">
+<span id="fgrid-chapter"></span><h1>fgrid: FEHM grid manipulation<a class="headerlink" href="#fgrid-fehm-grid-manipulation" title="Permalink to this headline">¶</a></h1>
+<p>This module contains classes and methods for the manipulation of FEHM grid
+files. Typically, usage will be limited to reading and writing of grid files,
+and the use of the spatial and connectivity information provided.</p>
+<p>PyFEHM can parse unstructured or structured grids in FEHM format. PyFEHM can construct orthogonal grids of arbitrary complexity using the
+<code class="xref py py-class docutils literal notranslate"><span class="pre">fmake</span></code> class or by calling <a class="reference internal" href="#fgrid.fgrid.make" title="fgrid.fgrid.make"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fgrid.make()</span></code></a>.</p>
+<p>For the purposes of this manual, the variable <code class="docutils literal notranslate"><span class="pre">geo</span></code> will be assumed
+to refer to a previously defined instance of the <a class="reference internal" href="#fgrid.fgrid" title="fgrid.fgrid"><code class="xref py py-class docutils literal notranslate"><span class="pre">fgrid</span></code></a> class.</p>
+<div class="section" id="nodes">
+<h2>Nodes<a class="headerlink" href="#nodes" title="Permalink to this headline">¶</a></h2>
+<p>The smallest quantum of the finite element grid. Node objects and associated
+connectivity information are automatically created when a grid file is parsed (<a class="reference internal" href="#fgrid.fgrid.read" title="fgrid.fgrid.read"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fgrid.read()</span></code></a>).</p>
+<p>In FEHM, a node is associated with a position in space and a control volume - the region of space
+uniquely associated with the node. It is connected to other nodes, forming elements and the finite element grid.</p>
+<p>When a grid is loaded and associated with an FEHM input file, material properties and zone information are
+mapped back onto the nodes. For example, if the <strong>ROCK</strong> macro has been assigned in an input file, then
+density information for a given node is accessed through its density attribute, <a class="reference internal" href="#fgrid.fnode.density" title="fgrid.fnode.density"><code class="xref py py-attr docutils literal notranslate"><span class="pre">fnode.density</span></code></a>.</p>
+<dl class="class">
+<dt id="fgrid.fnode">
+<em class="property">class </em><code class="descclassname">fgrid.</code><code class="descname">fnode</code><span class="sig-paren">(</span><em>index=None</em>, <em>position=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fgrid.html#fnode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fgrid.fnode" title="Permalink to this definition">¶</a></dt>
+<dd><p>FEHM grid node object.</p>
+</dd></dl>
+
+<div class="section" id="geometry-attributes">
+<h3>Geometry attributes<a class="headerlink" href="#geometry-attributes" title="Permalink to this headline">¶</a></h3>
+<dl class="attribute">
+<dt id="fgrid.fnode.index">
+<code class="descclassname">fnode.</code><code class="descname">index</code><a class="headerlink" href="#fgrid.fnode.index" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>int</em>) Integer number denoting the node.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fnode.position">
+<code class="descclassname">fnode.</code><code class="descname">position</code><a class="headerlink" href="#fgrid.fnode.position" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>lst[fl64]</em>) List of the node’s coordinates in 2- or 3-D space.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fnode.vol">
+<code class="descclassname">fnode.</code><code class="descname">vol</code><a class="headerlink" href="#fgrid.fnode.vol" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) Control volume associated with the node. This information only available if volumes() method called from grid attribute.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fnode.connected_nodes">
+<code class="descclassname">fnode.</code><code class="descname">connected_nodes</code><a class="headerlink" href="#fgrid.fnode.connected_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>lst[fnode]</em>) List of node objects connected to this node. This information only available if full_connectivity=True passed to fgrid.read()</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fnode.connections">
+<code class="descclassname">fnode.</code><code class="descname">connections</code><a class="headerlink" href="#fgrid.fnode.connections" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>lst[fconn]</em>) List of connection objects of which the node is a member.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fnode.elements">
+<code class="descclassname">fnode.</code><code class="descname">elements</code><a class="headerlink" href="#fgrid.fnode.elements" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>lst[felem]</em>) List of element objects of which the node is a member.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="material-property-attributes">
+<h3>Material property attributes<a class="headerlink" href="#material-property-attributes" title="Permalink to this headline">¶</a></h3>
+<dl class="attribute">
+<dt id="fgrid.fnode.permeability">
+<code class="descclassname">fnode.</code><code class="descname">permeability</code><a class="headerlink" href="#fgrid.fnode.permeability" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>list</em>) permeability values at node.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fnode.conductivity">
+<code class="descclassname">fnode.</code><code class="descname">conductivity</code><a class="headerlink" href="#fgrid.fnode.conductivity" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>list</em>) conductivity values at node.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fnode.density">
+<code class="descclassname">fnode.</code><code class="descname">density</code><a class="headerlink" href="#fgrid.fnode.density" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) density at node.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fnode.specific_heat">
+<code class="descclassname">fnode.</code><code class="descname">specific_heat</code><a class="headerlink" href="#fgrid.fnode.specific_heat" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) specific heat at node.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fnode.porosity">
+<code class="descclassname">fnode.</code><code class="descname">porosity</code><a class="headerlink" href="#fgrid.fnode.porosity" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) porosity at node.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fnode.youngs_modulus">
+<code class="descclassname">fnode.</code><code class="descname">youngs_modulus</code><a class="headerlink" href="#fgrid.fnode.youngs_modulus" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) Youngs modulus at node.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fnode.poissons_ratio">
+<code class="descclassname">fnode.</code><code class="descname">poissons_ratio</code><a class="headerlink" href="#fgrid.fnode.poissons_ratio" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) Poissons ratio at node.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fnode.thermal_expansion">
+<code class="descclassname">fnode.</code><code class="descname">thermal_expansion</code><a class="headerlink" href="#fgrid.fnode.thermal_expansion" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) Coefficient of thermal expansion at node.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fnode.pressure_coupling">
+<code class="descclassname">fnode.</code><code class="descname">pressure_coupling</code><a class="headerlink" href="#fgrid.fnode.pressure_coupling" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) Biot pressure coupling coefficient at node.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fnode.rlpmodel">
+<code class="descclassname">fnode.</code><code class="descname">rlpmodel</code><a class="headerlink" href="#fgrid.fnode.rlpmodel" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>int</em>) index of relative permeability model assigned to node</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fnode.permmodel">
+<code class="descclassname">fnode.</code><code class="descname">permmodel</code><a class="headerlink" href="#fgrid.fnode.permmodel" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>int</em>) index of stress-permeability model assigned to node.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fnode.pormodel">
+<code class="descclassname">fnode.</code><code class="descname">pormodel</code><a class="headerlink" href="#fgrid.fnode.pormodel" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>int</em>) index of variable porosity model assigned to node.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fnode.condmodel">
+<code class="descclassname">fnode.</code><code class="descname">condmodel</code><a class="headerlink" href="#fgrid.fnode.condmodel" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>int</em>) index of variable conductivity model assigned to node.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="state-attributes">
+<h3>State attributes<a class="headerlink" href="#state-attributes" title="Permalink to this headline">¶</a></h3>
+<dl class="attribute">
+<dt id="fgrid.fnode.Pi">
+<code class="descclassname">fnode.</code><code class="descname">Pi</code><a class="headerlink" href="#fgrid.fnode.Pi" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) initial pressure at node.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fnode.Ti">
+<code class="descclassname">fnode.</code><code class="descname">Ti</code><a class="headerlink" href="#fgrid.fnode.Ti" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) initial temperature at node.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fnode.Si">
+<code class="descclassname">fnode.</code><code class="descname">Si</code><a class="headerlink" href="#fgrid.fnode.Si" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) initial water saturation at node.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fnode.S_co2gi">
+<code class="descclassname">fnode.</code><code class="descname">S_co2gi</code><a class="headerlink" href="#fgrid.fnode.S_co2gi" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) initial gaseous CO2 saturation at node.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fnode.S_co2li">
+<code class="descclassname">fnode.</code><code class="descname">S_co2li</code><a class="headerlink" href="#fgrid.fnode.S_co2li" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) initial liquid CO2 saturation at node.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fnode.co2aqi">
+<code class="descclassname">fnode.</code><code class="descname">co2aqi</code><a class="headerlink" href="#fgrid.fnode.co2aqi" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) initial dissolved CO2 concentration at node.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fnode.strsi">
+<code class="descclassname">fnode.</code><code class="descname">strsi</code><a class="headerlink" href="#fgrid.fnode.strsi" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) initial stresses at node.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fnode.dispi">
+<code class="descclassname">fnode.</code><code class="descname">dispi</code><a class="headerlink" href="#fgrid.fnode.dispi" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) initial displacements at node.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fnode.P">
+<code class="descclassname">fnode.</code><code class="descname">P</code><a class="headerlink" href="#fgrid.fnode.P" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) pressure at node during a simulation.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fnode.T">
+<code class="descclassname">fnode.</code><code class="descname">T</code><a class="headerlink" href="#fgrid.fnode.T" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) temperature at node.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fnode.S">
+<code class="descclassname">fnode.</code><code class="descname">S</code><a class="headerlink" href="#fgrid.fnode.S" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) water saturation at node.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fnode.S_co2g">
+<code class="descclassname">fnode.</code><code class="descname">S_co2g</code><a class="headerlink" href="#fgrid.fnode.S_co2g" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) gaseous CO2 saturation at node.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fnode.S_co2l">
+<code class="descclassname">fnode.</code><code class="descname">S_co2l</code><a class="headerlink" href="#fgrid.fnode.S_co2l" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) liquid CO2 saturation at node.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fnode.co2aq">
+<code class="descclassname">fnode.</code><code class="descname">co2aq</code><a class="headerlink" href="#fgrid.fnode.co2aq" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) dissolved CO2 concentration at node.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fnode.strs">
+<code class="descclassname">fnode.</code><code class="descname">strs</code><a class="headerlink" href="#fgrid.fnode.strs" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>list</em>) stresses at node ([xx,yy,xy] for 2D, [xx,yy,zz,xy,yz,xz] for 3D).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fnode.disp">
+<code class="descclassname">fnode.</code><code class="descname">disp</code><a class="headerlink" href="#fgrid.fnode.disp" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>list</em>) displacements at node ([x,y] for 2D, [x,y,z] for 3D).</p>
+</dd></dl>
+
+</div>
+<div class="section" id="other-attributes">
+<h3>Other attributes<a class="headerlink" href="#other-attributes" title="Permalink to this headline">¶</a></h3>
+<dl class="attribute">
+<dt id="fgrid.fnode.zone">
+<code class="descclassname">fnode.</code><code class="descname">zone</code><a class="headerlink" href="#fgrid.fnode.zone" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>dict</em>) Dictionary of zones to which the node belongs.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fnode.zonelist">
+<code class="descclassname">fnode.</code><code class="descname">zonelist</code><a class="headerlink" href="#fgrid.fnode.zonelist" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>lst[fzone]</em>) List of zones of which the node is a member</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fnode.generator">
+<code class="descclassname">fnode.</code><code class="descname">generator</code><a class="headerlink" href="#fgrid.fnode.generator" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>dict</em>) Dictionary of generator properties associated with node.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="methods">
+<h3>Methods<a class="headerlink" href="#methods" title="Permalink to this headline">¶</a></h3>
+<dl class="attribute">
+<dt id="fgrid.fnode.what">
+<code class="descclassname">fnode.</code><code class="descname">what</code><a class="headerlink" href="#fgrid.fnode.what" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print to screen information about the node.</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="connections">
+<h2>Connections<a class="headerlink" href="#connections" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="fgrid.fconn">
+<em class="property">class </em><code class="descclassname">fgrid.</code><code class="descname">fconn</code><span class="sig-paren">(</span><em>nodes=[ndNone, ndNone]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fgrid.html#fconn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fgrid.fconn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connection object, comprising two connected nodes, separated by some distance.</p>
+<p>A connection is associated with a distance between the two nodes.</p>
+</dd></dl>
+
+<div class="section" id="attributes">
+<h3>Attributes<a class="headerlink" href="#attributes" title="Permalink to this headline">¶</a></h3>
+<dl class="attribute">
+<dt id="fgrid.fconn.nodes">
+<code class="descclassname">fconn.</code><code class="descname">nodes</code><a class="headerlink" href="#fgrid.fconn.nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>lst[fnode]</em>) List of node objects (fnode()) that define the connection.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fconn.distance">
+<code class="descclassname">fconn.</code><code class="descname">distance</code><a class="headerlink" href="#fgrid.fconn.distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) Distance between the two connected nodes.</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="elements">
+<h2>Elements<a class="headerlink" href="#elements" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="fgrid.felem">
+<em class="property">class </em><code class="descclassname">fgrid.</code><code class="descname">felem</code><span class="sig-paren">(</span><em>index=None</em>, <em>nodes=[]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fgrid.html#felem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fgrid.felem" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finite element object, comprising a set of connected nodes.</p>
+<p>A finite element is associated with an element centre and an element volume.</p>
+</dd></dl>
+
+<div class="section" id="id1">
+<h3>Attributes<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<dl class="attribute">
+<dt id="fgrid.felem.index">
+<code class="descclassname">felem.</code><code class="descname">index</code><a class="headerlink" href="#fgrid.felem.index" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>int</em>) Integer number denoting the element.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.felem.nodes">
+<code class="descclassname">felem.</code><code class="descname">nodes</code><a class="headerlink" href="#fgrid.felem.nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>lst[fnode]</em>) List of node objects that define the element.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.felem.centre">
+<code class="descclassname">felem.</code><code class="descname">centre</code><a class="headerlink" href="#fgrid.felem.centre" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>ndarray</em>) Coordinates of the element centroid.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="id2">
+<h3>Methods<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<dl class="attribute">
+<dt id="fgrid.felem.what">
+<code class="descclassname">felem.</code><code class="descname">what</code><a class="headerlink" href="#fgrid.felem.what" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print to screen information about the element.</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="grids">
+<h2>Grids<a class="headerlink" href="#grids" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="#fgrid.fgrid" title="fgrid.fgrid"><code class="xref py py-class docutils literal notranslate"><span class="pre">fgrid</span></code></a> object contains all information about the finite element grid.</p>
+<p>The grid object corresponds to an FEHM grid file and comprises an assembly of <a class="reference internal" href="#fgrid.fnode" title="fgrid.fnode"><code class="xref py py-class docutils literal notranslate"><span class="pre">fnode</span></code></a>,
+<a class="reference internal" href="#fgrid.fconn" title="fgrid.fconn"><code class="xref py py-class docutils literal notranslate"><span class="pre">fconn</span></code></a> and <a class="reference internal" href="#fgrid.felem" title="fgrid.felem"><code class="xref py py-class docutils literal notranslate"><span class="pre">felem</span></code></a> objects. This assembly is constructed by reading an
+existing FEHM grid files (<a class="reference internal" href="#fgrid.fgrid.read" title="fgrid.fgrid.read"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fgrid.read()</span></code></a>) or by creating an empty <a class="reference internal" href="#fgrid.fgrid" title="fgrid.fgrid"><code class="xref py py-class docutils literal notranslate"><span class="pre">fgrid</span></code></a> object and creating
+a new mesh using the <a class="reference internal" href="#fgrid.fgrid.make" title="fgrid.fgrid.make"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fgrid.make()</span></code></a> command. Read and write support for FEHM stor files is supported.</p>
+<dl class="class">
+<dt id="fgrid.fgrid">
+<em class="property">class </em><code class="descclassname">fgrid.</code><code class="descname">fgrid</code><span class="sig-paren">(</span><em>full_connectivity=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fgrid.html#fgrid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fgrid.fgrid" title="Permalink to this definition">¶</a></dt>
+<dd><p>FEHM grid object.</p>
+</dd></dl>
+
+<div class="section" id="attributes-object-lists">
+<h3>Attributes: object lists<a class="headerlink" href="#attributes-object-lists" title="Permalink to this headline">¶</a></h3>
+<dl class="attribute">
+<dt id="fgrid.fgrid.node">
+<code class="descclassname">fgrid.</code><code class="descname">node</code><a class="headerlink" href="#fgrid.fgrid.node" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>dict[fnode]</em>) Dictionary of grid nodes, indexed by node integer.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fgrid.nodelist">
+<code class="descclassname">fgrid.</code><code class="descname">nodelist</code><a class="headerlink" href="#fgrid.fgrid.nodelist" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>lst[fnode]</em>) List of all node objects in the grid.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fgrid.conn">
+<code class="descclassname">fgrid.</code><code class="descname">conn</code><a class="headerlink" href="#fgrid.fgrid.conn" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>dict[fconn]</em>) Dictionary of connections, indexed by a two element tuple of the member node integers.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fgrid.connlist">
+<code class="descclassname">fgrid.</code><code class="descname">connlist</code><a class="headerlink" href="#fgrid.fgrid.connlist" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>lst[fconn]</em>) List of all connection objects in the grid.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fgrid.elem">
+<code class="descclassname">fgrid.</code><code class="descname">elem</code><a class="headerlink" href="#fgrid.fgrid.elem" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>dict[felem]</em>) Dictionary of elements, indexed by element integer.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fgrid.elemlist">
+<code class="descclassname">fgrid.</code><code class="descname">elemlist</code><a class="headerlink" href="#fgrid.fgrid.elemlist" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>lst[felem]</em>) List of all element objects in the grid.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="attributes-grid-properties">
+<h3>Attributes: grid properties<a class="headerlink" href="#attributes-grid-properties" title="Permalink to this headline">¶</a></h3>
+<dl class="attribute">
+<dt id="fgrid.fgrid.xmin">
+<code class="descclassname">fgrid.</code><code class="descname">xmin</code><a class="headerlink" href="#fgrid.fgrid.xmin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Minimum x-coordinate for all nodes.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fgrid.xmax">
+<code class="descclassname">fgrid.</code><code class="descname">xmax</code><a class="headerlink" href="#fgrid.fgrid.xmax" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maximum x-coordinate for all nodes.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fgrid.ymin">
+<code class="descclassname">fgrid.</code><code class="descname">ymin</code><a class="headerlink" href="#fgrid.fgrid.ymin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Minimum y-coordinate for all nodes.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fgrid.ymax">
+<code class="descclassname">fgrid.</code><code class="descname">ymax</code><a class="headerlink" href="#fgrid.fgrid.ymax" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maximum y-coordinate for all nodes.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fgrid.zmin">
+<code class="descclassname">fgrid.</code><code class="descname">zmin</code><a class="headerlink" href="#fgrid.fgrid.zmin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Minimum z-coordinate for all nodes.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fgrid.zmax">
+<code class="descclassname">fgrid.</code><code class="descname">zmax</code><a class="headerlink" href="#fgrid.fgrid.zmax" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maximum z-coordinate for all nodes.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fgrid.dimensions">
+<code class="descclassname">fgrid.</code><code class="descname">dimensions</code><a class="headerlink" href="#fgrid.fgrid.dimensions" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>int</em>) Dimensions of the grid.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fgrid.number_nodes">
+<code class="descclassname">fgrid.</code><code class="descname">number_nodes</code><a class="headerlink" href="#fgrid.fgrid.number_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of nodes in grid.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fgrid.number_elems">
+<code class="descclassname">fgrid.</code><code class="descname">number_elems</code><a class="headerlink" href="#fgrid.fgrid.number_elems" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of elements in grid.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="id3">
+<h3>Methods<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<dl class="method">
+<dt id="fgrid.fgrid.read">
+<code class="descclassname">fgrid.</code><code class="descname">read</code><span class="sig-paren">(</span><em>gridfilename</em>, <em>full_connectivity=False</em>, <em>octree=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fgrid.html#fgrid.read"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fgrid.fgrid.read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read data from an FEHM or AVS grid file. If an AVS grid is specified, PyFEHM will write out the corresponding FEHM grid file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>gridfilename</strong> (<em>str</em>) – name of grid file, including path specification.</li>
+<li><strong>full_connectivity</strong> (<em>bool</em>) – read element and connection data and construct corresponding objects. Defaults to False. Use if access to connectivity information will be useful.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="fgrid.fgrid.write">
+<code class="descclassname">fgrid.</code><code class="descname">write</code><span class="sig-paren">(</span><em>filename=None</em>, <em>format='fehm'</em>, <em>compression=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fgrid.html#fgrid.write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fgrid.fgrid.write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write grid object to a grid file (FEHM, AVS STOR file formats supported). Stor file support only for orthogonal hexahedral grids.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>filename</strong> (<em>str</em>) – name of FEHM grid file to write to, including path specification, e.g. c:pathfile_out.inp</li>
+<li><strong>format</strong> (<em>str</em>) – FEHM grid file format (‘fehm’,’avs’,’stor’). Defaults to ‘fehm’ unless filename is passed with extension ‘<em>.avs’ or ‘</em>.stor’.</li>
+<li><strong>compression</strong> (<em>bool</em>) – Use maximum compression when generating stor files (default = True).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="fgrid.fgrid.node_nearest_point">
+<code class="descclassname">fgrid.</code><code class="descname">node_nearest_point</code><span class="sig-paren">(</span><em>pos=[]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fgrid.html#fgrid.node_nearest_point"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fgrid.fgrid.node_nearest_point" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return node object nearest to position in space. Method uses octree structure for speed up if available.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pos</strong> (<em>list</em>) – Coordinates, e.g. [2300., -134.8, 0.].</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">fnode() – node object closest to position.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="fgrid.fgrid.plot">
+<code class="descclassname">fgrid.</code><code class="descname">plot</code><span class="sig-paren">(</span><em>save='', angle=[45, 45], color='k', connections=False, equal_axes=True, xlabel='x / m', ylabel='y / m', zlabel='z / m', title='', font_size='small', cutaway=[]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fgrid.html#fgrid.plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fgrid.fgrid.plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates and saves a 3-D plot of the grid.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>save</strong> (<em>str</em>) – Name of saved zone image.</li>
+<li><strong>angle</strong> (<em>[</em><em>fl64</em><em>,</em><em>fl64</em><em>]</em><em>, </em><em>str</em>) – View angle of zone. First number is tilt angle in degrees, second number is azimuth. Alternatively, if angle is ‘x’, ‘y’, ‘z’, view is aligned along the corresponding axis.</li>
+<li><strong>color</strong> (<em>str</em><em>, </em><em>[</em><em>fl64</em><em>,</em><em>fl64</em><em>,</em><em>fl64</em><em>]</em>) – Colour of zone.</li>
+<li><strong>connections</strong> (<em>bool</em>) – Plot connections. If <code class="docutils literal notranslate"><span class="pre">True</span></code> all connections plotted. If between 0 and 1, random proportion plotted. If greater than 1, specified number plotted.</li>
+<li><strong>equal_axes</strong> (<em>bool</em>) – Force plotting with equal aspect ratios for all axes.</li>
+<li><strong>xlabel</strong> (<em>str</em>) – Label on x-axis.</li>
+<li><strong>ylabel</strong> (<em>str</em>) – Label on y-axis.</li>
+<li><strong>zlabel</strong> (<em>str</em>) – Label on z-axis.</li>
+<li><strong>title</strong> (<em>str</em>) – Title of plot.</li>
+<li><strong>font_size</strong> (<em>str</em><em>, </em><em>int</em>) – Size of text on plot.</li>
+<li><strong>cutaway</strong> (<em>[</em><em>fl64</em><em>,</em><em>fl64</em><em>,</em><em>fl64</em><em>]</em><em>, </em><em>str</em>) – Coordinate from which cutaway begins. Alternatively, specifying ‘middle’,’centre’ with choose the centre of the grid as the cutaway point.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="fgrid.fgrid.make">
+<code class="descclassname">fgrid.</code><code class="descname">make</code><span class="sig-paren">(</span><em>gridfilename</em>, <em>x</em>, <em>y</em>, <em>z</em>, <em>full_connectivity=True</em>, <em>octree=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fgrid.html#fgrid.make"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fgrid.fgrid.make" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates an orthogonal mesh for input node positions.</p>
+<p>The mesh is constructed using the <code class="docutils literal notranslate"><span class="pre">fgrid.</span></code><strong>fmake</strong> object and an FEHM grid file is written for the mesh.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>gridfilename</strong> (<em>str</em>) – Name to which to save the grid file.</li>
+<li><strong>x</strong> (<em>list</em><em>[</em><em>fl64</em><em>]</em>) – Unique set of x-coordinates.</li>
+<li><strong>y</strong> (<em>list</em><em>[</em><em>fl64</em><em>]</em>) – Unique set of y-coordinates.</li>
+<li><strong>z</strong> (<em>list</em><em>[</em><em>fl64</em><em>]</em>) – Unique set of z-coordinates.</li>
+<li><strong>full_connectivity</strong> (<em>bool</em>) – read element and connection data and construct corresponding objects. Defaults to False. Use if access to connectivity information will be useful.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="fgrid.fgrid.lagrit_stor">
+<code class="descclassname">fgrid.</code><code class="descname">lagrit_stor</code><span class="sig-paren">(</span><em>grid=None</em>, <em>stor=None</em>, <em>exe='c:\\path\\to\\lagrit\\lagrit.exe'</em>, <em>overwrite=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fgrid.html#fgrid.lagrit_stor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fgrid.fgrid.lagrit_stor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Uses LaGriT to create a stor file for the simulation, this will be used in subsequent runs.
+To create the stor file, LaGriT will convert a mesh comprised of hexahedral elements into one comprising
+only tetrahedrals. Therefore, a new FEHM grid file will be created and parsed, reflecting the modified 
+element structure.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>grid</strong> (<em>str</em>) – Name of grid file to be created. Destination directory supported.</li>
+<li><strong>stor</strong> (<em>str</em>) – Name of stor file to be created. Destination directory supported.</li>
+<li><strong>exe</strong> (<em>str</em>) – Path to lagrit executable (default, fdflt.lagrit_path, in environment file ‘fdflt.py’).</li>
+<li><strong>overwrite</strong> (<em>bool</em>) – Flag to request that the new FEHM grid file overwrites the old one.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="fgrid.fgrid.volumes">
+<code class="descclassname">fgrid.</code><code class="descname">volumes</code><span class="sig-paren">(</span><em>volumefilename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fgrid.html#fgrid.volumes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fgrid.fgrid.volumes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a lagrit generated file containing control volume information.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>volumefilename</strong> (<em>str</em>) – Name of lagrit output file containing control volume information.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fgrid.fgrid.what">
+<code class="descclassname">fgrid.</code><code class="descname">what</code><a class="headerlink" href="#fgrid.fgrid.what" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print to screen information about the grid.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic simple">
+<li>Create an <a class="reference internal" href="#fgrid.fgrid" title="fgrid.fgrid"><code class="xref py py-class docutils literal notranslate"><span class="pre">fgrid</span></code></a> object and read an existing FEHM grid file.</li>
+</ol>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">geo=</span></code><a class="reference internal" href="#fgrid.fgrid" title="fgrid.fgrid"><code class="xref py py-class docutils literal notranslate"><span class="pre">fgrid</span></code></a><code class="docutils literal notranslate"><span class="pre">()</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">geo.</span></code><a class="reference internal" href="#fgrid.fgrid.read" title="fgrid.fgrid.read"><code class="xref py py-meth docutils literal notranslate"><span class="pre">read</span></code></a><code class="docutils literal notranslate"><span class="pre">('c:\\path\\to\\old_GRID.inp')</span></code></p>
+<p>or</p>
+<p><code class="docutils literal notranslate"><span class="pre">geo=</span></code><a class="reference internal" href="#fgrid.fgrid" title="fgrid.fgrid"><code class="xref py py-class docutils literal notranslate"><span class="pre">fgrid</span></code></a><code class="docutils literal notranslate"><span class="pre">('c:\\path\\to\\old_GRID.inp')</span></code></p>
+</div></blockquote>
+<ol class="arabic simple" start="2">
+<li>Plot a view of the grid looking down the x-axis, with gridlines coloured blue.</li>
+</ol>
+<blockquote>
+<div><code class="docutils literal notranslate"><span class="pre">geo.</span></code><a class="reference internal" href="#fgrid.fgrid.plot" title="fgrid.fgrid.plot"><code class="xref py py-meth docutils literal notranslate"><span class="pre">plot</span></code></a><code class="docutils literal notranslate"><span class="pre">('FEHMgrid1.png',color='r',angle='x')</span></code></div></blockquote>
+<ol class="arabic simple" start="3">
+<li>Plot a view of the grid looking along the axis x=y=z, gridlines coloured red, with a cutaway beginning at the centre.</li>
+</ol>
+<blockquote>
+<div><code class="docutils literal notranslate"><span class="pre">geo.</span></code><a class="reference internal" href="#fgrid.fgrid.plot" title="fgrid.fgrid.plot"><code class="xref py py-meth docutils literal notranslate"><span class="pre">plot</span></code></a><code class="docutils literal notranslate"><span class="pre">('FEHMgrid2.png',color='b',angle=[45,45],cutaway='middle')</span></code></div></blockquote>
+<div class="figure" id="id4">
+<a class="reference internal image-reference" href="_images/FEHMgrid2.png"><img alt="_images/FEHMgrid2.png" src="_images/FEHMgrid2.png" style="width: 521.4px; height: 411.0px;" /></a>
+<p class="caption"><span class="caption-text">Image produced by example 3.</span></p>
+</div>
+<ol class="arabic simple" start="4">
+<li>Make changes to an <a class="reference internal" href="#fgrid.fgrid" title="fgrid.fgrid"><code class="xref py py-class docutils literal notranslate"><span class="pre">fgrid</span></code></a> object and write out the changes to a new FEHM grid file.</li>
+</ol>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">for</span> <span class="pre">nd</span> <span class="pre">in</span> <span class="pre">geo.</span></code><a class="reference internal" href="#fgrid.fgrid.nodelist" title="fgrid.fgrid.nodelist"><code class="xref py py-attr docutils literal notranslate"><span class="pre">nodelist</span></code></a><code class="docutils literal notranslate"><span class="pre">:</span> <span class="pre">nd.</span></code><a class="reference internal" href="#fgrid.fnode.position" title="fgrid.fnode.position"><code class="xref py py-attr docutils literal notranslate"><span class="pre">position</span></code></a><code class="docutils literal notranslate"><span class="pre">[2]+=1000.</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">geo.</span></code><a class="reference internal" href="#fgrid.fgrid.write" title="fgrid.fgrid.write"><code class="xref py py-meth docutils literal notranslate"><span class="pre">write</span></code></a><code class="docutils literal notranslate"><span class="pre">('new_GRID.inp')</span></code></p>
+</div></blockquote>
+<ol class="arabic simple" start="5">
+<li>Find the node nearest a given location in space.</li>
+</ol>
+<blockquote>
+<div><code class="docutils literal notranslate"><span class="pre">nd=geo.</span></code><a class="reference internal" href="#fgrid.fgrid.node_nearest_point" title="fgrid.fgrid.node_nearest_point"><code class="xref py py-meth docutils literal notranslate"><span class="pre">node_nearest_point</span></code></a><code class="docutils literal notranslate"><span class="pre">([225,1600,-356])</span></code></div></blockquote>
+<ol class="arabic simple" start="6">
+<li>Create a new grid using the <a class="reference internal" href="#fgrid.fgrid.make" title="fgrid.fgrid.make"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fgrid.make()</span></code></a> command.</li>
+</ol>
+<blockquote>
+<div><code class="docutils literal notranslate"><span class="pre">geo.</span></code><a class="reference internal" href="#fgrid.fgrid.make" title="fgrid.fgrid.make"><code class="xref py py-meth docutils literal notranslate"><span class="pre">make</span></code></a><code class="docutils literal notranslate"><span class="pre">('mygrid.inp',</span> <span class="pre">x=[0,1,2,3],</span> <span class="pre">y=[-10,-20,-30],</span> <span class="pre">z=[0.1,0.3,0.8])</span></code></div></blockquote>
+<ol class="arabic simple" start="7">
+<li>For an existing grid, use <a class="reference internal" href="#fgrid.fgrid.lagrit_stor" title="fgrid.fgrid.lagrit_stor"><code class="xref py py-meth docutils literal notranslate"><span class="pre">lagrit_stor()</span></code></a> method to instruct LaGriT to create a stor file.</li>
+</ol>
+<blockquote>
+<div><code class="docutils literal notranslate"><span class="pre">geo.</span></code><a class="reference internal" href="#fgrid.fgrid.lagrit_stor" title="fgrid.fgrid.lagrit_stor"><code class="xref py py-meth docutils literal notranslate"><span class="pre">lagrit_stor</span></code></a><code class="docutils literal notranslate"><span class="pre">(overwrite=True,</span> <span class="pre">stor='stor\\geo.stor',</span> <span class="pre">exe='c:\\bin\\lagrit.exe')</span></code></div></blockquote>
+</div>
+</div>
+</div>
+
+
+          </div>
+            
+  <div class="footer-relations">
+    
+      <div class="pull-left">
+        <a class="btn btn-default" href="intro.html" title="previous chapter (use the left arrow)">Introduction</a>
+      </div>
+    
+      <div class="pull-right">
+        <a class="btn btn-default" href="fdata.html" title="next chapter (use the right arrow)">fdata: FEHM input file manipulation</a>
+      </div>
+    </div>
+    <div class="clearer"></div>
+  
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="fdata.html" title="fdata: FEHM input file manipulation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="intro.html" title="Introduction"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">PyFEHM 1.0.4 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+<script type="text/javascript">
+  $("#mobile-toggle a").click(function () {
+    $("#left-column").toggle();
+  });
+</script>
+<script type="text/javascript" src="_static/js/bootstrap.js"></script>
+  <div class="footer">
+    &copy; Copyright 2018, Los Alamos National Laboratory. Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+  </div>
+  </body>
+</html>

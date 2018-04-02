@@ -1,0 +1,1020 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  
+  <!-- Licensed under the Apache 2.0 License -->
+  <link rel="stylesheet" type="text/css" href="_static/fonts/open-sans/stylesheet.css" />
+  <!-- Licensed under the SIL Open Font License -->
+  <link rel="stylesheet" type="text/css" href="_static/fonts/source-serif-pro/source-serif-pro.css" />
+  <link rel="stylesheet" type="text/css" href="_static/css/bootstrap.min.css" />
+  <link rel="stylesheet" type="text/css" href="_static/css/bootstrap-theme.min.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+    <title>Tutorials &#8212; PyFEHM 1.0.4 documentation</title>
+    <link rel="stylesheet" href="_static/guzzle.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="fvars: FEHM thermodynamic calculations" href="fvars.html" />
+  
+   
+
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="fvars.html" title="fvars: FEHM thermodynamic calculations"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">PyFEHM 1.0.4 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="container-wrapper">
+
+      <div id="mobile-toggle">
+        <a href="#"><span class="glyphicon glyphicon-align-justify" aria-hidden="true"></span></a>
+      </div>
+  <div id="left-column">
+    <div class="sphinxsidebar"><a href="
+    index.html" class="text-logo">PyFEHM</a>
+<div class="sidebar-block">
+  <div class="sidebar-wrapper">
+    <h2>Table Of Contents</h2>
+  </div>
+  <div class="sidebar-toc">
+    
+    
+      <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fgrid.html">fgrid: FEHM grid manipulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fdata.html">fdata: FEHM input file manipulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fpost.html">fpost: FEHM output file manipulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fvars.html">fvars: FEHM thermodynamic calculations</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Tutorials</a></li>
+</ul>
+
+    
+  </div>
+</div>
+<div class="sidebar-block">
+  <div class="sidebar-wrapper">
+    <h2>Contents</h2>
+    <div class="sidebar-localtoc">
+      <ul>
+<li><a class="reference internal" href="#">Tutorials</a><ul>
+<li><a class="reference internal" href="#cube-with-fixed-pressures-temperatures">Cube with fixed pressures/temperatures</a><ul>
+<li><a class="reference internal" href="#getting-started">Getting started</a></li>
+<li><a class="reference internal" href="#grid-generation">Grid generation</a></li>
+<li><a class="reference internal" href="#zone-creation">Zone creation</a></li>
+<li><a class="reference internal" href="#adding-macros">Adding macros</a></li>
+<li><a class="reference internal" href="#initial-and-boundary-conditions">Initial and boundary conditions</a></li>
+<li><a class="reference internal" href="#running-the-simulation">Running the simulation</a></li>
+<li><a class="reference internal" href="#visualisation">Visualisation</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#five-spot-injection-and-production">Five-spot injection and production</a><ul>
+<li><a class="reference internal" href="#first-steps">First steps</a></li>
+<li><a class="reference internal" href="#id1">Grid generation</a></li>
+<li><a class="reference internal" href="#id2">Zone creation</a></li>
+<li><a class="reference internal" href="#material-property-assignment">Material property assignment</a></li>
+<li><a class="reference internal" href="#injectors-and-producers">Injectors and producers</a></li>
+<li><a class="reference internal" href="#initial-conditions">Initial conditions</a></li>
+<li><a class="reference internal" href="#setting-up-stresses">Setting up stresses</a></li>
+<li><a class="reference internal" href="#running-the-model">Running the model</a></li>
+<li><a class="reference internal" href="#post-processing">Post-processing</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#multiprocessing-and-batch-job-submission">Multiprocessing and batch job submission</a><ul>
+<li><a class="reference internal" href="#setting-up-a-batch-of-simulations">Setting up a batch of simulations</a></li>
+<li><a class="reference internal" href="#generalising-to-a-function">Generalising to a function</a></li>
+<li><a class="reference internal" href="#parameters-as-function-arguments">Parameters as function arguments</a></li>
+<li><a class="reference internal" href="#assigning-the-simulation-a-target-directory">Assigning the simulation a target directory</a></li>
+<li><a class="reference internal" href="#assembling-the-processing-pool-and-distributing-the-simulations">Assembling the processing pool and distributing the simulations</a></li>
+<li><a class="reference internal" href="#basic-operation-of-the-parallel-batch-script">Basic operation of the parallel batch script</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#dynamic-simulation-monitoring">Dynamic simulation monitoring</a><ul>
+<li><a class="reference internal" href="#defining-a-kill-condition">Defining a kill condition</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#paraview-visualisation">Paraview visualisation</a><ul>
+<li><a class="reference internal" href="#using-the-paraview-method">Using the Paraview method</a></li>
+<li><a class="reference internal" href="#model-information">Model information</a></li>
+<li><a class="reference internal" href="#contour-output">Contour output</a></li>
+<li><a class="reference internal" href="#some-additional-paraview-tools">Some additional Paraview tools</a></li>
+<li><a class="reference internal" href="#paraview-script">Paraview script</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#diagnostic-window">Diagnostic window</a><ul>
+<li><a class="reference internal" href="#output-files">Output files</a></li>
+<li><a class="reference internal" href="#diagnostic-script">Diagnostic script</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+    </div>
+  </div>
+</div>
+<div class="sidebar-block">
+  <div class="sidebar-wrapper">
+    <div id="main-search">
+      <form class="form-inline" action="search.html" method="GET" role="form">
+        <div class="input-group">
+          <input name="q" type="text" class="form-control" placeholder="Search...">
+        </div>
+        <input type="hidden" name="check_keywords" value="yes" />
+        <input type="hidden" name="area" value="default" />
+      </form>
+    </div>
+  </div>
+</div>
+      
+    </div>
+  </div>
+        <div id="right-column">
+          
+          <div role="navigation" aria-label="breadcrumbs navigation">
+            <ol class="breadcrumb">
+              <li><a href="index.html">Docs</a></li>
+              
+              <li>Tutorials</li>
+            </ol>
+          </div>
+          
+          <div class="document clearer body">
+            
+  <div class="section" id="tutorials">
+<span id="ftutorial-chapter"></span><h1>Tutorials<a class="headerlink" href="#tutorials" title="Permalink to this headline">¶</a></h1>
+<p>These tutorials build script files from scratch that, when executed, construct, run and process the results of,
+an FEHM simulation. One way to enjoy this tutorial, is create a new script file and copy these commands across
+as you go through them. The script can be executed at any stage within a python terminal using <code class="docutils literal notranslate"><span class="pre">execfile('myScript.py')</span></code>
+so that you can inspect the variables and objects, or just generally mess around in python.</p>
+<p>Within a tutorial, any code commands given are assumed to be appended to the end of a single PyFEHM script for
+that tutorial. A complete python script for each tutorial should have been received with PyFEHM.</p>
+<div class="section" id="cube-with-fixed-pressures-temperatures">
+<span id="tutorial1"></span><h2>Cube with fixed pressures/temperatures<a class="headerlink" href="#cube-with-fixed-pressures-temperatures" title="Permalink to this headline">¶</a></h2>
+<p>This first tutorial describes the set up, simulation and post-processing of a simple cube model. The model contains</p>
+<ol class="arabic simple">
+<li>Three zones of contrasting permeability.</li>
+<li>An initially homogeneous temperature and pressure distribution.</li>
+<li>Fixed temperature and pressure boundary conditions.</li>
+</ol>
+<p>Generation of a simple grid and construction of two contour plots of temperature and pressure are also demonstrated.</p>
+<div class="section" id="getting-started">
+<h3>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h3>
+<p>Because this is a new script that builds a model and does some post-processing, we will need access to a few
+modules. So python can find the PyFEHM library files, first write</p>
+<p><code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">os,sys</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">sys.path.append('c:\\python\\pyfehm')</span></code></p>
+<p>Note, if you have created a PYTHONPATH environment variable that points to <em>c:\python\pyfehm</em> you can skip this step.</p>
+<p>If your PyFEHM library files (<em>fdata.py, fgrid.py</em>, etc) are in a different location, then change the path to
+that location. If this path is contained in the PYTHONPATH environment variable, then you can skip this step.</p>
+<p>Get access to PyFEHM grid generation, model construction and post-processing utilities.</p>
+<p><code class="docutils literal notranslate"><span class="pre">from</span></code> <a class="reference internal" href="fdata.html#fdata-chapter"><span class="std std-ref">fdata</span></a> <code class="docutils literal notranslate"><span class="pre">import*</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">from</span></code> <a class="reference internal" href="fpost.html#fpost-chapter"><span class="std std-ref">fpost</span></a> <code class="docutils literal notranslate"><span class="pre">import*</span></code></p>
+<p>As a first action, let us create an empty model object.</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat</span> <span class="pre">=</span></code> <a class="reference internal" href="fdata.html#fdata.fdata" title="fdata.fdata"><code class="xref py py-class docutils literal notranslate"><span class="pre">fdata</span></code></a><code class="docutils literal notranslate"><span class="pre">()</span></code></p>
+<p>Define a root label for use as the default naming convention</p>
+<p><code class="docutils literal notranslate"><span class="pre">root</span> <span class="pre">=</span> <span class="pre">'tut1'</span></code></p>
+</div>
+<div class="section" id="grid-generation">
+<h3>Grid generation<a class="headerlink" href="#grid-generation" title="Permalink to this headline">¶</a></h3>
+<p>We will create a simple grid with 11 nodes on each side, spaced 1 m apart. First use <code class="docutils literal notranslate"><span class="pre">np.linspace()</span></code> to create
+a vector of these positions. The use the <a class="reference internal" href="fgrid.html#fgrid.fgrid.make" title="fgrid.fgrid.make"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fgrid.make()</span></code></a> command to create the grid, and the <a class="reference internal" href="fgrid.html#fgrid.fgrid.plot" title="fgrid.fgrid.plot"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fgrid.plot()</span></code></a>
+command to generate a visualisation (see Figure <a class="reference internal" href="#tut0-fig1"><span class="std std-ref">7.1</span></a>).</p>
+<p><code class="docutils literal notranslate"><span class="pre">x=np.linspace(0,10,11)</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.grid" title="fdata.fdata.grid"><code class="xref py py-attr docutils literal notranslate"><span class="pre">grid</span></code></a><code class="docutils literal notranslate"><span class="pre">.</span></code><a class="reference internal" href="fgrid.html#fgrid.fgrid.make" title="fgrid.fgrid.make"><code class="xref py py-meth docutils literal notranslate"><span class="pre">make</span></code></a><code class="docutils literal notranslate"><span class="pre">(root+'_GRID.inp',x=x,y=x,z=x)</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.grid" title="fdata.fdata.grid"><code class="xref py py-attr docutils literal notranslate"><span class="pre">grid</span></code></a><code class="docutils literal notranslate"><span class="pre">.</span></code><a class="reference internal" href="fgrid.html#fgrid.fgrid.plot" title="fgrid.fgrid.plot"><code class="xref py py-meth docutils literal notranslate"><span class="pre">plot</span></code></a><code class="docutils literal notranslate"><span class="pre">(root+'_GRID.png',color='r',angle=[45,45])</span></code></p>
+<div class="figure" id="id3">
+<span id="tut0-fig1"></span><a class="reference internal image-reference" href="_images/tut0_grid.png"><img alt="_images/tut0_grid.png" src="_images/tut0_grid.png" style="width: 547.2px; height: 458.4px;" /></a>
+<p class="caption"><span class="caption-text">View of grid, as produced by <a class="reference internal" href="fgrid.html#fgrid.fgrid.plot" title="fgrid.fgrid.plot"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fgrid.plot()</span></code></a>.</span></p>
+</div>
+</div>
+<div class="section" id="zone-creation">
+<h3>Zone creation<a class="headerlink" href="#zone-creation" title="Permalink to this headline">¶</a></h3>
+<p>We need to create zones corresponding to three layers with different material properties. For zones that are bounded
+by a rectangle, the easiest method for zone generation is using the <a class="reference internal" href="fdata.html#fdata.fzone.rect" title="fdata.fzone.rect"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fzone.rect()</span></code></a> command. Below we add a zone
+with index = 1, named <code class="docutils literal notranslate"><span class="pre">'lower'</span></code> that includes all the zones with z-coordinates between -0.1 and 3.1.</p>
+<p>First, create the zone object with index and name.</p>
+<p><code class="docutils literal notranslate"><span class="pre">zn=</span></code><a class="reference internal" href="fdata.html#fdata.fzone" title="fdata.fzone"><code class="xref py py-class docutils literal notranslate"><span class="pre">fzone</span></code></a><code class="docutils literal notranslate"><span class="pre">(</span></code><a class="reference internal" href="fdata.html#fdata.fzone.index" title="fdata.fzone.index"><code class="xref py py-attr docutils literal notranslate"><span class="pre">index</span></code></a><code class="docutils literal notranslate"><span class="pre">=1,</span></code><a class="reference internal" href="fdata.html#fdata.fzone.name" title="fdata.fzone.name"><code class="xref py py-attr docutils literal notranslate"><span class="pre">name</span></code></a><code class="docutils literal notranslate"><span class="pre">='lower')</span></code></p>
+<p>Next, use the <a class="reference internal" href="fdata.html#fdata.fzone.rect" title="fdata.fzone.rect"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fzone.rect()</span></code></a> command to define its limits.</p>
+<p><code class="docutils literal notranslate"><span class="pre">zn.</span></code><a class="reference internal" href="fdata.html#fdata.fzone.rect" title="fdata.fzone.rect"><code class="xref py py-meth docutils literal notranslate"><span class="pre">rect</span></code></a><code class="docutils literal notranslate"><span class="pre">([-0.,-0.,-0.1],[10.1,10.1,3.1])</span></code></p>
+<p>Finally, attach the zone to the <a class="reference internal" href="fdata.html#fdata.fdata" title="fdata.fdata"><code class="xref py py-class docutils literal notranslate"><span class="pre">fdata</span></code></a> object.</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.add" title="fdata.fdata.add"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add</span></code></a><code class="docutils literal notranslate"><span class="pre">(zn)</span></code></p>
+<p>This three step process can be simplified by calling the <a class="reference internal" href="fdata.html#fdata.fdata.new_zone" title="fdata.fdata.new_zone"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fdata.new_zone()</span></code></a> method, which takes as input information about
+the zone (index, name, limits) and automates object creation and attachment processes. The code below is equivalent
+to the three commands above</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.new_zone" title="fdata.fdata.new_zone"><code class="xref py py-meth docutils literal notranslate"><span class="pre">new_zone</span></code></a><code class="docutils literal notranslate"><span class="pre">(index=1,</span> <span class="pre">name='lower',</span> <span class="pre">rect=[[-0.,-0.,-0.1],</span> <span class="pre">[10.1,10.1,3.1]])</span></code></p>
+<p>Two more zones, called ‘middle’ and ‘upper’ are created in the same way.</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.new_zone" title="fdata.fdata.new_zone"><code class="xref py py-meth docutils literal notranslate"><span class="pre">new_zone</span></code></a><code class="docutils literal notranslate"><span class="pre">(index=2,</span> <span class="pre">name='middle',</span> <span class="pre">rect=[[-0.,-0.,-3.1],</span> <span class="pre">[10.1,10.1,6.1]])</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.new_zone" title="fdata.fdata.new_zone"><code class="xref py py-meth docutils literal notranslate"><span class="pre">new_zone</span></code></a><code class="docutils literal notranslate"><span class="pre">(index=3,</span> <span class="pre">name='upper',</span> <span class="pre">rect=[[-0.,-0.,-6.1],</span> <span class="pre">[10.1,10.1,10.1]])</span></code></p>
+<p>In the next section, we will look at assigning differing permeability properties to these zones. However, if we know that
+this zone is being created for the sole purpose of assigning it some permeability, then why not do that during zone creation?
+This is achieved by passing additional material property arguments to the <a class="reference internal" href="fdata.html#fdata.fdata.new_zone" title="fdata.fdata.new_zone"><code class="xref py py-meth docutils literal notranslate"><span class="pre">new_zone()</span></code></a> method. For example, to
+assign anisotropic permeability to the <code class="docutils literal notranslate"><span class="pre">'upper'</span></code> zone we should have written</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.new_zone" title="fdata.fdata.new_zone"><code class="xref py py-meth docutils literal notranslate"><span class="pre">new_zone</span></code></a><code class="docutils literal notranslate"><span class="pre">(index=3,</span> <span class="pre">name='upper',</span> <span class="pre">rect=[[-0.,-0.,-6.1],</span> <span class="pre">[10.1,10.1,10.1]],</span> <span class="pre">permeability=[1.e-14,1.e-14,1.e-15])</span></code></p>
+<p>This single command will both create the zone and create a PERM macro for that zone with the specified permeability properties. If isotropic
+permeability is desired, the argument can be passed as a single float, i.e., <code class="docutils literal notranslate"><span class="pre">permeability=1.e-14</span></code>.</p>
+</div>
+<div class="section" id="adding-macros">
+<h3>Adding macros<a class="headerlink" href="#adding-macros" title="Permalink to this headline">¶</a></h3>
+<p>Now that the zones have been established, we can begin assigning material properties, either to specific zones or to the
+entire model. For example, adding rock properties to the entire model.</p>
+<p>First, create a new <code class="docutils literal notranslate"><span class="pre">'rock'</span></code> <a class="reference internal" href="fdata.html#fdata.fmacro" title="fdata.fmacro"><code class="xref py py-class docutils literal notranslate"><span class="pre">fmacro</span></code></a> object with a tuple of parameter name/value pairings. See Table <span class="xref std std-ref">3.1</span> for parameter names. Note,
+by leaving the zone argument blank, the macro properties are assigned to all nodes in the model.</p>
+<p><code class="docutils literal notranslate"><span class="pre">rm=</span></code><a class="reference internal" href="fdata.html#fdata.fmacro" title="fdata.fmacro"><code class="xref py py-class docutils literal notranslate"><span class="pre">fmacro</span></code></a><code class="docutils literal notranslate"><span class="pre">('rock',</span></code> <a class="reference internal" href="fdata.html#fdata.fmacro.param" title="fdata.fmacro.param"><code class="xref py py-attr docutils literal notranslate"><span class="pre">param</span></code></a><code class="docutils literal notranslate"><span class="pre">=(('density',2500),('specific_heat',1000),('porosity',0.1)))</span></code></p>
+<p>Finally, attach the macro to the <a class="reference internal" href="fdata.html#fdata.fdata" title="fdata.fdata"><code class="xref py py-class docutils literal notranslate"><span class="pre">fdata</span></code></a> object.</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.add" title="fdata.fdata.add"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add</span></code></a><code class="docutils literal notranslate"><span class="pre">(rm)</span></code></p>
+<p>Note that, if ROCK properties are omitted, FEHM does not generally behave well. Therefore, if PyFEHM notes that no
+global rock properties have been assigned, it will add its own default values before running the simulation (and print
+a warning to notify the user). This applies for thermal conductivity properties assigned through COND.</p>
+<p>Now we assign different permeability properties to each of the three zones defined in the previous section.</p>
+<p>First, create a new ‘perm’ <a class="reference internal" href="fdata.html#fdata.fmacro" title="fdata.fmacro"><code class="xref py py-class docutils literal notranslate"><span class="pre">fmacro</span></code></a> object with a tuple of parameter name/value pairings. This time, the index of the
+first zone, 1, is assigned to the zone argument.</p>
+<p><code class="docutils literal notranslate"><span class="pre">pm=</span></code><a class="reference internal" href="fdata.html#fdata.fmacro" title="fdata.fmacro"><code class="xref py py-class docutils literal notranslate"><span class="pre">fmacro</span></code></a><code class="docutils literal notranslate"><span class="pre">('perm',</span></code><a class="reference internal" href="fdata.html#fdata.fmacro.zone" title="fdata.fmacro.zone"><code class="xref py py-attr docutils literal notranslate"><span class="pre">zone</span></code></a><code class="docutils literal notranslate"><span class="pre">=1,</span></code> <a class="reference internal" href="fdata.html#fdata.fmacro.param" title="fdata.fmacro.param"><code class="xref py py-attr docutils literal notranslate"><span class="pre">param</span></code></a><code class="docutils literal notranslate"><span class="pre">=(('kx',1.e-15),('ky',1.e-15),('kz',1.e-16)))</span></code></p>
+<p>Attach the macro to the <a class="reference internal" href="fdata.html#fdata.fdata" title="fdata.fdata"><code class="xref py py-class docutils literal notranslate"><span class="pre">fdata</span></code></a> object.</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.add" title="fdata.fdata.add"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add</span></code></a><code class="docutils literal notranslate"><span class="pre">(pm)</span></code></p>
+<p>The process can be shortened by assigning permeability properties directly to the zone. In this case, PyFEHM will create the
+corresponding macro object (if it needs to, one may already exist) and attach it to the fdata structure.</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.zone" title="fdata.fdata.zone"><code class="xref py py-attr docutils literal notranslate"><span class="pre">zone</span></code></a><code class="docutils literal notranslate"><span class="pre">['lower'].</span></code><a class="reference internal" href="fdata.html#fdata.fzone.permeability" title="fdata.fzone.permeability"><code class="xref py py-attr docutils literal notranslate"><span class="pre">permeability</span></code></a><code class="docutils literal notranslate"><span class="pre">=[1.e-15,1.e-15,1.e-16]</span></code></p>
+<p>In this variant, permeability is assigned to the variable <code class="docutils literal notranslate"><span class="pre">kmid</span></code> ahead of time, then called during assignment.</p>
+<p><code class="docutils literal notranslate"><span class="pre">kmid=1.e-20</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.zone" title="fdata.fdata.zone"><code class="xref py py-attr docutils literal notranslate"><span class="pre">zone</span></code></a><code class="docutils literal notranslate"><span class="pre">[2].</span></code><a class="reference internal" href="fdata.html#fdata.fzone.permeability" title="fdata.fzone.permeability"><code class="xref py py-attr docutils literal notranslate"><span class="pre">permeability</span></code></a><code class="docutils literal notranslate"><span class="pre">=kmid</span></code></p>
+<p>Finally, permeability properties for the <code class="docutils literal notranslate"><span class="pre">'upper'</span></code> zone were assigned during zone creation, no further action is required.</p>
+</div>
+<div class="section" id="initial-and-boundary-conditions">
+<h3>Initial and boundary conditions<a class="headerlink" href="#initial-and-boundary-conditions" title="Permalink to this headline">¶</a></h3>
+<p>We wish to assign initial pressures and temperatures within the cube. The PRES macro is used for this</p>
+<p>Create a new <code class="docutils literal notranslate"><span class="pre">'pres'</span></code> <a class="reference internal" href="fdata.html#fdata.fmacro" title="fdata.fmacro"><code class="xref py py-class docutils literal notranslate"><span class="pre">fmacro</span></code></a> object with a tuple of parameter name/value pairings. The zone argument is
+left blank so that initial conditions are assigned to all nodes.</p>
+<p><code class="docutils literal notranslate"><span class="pre">pres=</span></code><a class="reference internal" href="fdata.html#fdata.fmacro" title="fdata.fmacro"><code class="xref py py-class docutils literal notranslate"><span class="pre">fmacro</span></code></a><code class="docutils literal notranslate"><span class="pre">('pres',</span></code> <a class="reference internal" href="fdata.html#fdata.fmacro.param" title="fdata.fmacro.param"><code class="xref py py-attr docutils literal notranslate"><span class="pre">param</span></code></a><code class="docutils literal notranslate"><span class="pre">=(('pressure',5.),('temperature',60.),('saturation',1)))</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.add" title="fdata.fdata.add"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add</span></code></a><code class="docutils literal notranslate"><span class="pre">(pres)</span></code></p>
+<p>Again, this process is made a little simpler by assigning to the zone directly</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.zone" title="fdata.fdata.zone"><code class="xref py py-attr docutils literal notranslate"><span class="pre">zone</span></code></a><code class="docutils literal notranslate"><span class="pre">.</span></code><a class="reference internal" href="fdata.html#fdata.fzone.Pi" title="fdata.fzone.Pi"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Pi</span></code></a><code class="docutils literal notranslate"><span class="pre">=1.</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.zone" title="fdata.fdata.zone"><code class="xref py py-attr docutils literal notranslate"><span class="pre">zone</span></code></a><code class="docutils literal notranslate"><span class="pre">.</span></code><a class="reference internal" href="fdata.html#fdata.fzone.Ti" title="fdata.fzone.Ti"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Ti</span></code></a><code class="docutils literal notranslate"><span class="pre">=60.</span></code></p>
+<p>We wish to set the temperature at the top and bottom boundaries to 30 and 80 degC, respectively. To do this, we will take
+advantage of boundary zones automatically created by PyFEHM during grid generation. These zones have indices 999, 998,
+997, 996, 995, 994 corresponding to names ‘XMIN’,’XMAX’,’YMIN’,’YMAX’,’ZMIN’,’ZMAX’.</p>
+<p>Create a new ‘hflx’ <a class="reference internal" href="fdata.html#fdata.fmacro" title="fdata.fmacro"><code class="xref py py-class docutils literal notranslate"><span class="pre">fmacro</span></code></a> object with a tuple of parameter name/value pairings. Setting the ‘multiplier’ to a large
+value will ensure that the temperature is maintained very near to ‘heat_flow’. ‘ZMAX’ is specified in the zone
+argument.</p>
+<p><code class="docutils literal notranslate"><span class="pre">hflx=</span></code><a class="reference internal" href="fdata.html#fdata.fmacro" title="fdata.fmacro"><code class="xref py py-class docutils literal notranslate"><span class="pre">fmacro</span></code></a><code class="docutils literal notranslate"><span class="pre">('hflx',</span></code><a class="reference internal" href="fdata.html#fdata.fmacro.zone" title="fdata.fmacro.zone"><code class="xref py py-attr docutils literal notranslate"><span class="pre">zone</span></code></a><code class="docutils literal notranslate"><span class="pre">='ZMAX',</span></code> <a class="reference internal" href="fdata.html#fdata.fmacro.param" title="fdata.fmacro.param"><code class="xref py py-attr docutils literal notranslate"><span class="pre">param</span></code></a><code class="docutils literal notranslate"><span class="pre">=(('heat_flow',30),('multiplier',1.e10)))</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.add" title="fdata.fdata.add"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add</span></code></a><code class="docutils literal notranslate"><span class="pre">(hflx)</span></code></p>
+<p>This process can be streamlined by calling the <a class="reference internal" href="fdata.html#fdata.fzone.fix_temperature" title="fdata.fzone.fix_temperature"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fzone.fix_temperature()</span></code></a> command from a zone associated with the
+<a class="reference internal" href="fdata.html#fdata.fdata" title="fdata.fdata"><code class="xref py py-class docutils literal notranslate"><span class="pre">fdata</span></code></a> object.</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.zone" title="fdata.fdata.zone"><code class="xref py py-attr docutils literal notranslate"><span class="pre">zone</span></code></a><code class="docutils literal notranslate"><span class="pre">['ZMIN'].</span></code><a class="reference internal" href="fdata.html#fdata.fzone.fix_temperature" title="fdata.fzone.fix_temperature"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fix_temperature</span></code></a><code class="docutils literal notranslate"><span class="pre">(80)</span></code></p>
+<p>Now set pressures at two lateral boundaries, ‘YMIN’ and ‘YMAX’, to 4 and 6 MPa, respectively. This can be achieved using
+the <strong>FLOW</strong> macro</p>
+<p><code class="docutils literal notranslate"><span class="pre">flow=</span></code><a class="reference internal" href="fdata.html#fdata.fmacro" title="fdata.fmacro"><code class="xref py py-class docutils literal notranslate"><span class="pre">fmacro</span></code></a><code class="docutils literal notranslate"><span class="pre">('flow',</span></code><a class="reference internal" href="fdata.html#fdata.fmacro.zone" title="fdata.fmacro.zone"><code class="xref py py-attr docutils literal notranslate"><span class="pre">zone</span></code></a><code class="docutils literal notranslate"><span class="pre">='YMIN',</span></code> <a class="reference internal" href="fdata.html#fdata.fmacro.param" title="fdata.fmacro.param"><code class="xref py py-attr docutils literal notranslate"><span class="pre">param</span></code></a><code class="docutils literal notranslate"><span class="pre">=(('rate',6.),('energy',-60.),('impedance',1.e6)))</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.add" title="fdata.fdata.add"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add</span></code></a><code class="docutils literal notranslate"><span class="pre">(flow)</span></code></p>
+<p>Once again, this process is streamlined by calling the <a class="reference internal" href="fdata.html#fdata.fzone.fix_pressure" title="fdata.fzone.fix_pressure"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fzone.fix_pressure()</span></code></a> command from a zone associated with the
+<a class="reference internal" href="fdata.html#fdata.fdata" title="fdata.fdata"><code class="xref py py-class docutils literal notranslate"><span class="pre">fdata</span></code></a> object.</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.zone" title="fdata.fdata.zone"><code class="xref py py-attr docutils literal notranslate"><span class="pre">zone</span></code></a><code class="docutils literal notranslate"><span class="pre">['YMAX'].</span></code><a class="reference internal" href="fdata.html#fdata.fzone.fix_pressure" title="fdata.fzone.fix_pressure"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fix_pressure</span></code></a><code class="docutils literal notranslate"><span class="pre">(P=4.,T=60.)</span></code></p>
+</div>
+<div class="section" id="running-the-simulation">
+<h3>Running the simulation<a class="headerlink" href="#running-the-simulation" title="Permalink to this headline">¶</a></h3>
+<p>Before running the simulation, we want to specify variables to be printed out - in this case temperature and pressure -
+and request that this occurs at every time step.</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.cont" title="fdata.fdata.cont"><code class="xref py py-attr docutils literal notranslate"><span class="pre">cont</span></code></a><code class="docutils literal notranslate"><span class="pre">.</span></code><a class="reference internal" href="fdata.html#fdata.fcont.variables" title="fdata.fcont.variables"><code class="xref py py-attr docutils literal notranslate"><span class="pre">variables</span></code></a><code class="docutils literal notranslate"><span class="pre">.append(['xyz','temperature','pressure'])</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.cont" title="fdata.fdata.cont"><code class="xref py py-attr docutils literal notranslate"><span class="pre">cont</span></code></a><code class="docutils literal notranslate"><span class="pre">.</span></code><a class="reference internal" href="fdata.html#fdata.fcont.timestep_interval" title="fdata.fcont.timestep_interval"><code class="xref py py-attr docutils literal notranslate"><span class="pre">timestep_interval</span></code></a><code class="docutils literal notranslate"><span class="pre">=1</span></code></p>
+<p>Now set the end of the simulation to be 10 days using the shortcut attribute.</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.tf" title="fdata.fdata.tf"><code class="xref py py-attr docutils literal notranslate"><span class="pre">tf</span></code></a><code class="docutils literal notranslate"><span class="pre">=10.</span></code></p>
+<p>An alternative way to set the final time is directly through the <a class="reference internal" href="fdata.html#fdata.fdata.time" title="fdata.fdata.time"><code class="xref py py-attr docutils literal notranslate"><span class="pre">time</span></code></a> attribute</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.time" title="fdata.fdata.time"><code class="xref py py-attr docutils literal notranslate"><span class="pre">time</span></code></a><code class="docutils literal notranslate"><span class="pre">['max_time_TIMS']=10.</span></code></p>
+<p>However, using the shortcut attribute <a class="reference internal" href="fdata.html#fdata.fdata.tf" title="fdata.fdata.tf"><code class="xref py py-attr docutils literal notranslate"><span class="pre">tf</span></code></a> is simpler.</p>
+<p>Assign the root label to be used for all files created by FEHM during its execution.</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.files" title="fdata.fdata.files"><code class="xref py py-attr docutils literal notranslate"><span class="pre">files</span></code></a><code class="docutils literal notranslate"><span class="pre">.</span></code><a class="reference internal" href="fdata.html#fdata.files.root" title="fdata.files.root"><code class="xref py py-attr docutils literal notranslate"><span class="pre">root</span></code></a><code class="docutils literal notranslate"><span class="pre">=root</span></code></p>
+<p>Run the simulation, assuming ‘fehm.exe’ is sitting in the current directory.</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.run" title="fdata.fdata.run"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run</span></code></a><code class="docutils literal notranslate"><span class="pre">(root+'_INPUT.dat',exe='fehm.exe',files=['outp'])</span></code></p>
+</div>
+<div class="section" id="visualisation">
+<h3>Visualisation<a class="headerlink" href="#visualisation" title="Permalink to this headline">¶</a></h3>
+<p>Finally, we produce a couple of contour plots of vertical slices through the model, to verify that pressures and temperatures
+are behaving, at least qualitatively, as we expect.</p>
+<p>First, load in the contour information, printed to ‘.csv’ files. Wildcards (*) are used to load multiple files.</p>
+<p><code class="docutils literal notranslate"><span class="pre">c=</span></code><a class="reference internal" href="fpost.html#fpost.fcontour" title="fpost.fcontour"><code class="xref py py-class docutils literal notranslate"><span class="pre">fcontour</span></code></a><code class="docutils literal notranslate"><span class="pre">(root+'*.csv')</span></code></p>
+<p>Now, call the slice plotting methods. Slice plots are shown in Figure <a class="reference internal" href="#tut0-fig2"><span class="std std-ref">7.2</span></a>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">c.</span></code><a class="reference internal" href="fpost.html#fpost.fcontour.slice_plot" title="fpost.fcontour.slice_plot"><code class="xref py py-meth docutils literal notranslate"><span class="pre">slice_plot</span></code></a><code class="docutils literal notranslate"><span class="pre">(save='Tslice.png',</span> <span class="pre">time=[c.times[-1],</span> <span class="pre">c.times[-2]],</span> <span class="pre">cbar=True,</span> <span class="pre">levels=11,</span> <span class="pre">slice=['x',5],</span> <span class="pre">variable='T',</span> <span class="pre">method='linear',</span> <span class="pre">title='temperature</span> <span class="pre">/</span> <span class="pre">degC',</span> <span class="pre">xlabel='y</span> <span class="pre">/</span> <span class="pre">m',</span> <span class="pre">ylabel='z</span> <span class="pre">/</span> <span class="pre">m')</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">c.</span></code><a class="reference internal" href="fpost.html#fpost.fcontour.slice_plot" title="fpost.fcontour.slice_plot"><code class="xref py py-meth docutils literal notranslate"><span class="pre">slice_plot</span></code></a><code class="docutils literal notranslate"><span class="pre">(save='Pslice.png',</span> <span class="pre">cbar=True,</span> <span class="pre">levels=np.linspace(4,6,9),</span> <span class="pre">slice=['x',5],</span> <span class="pre">variable='P',</span> <span class="pre">method='linear',</span> <span class="pre">title='pressure</span> <span class="pre">/</span> <span class="pre">MPa',</span> <span class="pre">xlabel='y</span> <span class="pre">/</span> <span class="pre">m',</span> <span class="pre">ylabel='z</span> <span class="pre">/</span> <span class="pre">m')</span></code></p>
+<div class="figure" id="id4">
+<span id="tut0-fig2"></span><a class="reference internal image-reference" href="_images/tut0_output1.png"><img alt="_images/tut0_output1.png" src="_images/tut0_output1.png" style="width: 637.8px; height: 325.8px;" /></a>
+<p class="caption"><span class="caption-text">Left: Contour plot of a vertical slice of temperature change during the final time step, as produced by <a class="reference internal" href="fpost.html#fpost.fcontour.slice_plot" title="fpost.fcontour.slice_plot"><code class="xref py py-meth docutils literal notranslate"><span class="pre">slice_plot()</span></code></a>.
+Right: Contour plot of a vertical slice of pressure.</span></p>
+</div>
+</div>
+</div>
+<div class="section" id="five-spot-injection-and-production">
+<h2>Five-spot injection and production<a class="headerlink" href="#five-spot-injection-and-production" title="Permalink to this headline">¶</a></h2>
+<p>This second tutorial sets up a five-spot injection/production simulation for an EGS style system. The model
+considers cold-water injection into a hot reservoir with attendant effects on stress. The model
+grid is generated using built-in PyFEHM tools and is a quarter-reduced domain.</p>
+<div class="section" id="first-steps">
+<h3>First steps<a class="headerlink" href="#first-steps" title="Permalink to this headline">¶</a></h3>
+<p>As in the previous tutorial, we will need access to a few modules. If the PYTHONPATH environment variable is not
+set, follow the instructions in tutorial 1 for adding a path to your PyFEHM library files.</p>
+<p>Get access to PyFEHM grid generation, model construction and post-processing utilities.</p>
+<p><code class="docutils literal notranslate"><span class="pre">from</span></code> <a class="reference internal" href="fdata.html#fdata-chapter"><span class="std std-ref">fdata</span></a> <code class="docutils literal notranslate"><span class="pre">import*</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">from</span></code> <a class="reference internal" href="fpost.html#fpost-chapter"><span class="std std-ref">fpost</span></a> <code class="docutils literal notranslate"><span class="pre">import*</span></code></p>
+<p>As a first action, let us create an empty model object and assign the working directory to be tutorial2.</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat</span> <span class="pre">=</span></code> <a class="reference internal" href="fdata.html#fdata.fdata" title="fdata.fdata"><code class="xref py py-class docutils literal notranslate"><span class="pre">fdata</span></code></a><code class="docutils literal notranslate"><span class="pre">(work_dir='tutorial2')</span></code></p>
+</div>
+<div class="section" id="id1">
+<h3>Grid generation<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<p>Because we will model injection and production against fixed pressures, it is crucial that pressure gradients
+in the vicinity of the well be fully-resolved. To this end, it will be useful to have a mesh with variable resolution:
+<a class="reference internal" href="fgrid.html#fgrid.fgrid.make" title="fgrid.fgrid.make"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fgrid.make()</span></code></a> is useful for generating such meshes.</p>
+<p>First, let’s define some dimensions for the mesh. We want it to extend 1 km in each of the horizontal dimensions, and
+span between -500 and -1500 m depth (assuming <code class="docutils literal notranslate"><span class="pre">z</span> <span class="pre">=</span> <span class="pre">0</span></code> corresponds to the surface).</p>
+<p><code class="docutils literal notranslate"><span class="pre">X0,X1</span> <span class="pre">=</span> <span class="pre">0,1.e3</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">Z0,Z1</span> <span class="pre">=</span> <span class="pre">-1.5e3,-0.5e3</span></code></p>
+<p>We need to know the position of the injection and production wells so the mesh can be refined in the vicinity. The
+injection well is in the centre (the corner of the quarter spot) and the production well is at <code class="docutils literal notranslate"><span class="pre">(300,300)</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">injX,injY</span> <span class="pre">=</span> <span class="pre">0.,0.</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">proX,proY</span> <span class="pre">=</span> <span class="pre">300.,300.</span></code></p>
+<p>A power-law scaled node spacing will generate closer spacing nearer the injection and production locations.</p>
+<p><code class="docutils literal notranslate"><span class="pre">base</span> <span class="pre">=</span> <span class="pre">3</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dx</span> <span class="pre">=</span> <span class="pre">proX/2.</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">dx**(1-base)*np.linspace(0,dx,8)**base</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dx2</span> <span class="pre">=</span> <span class="pre">X1</span> <span class="pre">-</span> <span class="pre">proX</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">x2</span> <span class="pre">=</span> <span class="pre">dx2**(1-base)*np.linspace(0,dx2,10)**base</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">X</span> <span class="pre">=</span> <span class="pre">np.sort(list(x)</span> <span class="pre">+</span> <span class="pre">list(2*dx-x)[:-1]</span> <span class="pre">+</span> <span class="pre">list(2*dx+x2)[1:])</span></code></p>
+<p>Injection and production will be hosted within an aquifer, confined above and below by a caprock. We need to define
+the extent of these formations.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Za_base</span> <span class="pre">=</span> <span class="pre">-1.1e3</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">Za_top</span> <span class="pre">=</span> <span class="pre">-800.</span></code></p>
+<p>As all the action will be going on in the aquifer, we will want comparatively more nodes in there.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Z</span> <span class="pre">=</span> <span class="pre">list(np.linspace(Z0,Za_base,5))</span> <span class="pre">+</span> <span class="pre">list(np.linspace(Za_base,Za_top,11))[1:]</span> <span class="pre">+</span> <span class="pre">list(np.linspace(Za_top,Z1,5))[1:]</span></code></p>
+<p>Now that the node positions have been defined, we can create the mesh using the <a class="reference internal" href="fgrid.html#fgrid.fgrid.make" title="fgrid.fgrid.make"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fgrid.make()</span></code></a> command.</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.grid" title="fdata.fdata.grid"><code class="xref py py-attr docutils literal notranslate"><span class="pre">grid</span></code></a><code class="docutils literal notranslate"><span class="pre">.</span></code><a class="reference internal" href="fgrid.html#fgrid.fgrid.make" title="fgrid.fgrid.make"><code class="xref py py-meth docutils literal notranslate"><span class="pre">make</span></code></a><code class="docutils literal notranslate"><span class="pre">('quarterGrid.inp',</span> <span class="pre">x</span> <span class="pre">=</span> <span class="pre">X,</span> <span class="pre">y</span> <span class="pre">=</span> <span class="pre">X,</span> <span class="pre">z</span> <span class="pre">=</span> <span class="pre">Z)</span></code></p>
+<p>Plot a picture of the grid to check it is as expected (see Figure <a class="reference internal" href="#tut1-fig1"><span class="std std-ref">7.3</span></a>).</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.grid" title="fdata.fdata.grid"><code class="xref py py-attr docutils literal notranslate"><span class="pre">grid</span></code></a><code class="docutils literal notranslate"><span class="pre">.</span></code><a class="reference internal" href="fgrid.html#fgrid.fgrid.plot" title="fgrid.fgrid.plot"><code class="xref py py-meth docutils literal notranslate"><span class="pre">plot</span></code></a><code class="docutils literal notranslate"><span class="pre">('quarterGrid.png',</span> <span class="pre">angle</span> <span class="pre">=</span> <span class="pre">[45,45],</span> <span class="pre">color</span> <span class="pre">=</span> <span class="pre">'b',</span> <span class="pre">cutaway</span> <span class="pre">=</span> <span class="pre">[proX,</span> <span class="pre">proY,</span> <span class="pre">-1000.])</span></code></p>
+<div class="figure" id="id5">
+<span id="tut1-fig1"></span><a class="reference internal image-reference" href="_images/tut1_gridZone.png"><img alt="_images/tut1_gridZone.png" src="_images/tut1_gridZone.png" style="width: 611.4px; height: 348.6px;" /></a>
+<p class="caption"><span class="caption-text">Left: Cutaway view of quarterGrid.inp, as produced by <a class="reference internal" href="fgrid.html#fgrid.fgrid.plot" title="fgrid.fgrid.plot"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fgrid.plot()</span></code></a>. Right: Nodes contained in
+<code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.zone" title="fdata.fdata.zone"><code class="xref py py-attr docutils literal notranslate"><span class="pre">zone</span></code></a><code class="docutils literal notranslate"><span class="pre">['reservoir']</span></code>, as produced by <a class="reference internal" href="fdata.html#fdata.fzone.rect" title="fdata.fzone.rect"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fzone.rect()</span></code></a> and illustrated by <a class="reference internal" href="fdata.html#fdata.fzone.plot" title="fdata.fzone.plot"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fzone.plot()</span></code></a>.</span></p>
+</div>
+<p>Note that the files <em>quarterGrid.inp</em> and <em>quarterGrid.png</em> should now exist in the python working directory. Grid information
+is now available within <code class="docutils literal notranslate"><span class="pre">dat</span></code>, e.g., <code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.grid" title="fdata.fdata.grid"><code class="xref py py-attr docutils literal notranslate"><span class="pre">grid</span></code></a><code class="docutils literal notranslate"><span class="pre">.</span></code><a class="reference internal" href="fgrid.html#fgrid.fgrid.node" title="fgrid.fgrid.node"><code class="xref py py-attr docutils literal notranslate"><span class="pre">node</span></code></a> should be populated.
+This concludes grid generation.</p>
+</div>
+<div class="section" id="id2">
+<h3>Zone creation<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<p>This problem has three defined zones, a reservoir (denoted <code class="docutils literal notranslate"><span class="pre">res</span></code>) and upper and lower confining formations (denoted <code class="docutils literal notranslate"><span class="pre">con</span></code>).
+For simplicity, we will not assign different material properties to the two confining layers.</p>
+<p>Before we can assign material properties via the <strong>PERM</strong>, <strong>ROCK</strong> and <strong>COND</strong> macros, we need zones to which these
+macros can be assigned. As these zones are rectangular, we will define them using the <a class="reference internal" href="fdata.html#fdata.fdata.new_zone" title="fdata.fdata.new_zone"><code class="xref py py-meth docutils literal notranslate"><span class="pre">new_zone()</span></code></a> method, passing
+it the rect argument for a bounding box defined by two corner points. First the reservoir zone.</p>
+<p>dat.``<a class="reference internal" href="fdata.html#fdata.fdata.new_zone" title="fdata.fdata.new_zone"><code class="xref py py-meth docutils literal notranslate"><span class="pre">new_zone</span></code></a><code class="docutils literal notranslate"><span class="pre">(10,</span> <span class="pre">name='reservoir',</span> <span class="pre">rect=[[X0-0.1,X0-0.1,Za_base+0.1],</span> <span class="pre">[X1+0.1,X1+0.1,Za_top-0.1]])</span></code></p>
+<p>We can plot which nodes are contained in the reservoir zone to verify we have made the correct selection (see Figure <a class="reference internal" href="#tut1-fig1"><span class="std std-ref">7.1</span></a>).</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.zone" title="fdata.fdata.zone"><code class="xref py py-attr docutils literal notranslate"><span class="pre">zone</span></code></a><code class="docutils literal notranslate"><span class="pre">['reservoir'].</span></code><a class="reference internal" href="fdata.html#fdata.fzone.plot" title="fdata.fzone.plot"><code class="xref py py-meth docutils literal notranslate"><span class="pre">plot</span></code></a><code class="docutils literal notranslate"><span class="pre">('reservoirZone.png',</span> <span class="pre">color='g',</span> <span class="pre">angle</span> <span class="pre">=</span> <span class="pre">[30,30])</span></code></p>
+<p>The two confining zones are generated similarly</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.new_zone" title="fdata.fdata.new_zone"><code class="xref py py-meth docutils literal notranslate"><span class="pre">new_zone</span></code></a><code class="docutils literal notranslate"><span class="pre">(20,</span> <span class="pre">name='confining_lower',</span> <span class="pre">rect=[[X0-0.1,X0-0.1,Z0-0.1],</span> <span class="pre">[X1+0.1,X1+0.1,Za_base+0.1]])</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.new_zone" title="fdata.fdata.new_zone"><code class="xref py py-meth docutils literal notranslate"><span class="pre">new_zone</span></code></a><code class="docutils literal notranslate"><span class="pre">(21,</span> <span class="pre">name='confining_upper',</span> <span class="pre">rect=[[X0-0.1,X0-0.1,Za_top-0.1],</span> <span class="pre">[X1+0.1,X1+0.1,Z1+0.1]])</span></code></p>
+<p>Now that the zones have been defined, we can begin assigning material properties.</p>
+</div>
+<div class="section" id="material-property-assignment">
+<h3>Material property assignment<a class="headerlink" href="#material-property-assignment" title="Permalink to this headline">¶</a></h3>
+<p>First, declare some parameters: permeability (<code class="docutils literal notranslate"><span class="pre">perm</span></code>), density (<code class="docutils literal notranslate"><span class="pre">rho</span></code>), porosity (<code class="docutils literal notranslate"><span class="pre">phi</span></code>),
+thermal conductivity (<code class="docutils literal notranslate"><span class="pre">cond</span></code>), and specific heat (<code class="docutils literal notranslate"><span class="pre">H</span></code>).</p>
+<p><code class="docutils literal notranslate"><span class="pre">perm_res,</span> <span class="pre">perm_con</span> <span class="pre">=</span> <span class="pre">1.e-14,</span> <span class="pre">1.e-16</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">rho_res,</span> <span class="pre">rho_con</span> <span class="pre">=</span> <span class="pre">2300.,</span> <span class="pre">2500.</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">phi_res,</span> <span class="pre">phi_con</span> <span class="pre">=</span> <span class="pre">0.1,</span> <span class="pre">0.01</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">cond</span> <span class="pre">=</span> <span class="pre">2.5</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">H</span> <span class="pre">=</span> <span class="pre">1.e3</span></code></p>
+<p>Now, create a new <a class="reference internal" href="fdata.html#fdata.fmacro" title="fdata.fmacro"><code class="xref py py-class docutils literal notranslate"><span class="pre">fmacro</span></code></a> object to which to assign reservoir permeability. For this first time, we will
+take an unnecessary number of steps to demonstrate macro assignment</p>
+<p><code class="docutils literal notranslate"><span class="pre">perm=</span></code><a class="reference internal" href="fdata.html#fdata.fmacro" title="fdata.fmacro"><code class="xref py py-class docutils literal notranslate"><span class="pre">fmacro</span></code></a><code class="docutils literal notranslate"><span class="pre">('perm')</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">perm.</span></code><a class="reference internal" href="fdata.html#fdata.fmacro.zone" title="fdata.fmacro.zone"><code class="xref py py-attr docutils literal notranslate"><span class="pre">zone</span></code></a><code class="docutils literal notranslate"><span class="pre">='reservoir'</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">perm.</span></code><a class="reference internal" href="fdata.html#fdata.fmacro.param" title="fdata.fmacro.param"><code class="xref py py-attr docutils literal notranslate"><span class="pre">param</span></code></a><code class="docutils literal notranslate"><span class="pre">['kx']=perm_res</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">perm.</span></code><a class="reference internal" href="fdata.html#fdata.fmacro.param" title="fdata.fmacro.param"><code class="xref py py-attr docutils literal notranslate"><span class="pre">param</span></code></a><code class="docutils literal notranslate"><span class="pre">['ky']=perm_res</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">perm.</span></code><a class="reference internal" href="fdata.html#fdata.fmacro.param" title="fdata.fmacro.param"><code class="xref py py-attr docutils literal notranslate"><span class="pre">param</span></code></a><code class="docutils literal notranslate"><span class="pre">['kz']=perm_res</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.add" title="fdata.fdata.add"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add</span></code></a><code class="docutils literal notranslate"><span class="pre">(perm)</span></code></p>
+<p>In general, this process can be streamlined to a few or even a single step, e.g., assigning upper confining formation permeability</p>
+<p><code class="docutils literal notranslate"><span class="pre">perm=</span></code><a class="reference internal" href="fdata.html#fdata.fmacro" title="fdata.fmacro"><code class="xref py py-class docutils literal notranslate"><span class="pre">fmacro</span></code></a><code class="docutils literal notranslate"><span class="pre">('perm',</span></code><a class="reference internal" href="fdata.html#fdata.fmacro.zone" title="fdata.fmacro.zone"><code class="xref py py-attr docutils literal notranslate"><span class="pre">zone</span></code></a><code class="docutils literal notranslate"><span class="pre">=21,</span></code> <a class="reference internal" href="fdata.html#fdata.fmacro.param" title="fdata.fmacro.param"><code class="xref py py-attr docutils literal notranslate"><span class="pre">param</span></code></a><code class="docutils literal notranslate"><span class="pre">=(('kx',perm_con),</span> <span class="pre">('ky',perm_con),</span> <span class="pre">('kz',perm_con)))</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.add" title="fdata.fdata.add"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add</span></code></a><code class="docutils literal notranslate"><span class="pre">(perm)</span></code></p>
+<p>Permeability can also be assigned to a zone through its <a class="reference internal" href="fdata.html#fdata.fzone.permeability" title="fdata.fzone.permeability"><code class="xref py py-attr docutils literal notranslate"><span class="pre">permeability</span></code></a> attribute. Behind the scenes, PyFEHM
+takes care of the macro definition and zone association required by FEHM to assign this permeability.</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.zone" title="fdata.fdata.zone"><code class="xref py py-attr docutils literal notranslate"><span class="pre">fdata.zone</span></code></a><code class="docutils literal notranslate"><span class="pre">['confining_lower'].</span></code><a class="reference internal" href="fdata.html#fdata.fzone.permeability" title="fdata.fzone.permeability"><code class="xref py py-attr docutils literal notranslate"><span class="pre">permeability</span></code></a><code class="docutils literal notranslate"><span class="pre">=perm_con</span></code></p>
+<p>Similarly, rock properties are defined either through a macro object, or by zone attributes, e.g., through a macro object</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.add" title="fdata.fdata.add"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add</span></code></a><code class="docutils literal notranslate"><span class="pre">(</span></code><a class="reference internal" href="fdata.html#fdata.fmacro" title="fdata.fmacro"><code class="xref py py-class docutils literal notranslate"><span class="pre">fmacro</span></code></a><code class="docutils literal notranslate"><span class="pre">('rock',</span></code><a class="reference internal" href="fdata.html#fdata.fmacro.zone" title="fdata.fmacro.zone"><code class="xref py py-attr docutils literal notranslate"><span class="pre">zone</span></code></a><code class="docutils literal notranslate"><span class="pre">=dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.zone" title="fdata.fdata.zone"><code class="xref py py-attr docutils literal notranslate"><span class="pre">zone</span></code></a><code class="docutils literal notranslate"><span class="pre">['reservoir'],</span></code> <a class="reference internal" href="fdata.html#fdata.fmacro.param" title="fdata.fmacro.param"><code class="xref py py-attr docutils literal notranslate"><span class="pre">param</span></code></a><code class="docutils literal notranslate"><span class="pre">=(('density',rho_res),</span> <span class="pre">('specific_heat',H),</span> <span class="pre">('porosity',phi_res))))</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.add" title="fdata.fdata.add"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add</span></code></a><code class="docutils literal notranslate"><span class="pre">(</span></code><a class="reference internal" href="fdata.html#fdata.fmacro" title="fdata.fmacro"><code class="xref py py-class docutils literal notranslate"><span class="pre">fmacro</span></code></a><code class="docutils literal notranslate"><span class="pre">('rock',</span></code><a class="reference internal" href="fdata.html#fdata.fmacro.zone" title="fdata.fmacro.zone"><code class="xref py py-attr docutils literal notranslate"><span class="pre">zone</span></code></a><code class="docutils literal notranslate"><span class="pre">=dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.zone" title="fdata.fdata.zone"><code class="xref py py-attr docutils literal notranslate"><span class="pre">zone</span></code></a><code class="docutils literal notranslate"><span class="pre">['confining_lower'],</span></code> <a class="reference internal" href="fdata.html#fdata.fmacro.param" title="fdata.fmacro.param"><code class="xref py py-attr docutils literal notranslate"><span class="pre">param</span></code></a><code class="docutils literal notranslate"><span class="pre">=(('density',rho_con),</span> <span class="pre">('specific_heat',H),</span> <span class="pre">('porosity',phi_con))))</span></code></p>
+<p>through zone attributes</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.zone" title="fdata.fdata.zone"><code class="xref py py-attr docutils literal notranslate"><span class="pre">fdata.zone</span></code></a><code class="docutils literal notranslate"><span class="pre">['confining_upper'].</span></code><a class="reference internal" href="fdata.html#fdata.fzone.density" title="fdata.fzone.density"><code class="xref py py-attr docutils literal notranslate"><span class="pre">density</span></code></a><code class="docutils literal notranslate"><span class="pre">=rho_con</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.zone" title="fdata.fdata.zone"><code class="xref py py-attr docutils literal notranslate"><span class="pre">fdata.zone</span></code></a><code class="docutils literal notranslate"><span class="pre">['confining_upper'].</span></code><a class="reference internal" href="fdata.html#fdata.fzone.specific_heat" title="fdata.fzone.specific_heat"><code class="xref py py-attr docutils literal notranslate"><span class="pre">specific_heat</span></code></a><code class="docutils literal notranslate"><span class="pre">=H</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.zone" title="fdata.fdata.zone"><code class="xref py py-attr docutils literal notranslate"><span class="pre">fdata.zone</span></code></a><code class="docutils literal notranslate"><span class="pre">['confining_upper'].</span></code><a class="reference internal" href="fdata.html#fdata.fzone.porosity" title="fdata.fzone.porosity"><code class="xref py py-attr docutils literal notranslate"><span class="pre">porosity</span></code></a><code class="docutils literal notranslate"><span class="pre">=phi_con</span></code></p>
+<p>Thermal conductivity (<strong>COND</strong>) properties are to be the same everywhere, so we will use the conductivity attribute of zone 0.</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.zone" title="fdata.fdata.zone"><code class="xref py py-attr docutils literal notranslate"><span class="pre">fdata.zone</span></code></a><code class="docutils literal notranslate"><span class="pre">[0].</span></code><a class="reference internal" href="fdata.html#fdata.fzone.conductivity" title="fdata.fzone.conductivity"><code class="xref py py-attr docutils literal notranslate"><span class="pre">conductivity</span></code></a><code class="docutils literal notranslate"><span class="pre">=cond</span></code></p>
+</div>
+<div class="section" id="injectors-and-producers">
+<h3>Injectors and producers<a class="headerlink" href="#injectors-and-producers" title="Permalink to this headline">¶</a></h3>
+<p>The EGS problem requires both injection and production wells. To demonstrate some of FEHM’s flexibility, we will
+include a source that injects cold fluid at a fixed rate, and a production well that operates against a specified
+production pressure.</p>
+<p>First we require a zone for each of the production and injection wells. For the injection well, we will consider
+fluid exiting the wellbore over an open-hole length, i.e., sources at multiple nodes. For the production well, we will consider a single
+feed-zone at a fixed depth, i.e., a single node sink.</p>
+<p>First define the open hole injection nodes. The aquifer extends from -1100 to -800 m depth; we will choose a 100 m open hole
+section between -1000 and -900 m. Nodes contained in this zone are well-defined by the bounding box approach of <a class="reference internal" href="fdata.html#fdata.fzone.rect" title="fdata.fzone.rect"><code class="xref py py-meth docutils literal notranslate"><span class="pre">rect()</span></code></a>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.new_zone" title="fdata.fdata.new_zone"><code class="xref py py-meth docutils literal notranslate"><span class="pre">new_zone</span></code></a><code class="docutils literal notranslate"><span class="pre">(30,</span> <span class="pre">name='injection',</span> <span class="pre">rect=[[injX-0.1,injY-0.1,-1000.1],[injX+0.1,injY+0.1,-899.9]])</span></code></p>
+<p>Note that, in general, it is good to enlarge the bounding box by some nominal amount (in this case, 0.1 m) to insure
+that the nodes are in fact ‘bounded’ by the box.</p>
+<p>Now to define the production feed-zone; let’s suppose that it is at the known depth of -950 m.
+As we want to find the node closest to this location, we will use the <a class="reference internal" href="fgrid.html#fgrid.fgrid.node_nearest_point" title="fgrid.fgrid.node_nearest_point"><code class="xref py py-meth docutils literal notranslate"><span class="pre">node_nearest_point()</span></code></a> command.</p>
+<p><code class="docutils literal notranslate"><span class="pre">pro_node=dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.grid" title="fdata.fdata.grid"><code class="xref py py-attr docutils literal notranslate"><span class="pre">grid</span></code></a><code class="docutils literal notranslate"><span class="pre">.</span></code><a class="reference internal" href="fgrid.html#fgrid.fgrid.node_nearest_point" title="fgrid.fgrid.node_nearest_point"><code class="xref py py-meth docutils literal notranslate"><span class="pre">node_nearest_point</span></code></a><code class="docutils literal notranslate"><span class="pre">([proX,proY,-950])</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.new_zone" title="fdata.fdata.new_zone"><code class="xref py py-meth docutils literal notranslate"><span class="pre">new_zone</span></code></a><code class="docutils literal notranslate"><span class="pre">(40,</span> <span class="pre">'production',</span> <span class="pre">nodelist=pro_node)</span></code></p>
+<p>Now that the zones have been defined, we will assign mass flow generators via the <strong>FLOW</strong> and <strong>BOUN</strong> macros. First the
+production well, which is simply production against a fixed pressure, let’s say 6 MPa. We will use the <a class="reference internal" href="fdata.html#fdata.fmacro" title="fdata.fmacro"><code class="xref py py-class docutils literal notranslate"><span class="pre">fmacro</span></code></a><code class="docutils literal notranslate"><span class="pre">('flow')</span></code>
+object with a non-zero impedance parameter indicating production against a fixed pressure.</p>
+<p><code class="docutils literal notranslate"><span class="pre">flow=</span></code><a class="reference internal" href="fdata.html#fdata.fmacro" title="fdata.fmacro"><code class="xref py py-class docutils literal notranslate"><span class="pre">fmacro</span></code></a><code class="docutils literal notranslate"><span class="pre">('flow',</span></code><a class="reference internal" href="fdata.html#fdata.fmacro.zone" title="fdata.fmacro.zone"><code class="xref py py-attr docutils literal notranslate"><span class="pre">zone</span></code></a><code class="docutils literal notranslate"><span class="pre">='production',</span></code> <a class="reference internal" href="fdata.html#fdata.fmacro.param" title="fdata.fmacro.param"><code class="xref py py-attr docutils literal notranslate"><span class="pre">param</span></code></a><code class="docutils literal notranslate"><span class="pre">=(('rate',6),</span> <span class="pre">('energy',30),</span> <span class="pre">('impedance',1.)))</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.add" title="fdata.fdata.add"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add</span></code></a><code class="docutils literal notranslate"><span class="pre">(flow)</span></code></p>
+<p>There are multiple nodes in the injection zone, but we wish to specify a single mass injection rate. The <strong>BOUN</strong> macro
+is useful for distributing a fixed source across multiple nodes. Recall that, in contrast to <strong>FLOW</strong>, <strong>BOUN</strong> has its
+own macro object, <a class="reference internal" href="fdata.html#fdata.fboun" title="fdata.fboun"><code class="xref py py-class docutils literal notranslate"><span class="pre">fboun</span></code></a>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">injRate=4.</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">injTemp=60.</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">boun=</span></code><a class="reference internal" href="fdata.html#fdata.fboun" title="fdata.fboun"><code class="xref py py-class docutils literal notranslate"><span class="pre">fboun</span></code></a><code class="docutils literal notranslate"><span class="pre">(</span></code><a class="reference internal" href="fdata.html#fdata.fboun.zone" title="fdata.fboun.zone"><code class="xref py py-attr docutils literal notranslate"><span class="pre">zone</span></code></a><code class="docutils literal notranslate"><span class="pre">=['injection'],</span></code> <a class="reference internal" href="fdata.html#fdata.fboun.times" title="fdata.fboun.times"><code class="xref py py-attr docutils literal notranslate"><span class="pre">times</span></code></a><code class="docutils literal notranslate"><span class="pre">=[0,1e10],</span></code> <a class="reference internal" href="fdata.html#fdata.fboun.variable" title="fdata.fboun.variable"><code class="xref py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a><code class="docutils literal notranslate"><span class="pre">=[['dsw',-injRate,-injRate],</span> <span class="pre">['ft',injTemp,injTemp]]])</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.add" title="fdata.fdata.add"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add</span></code></a><code class="docutils literal notranslate"><span class="pre">(boun)</span></code></p>
+<p>This creates a source of 60degC water, injecting at a rate of 2 kg/s, distributed evenly across all nodes in the ‘injection’ zone (‘dsw’ = distributed source water).
+By assigning a large value in <code class="docutils literal notranslate"><span class="pre">boun.</span></code><a class="reference internal" href="fdata.html#fdata.fboun.times" title="fdata.fboun.times"><code class="xref py py-attr docutils literal notranslate"><span class="pre">times</span></code></a> we ensure that the source will continue to operate for the entire
+simulation.</p>
+</div>
+<div class="section" id="initial-conditions">
+<h3>Initial conditions<a class="headerlink" href="#initial-conditions" title="Permalink to this headline">¶</a></h3>
+<p>Before running the simulation we need to set up initial conditions for temperature and pressure. For simplicity, we will
+assume that gradients in both are linear from the surface, although more complex configurations can of course be
+accommodated.</p>
+<p>For the temperature field, we will use the <strong>GRAD</strong> macro, with a 70degC / km temperature gradient, 25degC surface temperature
+corresponding to <code class="docutils literal notranslate"><span class="pre">z</span> <span class="pre">=</span> <span class="pre">0</span></code>. Again, by omitting the zone parameter when creating the <a class="reference internal" href="fdata.html#fdata.fmacro" title="fdata.fmacro"><code class="xref py py-class docutils literal notranslate"><span class="pre">fmacro</span></code></a> object, the macro will
+automatically be applied to all nodes. More complex initial temperature distributions can be created by passing measured
+temperature profile data to the <a class="reference internal" href="fdata.html#fdata.fdata.temperature_gradient" title="fdata.fdata.temperature_gradient"><code class="xref py py-meth docutils literal notranslate"><span class="pre">temperature_gradient()</span></code></a> command.</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.add" title="fdata.fdata.add"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add</span></code></a><code class="docutils literal notranslate"><span class="pre">(</span></code><a class="reference internal" href="fdata.html#fdata.fmacro" title="fdata.fmacro"><code class="xref py py-class docutils literal notranslate"><span class="pre">fmacro</span></code></a><code class="docutils literal notranslate"><span class="pre">('grad',</span></code> <a class="reference internal" href="fdata.html#fdata.fmacro.param" title="fdata.fmacro.param"><code class="xref py py-attr docutils literal notranslate"><span class="pre">param</span></code></a><code class="docutils literal notranslate"><span class="pre">=(('reference_coord',0.),</span> <span class="pre">('direction',3),</span> <span class="pre">('variable',2),</span> <span class="pre">('reference_value',25.),</span> <span class="pre">('gradient',-0.06))))</span></code></p>
+<p>For the pressure distribution, we will assume this is initially hydrostatic, although FEHM will recalculate pressures based on the
+temperature dependent fluid density. Specifying the pressure distribution requires two macros: (i) a <strong>GRAD</strong> for the pressure gradient, and (ii)
+a fixed pressure, implemented by the <a class="reference internal" href="fdata.html#fdata.fzone.fix_pressure" title="fdata.fzone.fix_pressure"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fix_pressure</span></code></a><code class="docutils literal notranslate"><span class="pre">()</span></code> method, at the top surface representing the submerged upper surface of the model. First add
+the pressure gradient</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.add" title="fdata.fdata.add"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add</span></code></a><code class="docutils literal notranslate"><span class="pre">(</span></code><a class="reference internal" href="fdata.html#fdata.fmacro" title="fdata.fmacro"><code class="xref py py-class docutils literal notranslate"><span class="pre">fmacro</span></code></a><code class="docutils literal notranslate"><span class="pre">('grad',</span></code> <a class="reference internal" href="fdata.html#fdata.fmacro.param" title="fdata.fmacro.param"><code class="xref py py-attr docutils literal notranslate"><span class="pre">param</span></code></a><code class="docutils literal notranslate"><span class="pre">=(('reference_coord',0.),</span> <span class="pre">('direction',3),</span> <span class="pre">('variable',1),</span> <span class="pre">('reference_value',0.1),</span> <span class="pre">('gradient',-9.81*1e3/1e6))))</span></code></p>
+<p>Upon grid initialisation, PyFEHM already created the zone for the top surface, assigned the key <code class="docutils literal notranslate"><span class="pre">'ZMAX'</span></code>. We use the
+<a class="reference internal" href="fdata.html#fdata.fzone.fix_pressure" title="fdata.fzone.fix_pressure"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fix_pressure</span></code></a><code class="docutils literal notranslate"><span class="pre">()</span></code> method to assign surface pressure conditions</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.zone" title="fdata.fdata.zone"><code class="xref py py-attr docutils literal notranslate"><span class="pre">zone</span></code></a><code class="docutils literal notranslate"><span class="pre">['ZMAX'].</span></code><a class="reference internal" href="fdata.html#fdata.fzone.fix_pressure" title="fdata.fzone.fix_pressure"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fix_pressure</span></code></a><code class="docutils literal notranslate"><span class="pre">(P=0.1+Z1*-9.81*1e3/1e6,T=25.+Z1*-0.06)</span></code></p>
+</div>
+<div class="section" id="setting-up-stresses">
+<h3>Setting up stresses<a class="headerlink" href="#setting-up-stresses" title="Permalink to this headline">¶</a></h3>
+<p>Set up for a stress solution in FEHM requires (i) specification of material parameters relevant to mechanical deformation,
+e.g., Young’s modulus, thermal expansion coefficient, (ii) boundary conditions, either displacement or force, and (iii) optionally
+an initial stress state or (iv) a stress-permeability model. In this example we will include the first three features.</p>
+<p>Initial stress states are calculated and loaded in via FEHM’s restart or INCON file. This file also contains information on
+the restart of temperature and pressure; therefore, to perform a stress restart we first require the temperature and pressure
+restart information. The easiest way to obtain this is to run one time step of the model (without the stress solution) and request
+it to output a restart file at the end of the time step. We do this by setting the <code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.files" title="fdata.fdata.files"><code class="xref py py-attr docutils literal notranslate"><span class="pre">files</span></code></a><code class="docutils literal notranslate"><span class="pre">.</span></code><a class="reference internal" href="fdata.html#fdata.files.rsto" title="fdata.files.rsto"><code class="xref py py-attr docutils literal notranslate"><span class="pre">rsto</span></code></a>
+attribute to the name of the restart file.</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.dtn" title="fdata.fdata.dtn"><code class="xref py py-attr docutils literal notranslate"><span class="pre">dtn</span></code></a><code class="docutils literal notranslate"><span class="pre">=1</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.files" title="fdata.fdata.files"><code class="xref py py-attr docutils literal notranslate"><span class="pre">files</span></code></a><code class="docutils literal notranslate"><span class="pre">.</span></code><a class="reference internal" href="fdata.html#fdata.files.rsto" title="fdata.files.rsto"><code class="xref py py-attr docutils literal notranslate"><span class="pre">rsto</span></code></a><code class="docutils literal notranslate"><span class="pre">='EGS_INCON.ini'</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.run" title="fdata.fdata.run"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run</span></code></a><code class="docutils literal notranslate"><span class="pre">('EGS_flow_INPUT.dat')</span></code></p>
+<p>Note that, because we have not specified an FEHM executable in the <em>exe</em> argument of <a class="reference internal" href="fdata.html#fdata.fdata.run" title="fdata.fdata.run"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run</span></code></a>,
+PyFEHM will automatically search for <em>fehm.exe</em> in the current working directory.</p>
+<p>Now that the model has run a single time step, the output restart file (containing only temperature and pressure data) can be
+read as an initial conditions file (<a class="reference internal" href="fdata.html#fdata.fincon" title="fdata.fincon"><code class="xref py py-class docutils literal notranslate"><span class="pre">fincon</span></code></a>).</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.incon" title="fdata.fdata.incon"><code class="xref py py-attr docutils literal notranslate"><span class="pre">incon</span></code></a><code class="docutils literal notranslate"><span class="pre">.</span></code><a class="reference internal" href="fdata.html#fdata.fincon.read" title="fdata.fincon.read"><code class="xref py py-meth docutils literal notranslate"><span class="pre">read</span></code></a><code class="docutils literal notranslate"><span class="pre">('EGS_INCON.ini')</span></code></p>
+<p>Vertical gradients in the three principal stresses can be calculated using the <a class="reference internal" href="fdata.html#fdata.fincon.stressgrad" title="fdata.fincon.stressgrad"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fincon.stressgrad()</span></code></a> command. In this case
+we will request that PyFEHM calculates the vertical load by integrating the variable density information supplied in
+<a class="reference internal" href="fdata.html#fdata.fmacro" title="fdata.fmacro"><code class="xref py py-class docutils literal notranslate"><span class="pre">fmacro</span></code></a><code class="docutils literal notranslate"><span class="pre">['rock']</span></code>, and the horizontal stresses as fractions of the vertical.</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.incon" title="fdata.fdata.incon"><code class="xref py py-attr docutils literal notranslate"><span class="pre">incon</span></code></a><code class="docutils literal notranslate"><span class="pre">.</span></code><a class="reference internal" href="fdata.html#fdata.fincon.stressgrad" title="fdata.fincon.stressgrad"><code class="xref py py-meth docutils literal notranslate"><span class="pre">stressgrad</span></code></a><code class="docutils literal notranslate"><span class="pre">(xgrad=0.6,</span> <span class="pre">ygrad=0.8,</span> <span class="pre">zgrad=2500*abs(Z1)*9.81/1e6,</span> <span class="pre">calculate_vertical=True,</span> <span class="pre">vertical_fraction=True)</span></code></p>
+<p>Now to turn the stress solution on and assign material parameters to the various zones in the model. We will assign
+different deformation parameters (<strong>ELASTIC</strong>) to the reservoir and confining units, but assume that stress-flow coupling
+parameters (<strong>BIOT</strong>) are the same throughout. These are material properties and thus can be assigned using appropriate zone
+attributes</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.strs" title="fdata.fdata.strs"><code class="xref py py-attr docutils literal notranslate"><span class="pre">strs</span></code></a><code class="docutils literal notranslate"><span class="pre">.</span></code><a class="reference internal" href="fdata.html#fdata.fstrs.on" title="fdata.fstrs.on"><code class="xref py py-meth docutils literal notranslate"><span class="pre">on</span></code></a><code class="docutils literal notranslate"><span class="pre">()</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">E_res,E_con</span> <span class="pre">=</span> <span class="pre">2e3,2e4</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">nu_res,nu_con</span> <span class="pre">=</span> <span class="pre">0.15,0.35</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.zone" title="fdata.fdata.zone"><code class="xref py py-attr docutils literal notranslate"><span class="pre">fdata.zone</span></code></a><code class="docutils literal notranslate"><span class="pre">['reservoir'].</span></code><a class="reference internal" href="fdata.html#fdata.fzone.youngs_modulus" title="fdata.fzone.youngs_modulus"><code class="xref py py-attr docutils literal notranslate"><span class="pre">youngs_modulus</span></code></a><code class="docutils literal notranslate"><span class="pre">=E_res</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.zone" title="fdata.fdata.zone"><code class="xref py py-attr docutils literal notranslate"><span class="pre">fdata.zone</span></code></a><code class="docutils literal notranslate"><span class="pre">['confining_lower'].</span></code><a class="reference internal" href="fdata.html#fdata.fzone.youngs_modulus" title="fdata.fzone.youngs_modulus"><code class="xref py py-attr docutils literal notranslate"><span class="pre">youngs_modulus</span></code></a><code class="docutils literal notranslate"><span class="pre">=E_con</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.zone" title="fdata.fdata.zone"><code class="xref py py-attr docutils literal notranslate"><span class="pre">fdata.zone</span></code></a><code class="docutils literal notranslate"><span class="pre">['confining_upper'].</span></code><a class="reference internal" href="fdata.html#fdata.fzone.youngs_modulus" title="fdata.fzone.youngs_modulus"><code class="xref py py-attr docutils literal notranslate"><span class="pre">youngs_modulus</span></code></a><code class="docutils literal notranslate"><span class="pre">=E_con</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.zone" title="fdata.fdata.zone"><code class="xref py py-attr docutils literal notranslate"><span class="pre">fdata.zone</span></code></a><code class="docutils literal notranslate"><span class="pre">['reservoir'].</span></code><a class="reference internal" href="fdata.html#fdata.fzone.poissons_ratio" title="fdata.fzone.poissons_ratio"><code class="xref py py-attr docutils literal notranslate"><span class="pre">poissons_ratio</span></code></a><code class="docutils literal notranslate"><span class="pre">=nu_res</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.zone" title="fdata.fdata.zone"><code class="xref py py-attr docutils literal notranslate"><span class="pre">fdata.zone</span></code></a><code class="docutils literal notranslate"><span class="pre">['confining_lower'].</span></code><a class="reference internal" href="fdata.html#fdata.fzone.poissons_ratio" title="fdata.fzone.poissons_ratio"><code class="xref py py-attr docutils literal notranslate"><span class="pre">poissons_ratio</span></code></a><code class="docutils literal notranslate"><span class="pre">=nu_con</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.zone" title="fdata.fdata.zone"><code class="xref py py-attr docutils literal notranslate"><span class="pre">fdata.zone</span></code></a><code class="docutils literal notranslate"><span class="pre">['confining_upper'].</span></code><a class="reference internal" href="fdata.html#fdata.fzone.poissons_ratio" title="fdata.fzone.poissons_ratio"><code class="xref py py-attr docutils literal notranslate"><span class="pre">poissons_ratio</span></code></a><code class="docutils literal notranslate"><span class="pre">=nu_con</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.zone" title="fdata.fdata.zone"><code class="xref py py-attr docutils literal notranslate"><span class="pre">fdata.zone</span></code></a><code class="docutils literal notranslate"><span class="pre">[0].</span></code><a class="reference internal" href="fdata.html#fdata.fzone.thermal_expansion" title="fdata.fzone.thermal_expansion"><code class="xref py py-attr docutils literal notranslate"><span class="pre">thermal_expansion</span></code></a><code class="docutils literal notranslate"><span class="pre">=3.e-5</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.zone" title="fdata.fdata.zone"><code class="xref py py-attr docutils literal notranslate"><span class="pre">fdata.zone</span></code></a><code class="docutils literal notranslate"><span class="pre">[0].</span></code><a class="reference internal" href="fdata.html#fdata.fzone.pressure_coupling" title="fdata.fzone.pressure_coupling"><code class="xref py py-attr docutils literal notranslate"><span class="pre">pressure_coupling</span></code></a><code class="docutils literal notranslate"><span class="pre">=1.</span></code></p>
+<p>Because we have prescribed the initial stress state, boundary conditions and body forces to not need to reflect
+gravitational or tectonic loading. For this reason, we should turn body force calculations off, and assign fixed displacement
+boundary conditions to prevent model drift (roller boundary conditions on the <code class="docutils literal notranslate"><span class="pre">x=0</span></code>, <code class="docutils literal notranslate"><span class="pre">y=0</span></code> and <code class="docutils literal notranslate"><span class="pre">z=0</span></code> planes). Note
+that these zones already exist, automatically created by PyFEHM with the names <code class="docutils literal notranslate"><span class="pre">'XMIN'</span></code>, <code class="docutils literal notranslate"><span class="pre">'YMIN'</span></code> and <code class="docutils literal notranslate"><span class="pre">'ZMIN'</span></code>. Furthermore,
+it is advisable when defining boundary conditions to pass the <code class="docutils literal notranslate"><span class="pre">write_one_macro=True</span></code> argument - this improves stability of the
+stress solution.</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.strs" title="fdata.fdata.strs"><code class="xref py py-attr docutils literal notranslate"><span class="pre">strs</span></code></a><code class="docutils literal notranslate"><span class="pre">.</span></code><a class="reference internal" href="fdata.html#fdata.fstrs.fem" title="fdata.fstrs.fem"><code class="xref py py-attr docutils literal notranslate"><span class="pre">fem</span></code></a><code class="docutils literal notranslate"><span class="pre">=1.</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.strs" title="fdata.fdata.strs"><code class="xref py py-attr docutils literal notranslate"><span class="pre">strs</span></code></a><code class="docutils literal notranslate"><span class="pre">.</span></code><a class="reference internal" href="fdata.html#fdata.fstrs.bodyforce" title="fdata.fstrs.bodyforce"><code class="xref py py-attr docutils literal notranslate"><span class="pre">bodyforce</span></code></a><code class="docutils literal notranslate"><span class="pre">=0.</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.sol" title="fdata.fdata.sol"><code class="xref py py-attr docutils literal notranslate"><span class="pre">sol</span></code></a><code class="docutils literal notranslate"><span class="pre">['element_integration_INTG']=-1</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.add" title="fdata.fdata.add"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add</span></code></a><code class="docutils literal notranslate"><span class="pre">(</span></code><a class="reference internal" href="fdata.html#fdata.fmacro" title="fdata.fmacro"><code class="xref py py-class docutils literal notranslate"><span class="pre">fmacro</span></code></a><code class="docutils literal notranslate"><span class="pre">('stressboun',</span></code> <a class="reference internal" href="fdata.html#fdata.fmacro.zone" title="fdata.fmacro.zone"><code class="xref py py-attr docutils literal notranslate"><span class="pre">zone</span></code></a><code class="docutils literal notranslate"><span class="pre">=60,</span></code> <a class="reference internal" href="fdata.html#fdata.fmacro.subtype" title="fdata.fmacro.subtype"><code class="xref py py-attr docutils literal notranslate"><span class="pre">subtype</span></code></a><code class="docutils literal notranslate"><span class="pre">='fixed',</span></code> <a class="reference internal" href="fdata.html#fdata.fmacro.param" title="fdata.fmacro.param"><code class="xref py py-attr docutils literal notranslate"><span class="pre">param</span></code></a><code class="docutils literal notranslate"><span class="pre">=(('direction',1),</span> <span class="pre">('value',0))))</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.add" title="fdata.fdata.add"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add</span></code></a><code class="docutils literal notranslate"><span class="pre">(</span></code><a class="reference internal" href="fdata.html#fdata.fmacro" title="fdata.fmacro"><code class="xref py py-class docutils literal notranslate"><span class="pre">fmacro</span></code></a><code class="docutils literal notranslate"><span class="pre">('stressboun',</span></code> <a class="reference internal" href="fdata.html#fdata.fmacro.zone" title="fdata.fmacro.zone"><code class="xref py py-attr docutils literal notranslate"><span class="pre">zone</span></code></a><code class="docutils literal notranslate"><span class="pre">=61,</span></code> <a class="reference internal" href="fdata.html#fdata.fmacro.subtype" title="fdata.fmacro.subtype"><code class="xref py py-attr docutils literal notranslate"><span class="pre">subtype</span></code></a><code class="docutils literal notranslate"><span class="pre">='fixed',</span></code> <a class="reference internal" href="fdata.html#fdata.fmacro.param" title="fdata.fmacro.param"><code class="xref py py-attr docutils literal notranslate"><span class="pre">param</span></code></a><code class="docutils literal notranslate"><span class="pre">=(('direction',2),</span> <span class="pre">('value',0))))</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.add" title="fdata.fdata.add"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add</span></code></a><code class="docutils literal notranslate"><span class="pre">(</span></code><a class="reference internal" href="fdata.html#fdata.fmacro" title="fdata.fmacro"><code class="xref py py-class docutils literal notranslate"><span class="pre">fmacro</span></code></a><code class="docutils literal notranslate"><span class="pre">('stressboun',</span></code> <a class="reference internal" href="fdata.html#fdata.fmacro.zone" title="fdata.fmacro.zone"><code class="xref py py-attr docutils literal notranslate"><span class="pre">zone</span></code></a><code class="docutils literal notranslate"><span class="pre">=62,</span></code> <a class="reference internal" href="fdata.html#fdata.fmacro.subtype" title="fdata.fmacro.subtype"><code class="xref py py-attr docutils literal notranslate"><span class="pre">subtype</span></code></a><code class="docutils literal notranslate"><span class="pre">='fixed',</span></code> <a class="reference internal" href="fdata.html#fdata.fmacro.param" title="fdata.fmacro.param"><code class="xref py py-attr docutils literal notranslate"><span class="pre">param</span></code></a><code class="docutils literal notranslate"><span class="pre">=(('direction',3),</span> <span class="pre">('value',0))))</span></code></p>
+<p>Note that, for a well-behaved model I have set the <code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.strs" title="fdata.fdata.strs"><code class="xref py py-attr docutils literal notranslate"><span class="pre">strs</span></code></a><code class="docutils literal notranslate"><span class="pre">.</span></code><a class="reference internal" href="fdata.html#fdata.fstrs.fem" title="fdata.fstrs.fem"><code class="xref py py-attr docutils literal notranslate"><span class="pre">fem</span></code></a> and
+<code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.sol" title="fdata.fdata.sol"><code class="xref py py-attr docutils literal notranslate"><span class="pre">sol</span></code></a><code class="docutils literal notranslate"><span class="pre">['element_integration_INTG']</span></code> attributes to particular values - mess with these
+at your peril.</p>
+</div>
+<div class="section" id="running-the-model">
+<h3>Running the model<a class="headerlink" href="#running-the-model" title="Permalink to this headline">¶</a></h3>
+<p>Before running the final model, we need to tell FEHM to output variable information at particular locations and times.
+This is done through the <code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.cont" title="fdata.fdata.cont"><code class="xref py py-attr docutils literal notranslate"><span class="pre">cont</span></code></a> and <code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.hist" title="fdata.fdata.hist"><code class="xref py py-attr docutils literal notranslate"><span class="pre">hist</span></code></a> attributes.</p>
+<p>First, to the contour output, we will request information on pressure, temperature, stress and other variables at the end of the simulation,
+and every six months.</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.cont" title="fdata.fdata.cont"><code class="xref py py-attr docutils literal notranslate"><span class="pre">cont</span></code></a><code class="docutils literal notranslate"><span class="pre">.</span></code><a class="reference internal" href="fdata.html#fdata.fcont.variables" title="fdata.fcont.variables"><code class="xref py py-attr docutils literal notranslate"><span class="pre">variables</span></code></a><code class="docutils literal notranslate"><span class="pre">.append(['xyz',</span> <span class="pre">'pressure',</span> <span class="pre">'liquid',</span> <span class="pre">'temperature',</span> <span class="pre">'stress',</span> <span class="pre">'displacement',</span> <span class="pre">'permeability'])</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.cont" title="fdata.fdata.cont"><code class="xref py py-attr docutils literal notranslate"><span class="pre">cont</span></code></a><code class="docutils literal notranslate"><span class="pre">.</span></code><a class="reference internal" href="fdata.html#fdata.fcont.format" title="fdata.fcont.format"><code class="xref py py-attr docutils literal notranslate"><span class="pre">format</span></code></a><code class="docutils literal notranslate"><span class="pre">='surf'</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.cont" title="fdata.fdata.cont"><code class="xref py py-attr docutils literal notranslate"><span class="pre">cont</span></code></a><code class="docutils literal notranslate"><span class="pre">.</span></code><a class="reference internal" href="fdata.html#fdata.fcont.timestep_interval" title="fdata.fcont.timestep_interval"><code class="xref py py-attr docutils literal notranslate"><span class="pre">timestep_interval</span></code></a><code class="docutils literal notranslate"><span class="pre">=1000.</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.cont" title="fdata.fdata.cont"><code class="xref py py-attr docutils literal notranslate"><span class="pre">cont</span></code></a><code class="docutils literal notranslate"><span class="pre">.</span></code><a class="reference internal" href="fdata.html#fdata.fcont.time_interval" title="fdata.fcont.time_interval"><code class="xref py py-attr docutils literal notranslate"><span class="pre">time_interval</span></code></a><code class="docutils literal notranslate"><span class="pre">=365.25/2.</span></code></p>
+<p>For history output, we will request information on temperature, pressure and flow, at each time step for the
+single production node and the total injection zone.</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.hist" title="fdata.fdata.hist"><code class="xref py py-attr docutils literal notranslate"><span class="pre">hist</span></code></a><code class="docutils literal notranslate"><span class="pre">.</span></code><a class="reference internal" href="fdata.html#fdata.fhist.variables" title="fdata.fhist.variables"><code class="xref py py-attr docutils literal notranslate"><span class="pre">variables</span></code></a><code class="docutils literal notranslate"><span class="pre">.append(['temperature',</span> <span class="pre">'pressure',</span> <span class="pre">'flow',</span> <span class="pre">'zfl'])</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.hist" title="fdata.fdata.hist"><code class="xref py py-attr docutils literal notranslate"><span class="pre">hist</span></code></a><code class="docutils literal notranslate"><span class="pre">.</span></code><a class="reference internal" href="fdata.html#fdata.fhist.format" title="fdata.fhist.format"><code class="xref py py-attr docutils literal notranslate"><span class="pre">format</span></code></a><code class="docutils literal notranslate"><span class="pre">='surf'</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.hist" title="fdata.fdata.hist"><code class="xref py py-attr docutils literal notranslate"><span class="pre">hist</span></code></a><code class="docutils literal notranslate"><span class="pre">.</span></code><code class="xref py py-attr docutils literal notranslate"><span class="pre">nodeflux</span></code><code class="docutils literal notranslate"><span class="pre">.append(dat.zone['production'].nodelist[0])</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.hist" title="fdata.fdata.hist"><code class="xref py py-attr docutils literal notranslate"><span class="pre">hist</span></code></a><code class="docutils literal notranslate"><span class="pre">.</span></code><a class="reference internal" href="fdata.html#fdata.fhist.zoneflux" title="fdata.fhist.zoneflux"><code class="xref py py-attr docutils literal notranslate"><span class="pre">zoneflux</span></code></a><code class="docutils literal notranslate"><span class="pre">.append(dat.zone['injection'])</span></code></p>
+<p>Finally, we need to change the time step count (as this was originally set to 1), and request the simulation to
+continue for 10 years with a maximum time step of 1 year. Shortcut attributes are utilised for these three requests.</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.dtn" title="fdata.fdata.dtn"><code class="xref py py-attr docutils literal notranslate"><span class="pre">dtn</span></code></a><code class="docutils literal notranslate"><span class="pre">=1000</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.tf" title="fdata.fdata.tf"><code class="xref py py-attr docutils literal notranslate"><span class="pre">tf</span></code></a><code class="docutils literal notranslate"><span class="pre">=365.25*10.</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.dtmax" title="fdata.fdata.dtmax"><code class="xref py py-attr docutils literal notranslate"><span class="pre">dtmax</span></code></a><code class="docutils literal notranslate"><span class="pre">=365.25</span></code></p>
+<p>Now to run the simulation. Post-processing of the simulation output will be detailed in the next section.</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.files" title="fdata.fdata.files"><code class="xref py py-attr docutils literal notranslate"><span class="pre">files</span></code></a><code class="docutils literal notranslate"><span class="pre">.</span></code><a class="reference internal" href="fdata.html#fdata.files.root" title="fdata.files.root"><code class="xref py py-attr docutils literal notranslate"><span class="pre">root</span></code></a><code class="docutils literal notranslate"><span class="pre">='EGS'</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.run" title="fdata.fdata.run"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run</span></code></a><code class="docutils literal notranslate"><span class="pre">('EGS_stress_INPUT.dat',files=['hist','outp','check'])</span></code></p>
+</div>
+<div class="section" id="post-processing">
+<h3>Post-processing<a class="headerlink" href="#post-processing" title="Permalink to this headline">¶</a></h3>
+<p>Let’s first produce some slice plots of the final temperature, pressure and stress distributions. Contour output
+is read in by the <a class="reference internal" href="fpost.html#fpost.fcontour" title="fpost.fcontour"><code class="xref py py-class docutils literal notranslate"><span class="pre">fcontour</span></code></a> class. Although we have only requested a single contour output file (at the
+end of the simulation), the code below is general enough to search through <em>all</em> contour output, but take only the
+latest generated file (presumably corresponding to the end of the simulation).</p>
+<p><code class="docutils literal notranslate"><span class="pre">cont=</span></code><a class="reference internal" href="fpost.html#fpost.fcontour" title="fpost.fcontour"><code class="xref py py-class docutils literal notranslate"><span class="pre">fcontour</span></code></a><code class="docutils literal notranslate"><span class="pre">(dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.files" title="fdata.fdata.files"><code class="xref py py-attr docutils literal notranslate"><span class="pre">files</span></code></a><code class="docutils literal notranslate"><span class="pre">.</span></code><a class="reference internal" href="fdata.html#fdata.files.root" title="fdata.files.root"><code class="xref py py-attr docutils literal notranslate"><span class="pre">root</span></code></a><code class="docutils literal notranslate"><span class="pre">+'*.csv',latest=True)</span></code></p>
+<p>There are several options for generating data plots, and we will demonstrate some of PyFEHM’s plotting capabilities
+here.</p>
+<ol class="arabic simple">
+<li>A horizontal slice plot of temperature (see Figure <a class="reference internal" href="#tut1-fig2"><span class="std std-ref">7.4</span></a>).</li>
+</ol>
+<blockquote>
+<div><code class="docutils literal notranslate"><span class="pre">cont.</span></code><a class="reference internal" href="fpost.html#fpost.fcontour.slice_plot" title="fpost.fcontour.slice_plot"><code class="xref py py-meth docutils literal notranslate"><span class="pre">slice_plot</span></code></a><code class="docutils literal notranslate"><span class="pre">(save='temperature_slice.png',</span> <span class="pre">cbar=True,</span> <span class="pre">levels</span> <span class="pre">=</span> <span class="pre">10,</span> <span class="pre">slice</span> <span class="pre">=</span> <span class="pre">['z',-1000],</span> <span class="pre">divisions=[100,100],</span> <span class="pre">variable='T',</span> <span class="pre">xlims=[0,500],</span> <span class="pre">ylims=[0,500],</span> <span class="pre">title='final</span> <span class="pre">temperature</span> <span class="pre">distribution')</span></code></div></blockquote>
+<ol class="arabic simple" start="2">
+<li>A profile plot of pressure between the injection and production wells (see Figure <a class="reference internal" href="#tut1-fig2"><span class="std std-ref">7.4</span></a>).</li>
+</ol>
+<blockquote>
+<div><code class="docutils literal notranslate"><span class="pre">cont.</span></code><a class="reference internal" href="fpost.html#fpost.fcontour.profile_plot" title="fpost.fcontour.profile_plot"><code class="xref py py-meth docutils literal notranslate"><span class="pre">profile_plot</span></code></a><code class="docutils literal notranslate"><span class="pre">(save='pressure_profile.png',</span> <span class="pre">profile=np.array([[0,0,-1000],</span> <span class="pre">[400,400,-1000]]),</span> <span class="pre">variable='P',</span> <span class="pre">ylabel='pressure</span> <span class="pre">/</span> <span class="pre">MPa',</span> <span class="pre">title='pressure</span> <span class="pre">with</span> <span class="pre">distance</span> <span class="pre">from</span> <span class="pre">injector',</span> <span class="pre">color='g',</span> <span class="pre">marker='o--',</span> <span class="pre">method='linear')</span></code></div></blockquote>
+<ol class="arabic simple" start="3">
+<li>A vertical profile plot of stress at <code class="docutils literal notranslate"><span class="pre">x,y</span> <span class="pre">=</span> <span class="pre">[600,600]</span></code> (see Figure <a class="reference internal" href="#tut1-fig3"><span class="std std-ref">7.5</span></a>).</li>
+</ol>
+<blockquote>
+<div><code class="docutils literal notranslate"><span class="pre">cont.</span></code><a class="reference internal" href="fpost.html#fpost.fcontour.profile_plot" title="fpost.fcontour.profile_plot"><code class="xref py py-meth docutils literal notranslate"><span class="pre">profile_plot</span></code></a><code class="docutils literal notranslate"><span class="pre">(save='stress_profile.png',</span> <span class="pre">profile=np.array([[600,600,-500],</span> <span class="pre">[600,600,-1500]]),</span> <span class="pre">variable='strs_xx',</span> <span class="pre">xlabel='depth</span> <span class="pre">/</span> <span class="pre">m',</span> <span class="pre">ylabel='pressure</span> <span class="pre">/</span> <span class="pre">MPa',</span> <span class="pre">title='horizontal</span> <span class="pre">stress</span> <span class="pre">with</span> <span class="pre">depth',</span> <span class="pre">color='k',</span> <span class="pre">marker='-',</span> <span class="pre">method='linear',</span> <span class="pre">elevationPlot=True)</span></code></div></blockquote>
+<ol class="arabic simple" start="4">
+<li>A cutway plot of temperature (see Figure <a class="reference internal" href="#tut1-fig3"><span class="std std-ref">7.5</span></a>).</li>
+</ol>
+<blockquote>
+<div><code class="docutils literal notranslate"><span class="pre">cont.</span></code><a class="reference internal" href="fpost.html#fpost.fcontour.cutaway_plot" title="fpost.fcontour.cutaway_plot"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cutaway_plot</span></code></a><code class="docutils literal notranslate"><span class="pre">(variable='T',</span> <span class="pre">save='temperature_cutaway.png',</span> <span class="pre">xlims=[0,400],</span> <span class="pre">ylims=[0,400],</span> <span class="pre">zlims=[-1000,-800],</span> <span class="pre">cbar=True,</span> <span class="pre">levels=np.linspace(60,90,11),</span> <span class="pre">grid_lines='k:',</span> <span class="pre">title='temperature</span> <span class="pre">contours</span> <span class="pre">/</span> <span class="pre">$^o$C')</span></code></div></blockquote>
+<p>Now let’s look at some of the time-series plotting capability. First we need to read in the history output for the flow
+data at the production well.</p>
+<p><code class="docutils literal notranslate"><span class="pre">hist=</span></code><a class="reference internal" href="fpost.html#fpost.fhistory" title="fpost.fhistory"><code class="xref py py-class docutils literal notranslate"><span class="pre">fhistory</span></code></a><code class="docutils literal notranslate"><span class="pre">(dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.files" title="fdata.fdata.files"><code class="xref py py-attr docutils literal notranslate"><span class="pre">files</span></code></a><code class="docutils literal notranslate"><span class="pre">.</span></code><a class="reference internal" href="fdata.html#fdata.files.root" title="fdata.files.root"><code class="xref py py-attr docutils literal notranslate"><span class="pre">root</span></code></a><code class="docutils literal notranslate"><span class="pre">+'_flow_.his.dat')</span></code></p>
+<p>Now produce a time series plot of the production data (see Figure <a class="reference internal" href="#tut1-fig4"><span class="std std-ref">7.6</span></a>).</p>
+<p><code class="docutils literal notranslate"><span class="pre">hist.</span></code><code class="xref py py-meth docutils literal notranslate"><span class="pre">time_plot</span></code><code class="docutils literal notranslate"><span class="pre">(variable='flow',</span> <span class="pre">save='extraction_plot.png',</span> <span class="pre">node=hist.nodes[0],</span> <span class="pre">scale_t=1./365.25,</span> <span class="pre">xlabel='time</span> <span class="pre">/</span> <span class="pre">years',</span> <span class="pre">ylabel='flow</span> <span class="pre">kg</span> <span class="pre">s$^{-1}$')</span></code></p>
+<div class="figure" id="id6">
+<span id="tut1-fig2"></span><a class="reference internal image-reference" href="_images/tut1_output1.png"><img alt="_images/tut1_output1.png" src="_images/tut1_output1.png" style="width: 628.8px; height: 316.2px;" /></a>
+<p class="caption"><span class="caption-text">Left: Slice plot of final temperature distribution at <code class="docutils literal notranslate"><span class="pre">z=-1000</span></code>, as produced by <a class="reference internal" href="fpost.html#fpost.fcontour.slice_plot" title="fpost.fcontour.slice_plot"><code class="xref py py-meth docutils literal notranslate"><span class="pre">slice_plot()</span></code></a>.
+Right: Horizontal profile plot of pressure with distance from the injector, as produced by <a class="reference internal" href="fpost.html#fpost.fcontour.profile_plot" title="fpost.fcontour.profile_plot"><code class="xref py py-meth docutils literal notranslate"><span class="pre">profile_plot()</span></code></a>.</span></p>
+</div>
+<div class="figure" id="id7">
+<span id="tut1-fig3"></span><a class="reference internal image-reference" href="_images/tut1_output2.png"><img alt="_images/tut1_output2.png" src="_images/tut1_output2.png" style="width: 637.2px; height: 305.4px;" /></a>
+<p class="caption"><span class="caption-text">Left: Vertical profile plot of horizontal stress, as produced by <a class="reference internal" href="fpost.html#fpost.fcontour.profile_plot" title="fpost.fcontour.profile_plot"><code class="xref py py-meth docutils literal notranslate"><span class="pre">profile_plot()</span></code></a>.
+Right: Cutaway plot of temperature, as produced by <a class="reference internal" href="fpost.html#fpost.fcontour.cutaway_plot" title="fpost.fcontour.cutaway_plot"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cutaway_plot()</span></code></a>.</span></p>
+</div>
+<div class="figure" id="id8">
+<span id="tut1-fig4"></span><a class="reference internal image-reference" href="_images/tut1_output3.png"><img alt="_images/tut1_output3.png" src="_images/tut1_output3.png" style="width: 312.0px; height: 309.6px;" /></a>
+<p class="caption"><span class="caption-text">Time series plot of production flow rate, as produced by <a class="reference internal" href="fpost.html#fpost.fhistory.time_plot" title="fpost.fhistory.time_plot"><code class="xref py py-meth docutils literal notranslate"><span class="pre">time_plot()</span></code></a>.</span></p>
+</div>
+</div>
+</div>
+<div class="section" id="multiprocessing-and-batch-job-submission">
+<h2>Multiprocessing and batch job submission<a class="headerlink" href="#multiprocessing-and-batch-job-submission" title="Permalink to this headline">¶</a></h2>
+<p>Having constructed and performed an FEHM simulation, often it is necessary to rerun the model for different parameter values.
+This could be for either calibration or parameter sensitivity purposes. In these situations, the models can be run as batches -
+with no requirement for information transfer between simulations, they can be run asynchronously in parallel.</p>
+<p>Using Python’s <a class="reference external" href="http://docs.python.org/2/library/multiprocessing.html">multiprocessing</a> module, we can generalise a script that creates, runs and postprocesses an FEHM simulation
+for one specific parameter set so as to distribute multiple simulations across a specified number of cores. As an example, we shall
+extend the first tutorial (Section <a class="reference internal" href="#tutorial1"><span class="std std-ref">7.1</span></a>).</p>
+<div class="section" id="setting-up-a-batch-of-simulations">
+<h3>Setting up a batch of simulations<a class="headerlink" href="#setting-up-a-batch-of-simulations" title="Permalink to this headline">¶</a></h3>
+<p>First, import the multiprocessing module.</p>
+<p><code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">multiprocessing</span></code></p>
+<p>We will use indices to keep track of models. In this case, we will run the model four times with different parameters
+and so require indices 1 through 4, given by the <code class="docutils literal notranslate"><span class="pre">range()</span></code> command. Additionally, we will choose to distribute these
+jobs to two or our machine’s processors.</p>
+<p><code class="docutils literal notranslate"><span class="pre">models</span> <span class="pre">=</span> <span class="pre">range(1,5)</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">processors</span> <span class="pre">=</span> <span class="pre">2</span></code></p>
+<p>Now we need to define the parameter sets for each of the four simulations. In this case, we are looking at two different
+permeabilities for the centre layer, and two different temperatures for the boundary condition at the base of the model.
+Each parameter set is a list, and all parameter sets are contained in a single list, i.e., a nested list structure. The
+formatting used below is simply a visual aide to keep track of simulations.</p>
+<p><code class="docutils literal notranslate"><span class="pre">params</span> <span class="pre">=</span> <span class="pre">[</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">#[kmid,Tbase],</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">#</span> <span class="pre">legend</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">[1.e-20,80],</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">#</span> <span class="pre">1</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">[1.e-20,120],</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">#</span> <span class="pre">2</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">[1.e-16,80],</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">#</span> <span class="pre">3</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">[1.e-16,120],</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">#</span> <span class="pre">4</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">]</span></code></p>
+</div>
+<div class="section" id="generalising-to-a-function">
+<h3>Generalising to a function<a class="headerlink" href="#generalising-to-a-function" title="Permalink to this headline">¶</a></h3>
+<p>In tutorial 1 (Section <a class="reference internal" href="#tutorial1"><span class="std std-ref">7.1</span></a>), we wrote a script to construct, run and post-process a simple
+FEHM simulation. As a first step, this script must be generalised as a callable function - this is relatively easy.</p>
+<p>The corresponding function is defined by writing</p>
+<p><code class="docutils literal notranslate"><span class="pre">def</span> <span class="pre">simulation(j,param):</span></code></p>
+<p>and then indenting the rest of the script below this line (excluding import commands which should remain outside the function call).
+The name of the function is <code class="docutils literal notranslate"><span class="pre">simulation</span></code> and it receives two input arguments: <code class="docutils literal notranslate"><span class="pre">j</span></code>, an integer index indicating which
+model we are running, and <code class="docutils literal notranslate"><span class="pre">param</span></code> a list of parameters to be assigned within the function call. For example, in the case
+describe here <code class="docutils literal notranslate"><span class="pre">param</span></code> might contain <code class="docutils literal notranslate"><span class="pre">[1.e-20,120]</span></code>, i.e., the second parameter set in the list of all parameter sets,
+<code class="docutils literal notranslate"><span class="pre">params</span></code>, defined in the previous section.</p>
+</div>
+<div class="section" id="parameters-as-function-arguments">
+<h3>Parameters as function arguments<a class="headerlink" href="#parameters-as-function-arguments" title="Permalink to this headline">¶</a></h3>
+<p>In tutorial 1, the parameters to be varied are defined explicitly in the script with the lines</p>
+<p><code class="docutils literal notranslate"><span class="pre">kmid=1.e-20</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.zone" title="fdata.fdata.zone"><code class="xref py py-attr docutils literal notranslate"><span class="pre">zone</span></code></a><code class="docutils literal notranslate"><span class="pre">['ZMIN'].</span></code><a class="reference internal" href="fdata.html#fdata.fzone.fix_temperature" title="fdata.fzone.fix_temperature"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fix_temperature</span></code></a><code class="docutils literal notranslate"><span class="pre">(80)</span></code></p>
+<p>These lines need to be altered to reflect the general parameters supplied as the argument param. First, we will unpack
+the list <code class="docutils literal notranslate"><span class="pre">param</span></code> into separate variables by writing</p>
+<p><code class="docutils literal notranslate"><span class="pre">kmid,</span> <span class="pre">Tbase</span> <span class="pre">=</span> <span class="pre">param</span></code></p>
+<p>or equivalently</p>
+<p><code class="docutils literal notranslate"><span class="pre">kmid=param[0]</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">Tbase=param[1]</span></code></p>
+<p>Now, <code class="docutils literal notranslate"><span class="pre">kmid</span></code> is clearly defined, and we can simply delete the line reading</p>
+<p><code class="docutils literal notranslate"><span class="pre">kmid=1.e=20</span></code></p>
+<p>If left in, this would override the value of <code class="docutils literal notranslate"><span class="pre">kmid</span></code> passed as an argument to <code class="docutils literal notranslate"><span class="pre">simulation</span></code>.</p>
+<p>In the case of <code class="docutils literal notranslate"><span class="pre">Tbase</span></code>, we need to replace the argument of <a class="reference internal" href="fdata.html#fdata.fzone.fix_temperature" title="fdata.fzone.fix_temperature"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fix_temperature</span></code></a>``
+so that it reads</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.zone" title="fdata.fdata.zone"><code class="xref py py-attr docutils literal notranslate"><span class="pre">zone</span></code></a><code class="docutils literal notranslate"><span class="pre">['ZMIN'].</span></code><a class="reference internal" href="fdata.html#fdata.fzone.fix_temperature" title="fdata.fzone.fix_temperature"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fix_temperature</span></code></a><code class="docutils literal notranslate"><span class="pre">(Tbase)</span></code></p>
+</div>
+<div class="section" id="assigning-the-simulation-a-target-directory">
+<h3>Assigning the simulation a target directory<a class="headerlink" href="#assigning-the-simulation-a-target-directory" title="Permalink to this headline">¶</a></h3>
+<p>As we are performing four simulations, for the sake of tidiness, it makes sense that all files pertaining
+to a simulation should be placed in a separate simulation directory. This is necessary, as calling fehm.exe
+multiple times simultaneously in the same directory can lead to sharing issues.</p>
+<p>Performing simulations in target directories is relatively simple with PyFEHM. The first step is to generate
+a different root label for each simulation, using the model index (passed to <code class="docutils literal notranslate"><span class="pre">simulation</span></code> as the argument <code class="docutils literal notranslate"><span class="pre">j</span></code>)
+to distinguish between each. We replace</p>
+<p><code class="docutils literal notranslate"><span class="pre">root</span> <span class="pre">=</span> <span class="pre">'tut1'</span></code></p>
+<p>with</p>
+<p><code class="docutils literal notranslate"><span class="pre">root</span> <span class="pre">=</span> <span class="pre">'tut3_'+str(j)</span></code></p>
+<p>which will yield root labels ‘tut3_1’, ‘tut3_2’, ‘tut3_3’ and ‘tut3_4’ for the four simulations.</p>
+<p>Second, when the <a class="reference internal" href="fdata.html#fdata.fdata" title="fdata.fdata"><code class="xref py py-class docutils literal notranslate"><span class="pre">fdata</span></code></a> object is created, we pass the root label to the input argument <code class="docutils literal notranslate"><span class="pre">work_dir</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat</span> <span class="pre">=</span></code> <a class="reference internal" href="fdata.html#fdata.fdata" title="fdata.fdata"><code class="xref py py-class docutils literal notranslate"><span class="pre">fdata</span></code></a><code class="docutils literal notranslate"><span class="pre">(work_dir=root)</span></code></p>
+<p>This tells PyFEHM that all grid, input, incon and output files should be created in the new folder <code class="docutils literal notranslate"><span class="pre">root</span></code> inside
+the current work directory. Furthermore, the simulation itself is performed inside <code class="docutils literal notranslate"><span class="pre">root</span></code> and not the current
+directory.</p>
+<p>Two additional changes are required in the post-processing section so that the correct files are targeted. These are</p>
+<p><code class="docutils literal notranslate"><span class="pre">c=</span></code><a class="reference internal" href="fpost.html#fpost.fcontour" title="fpost.fcontour"><code class="xref py py-class docutils literal notranslate"><span class="pre">fcontour</span></code></a><code class="docutils literal notranslate"><span class="pre">(root+'\\*.csv',latest=True)</span></code></p>
+<p>and</p>
+<p><code class="docutils literal notranslate"><span class="pre">c.</span></code><a class="reference internal" href="fpost.html#fpost.fcontour.slice_plot" title="fpost.fcontour.slice_plot"><code class="xref py py-meth docutils literal notranslate"><span class="pre">slice_plot</span></code></a><code class="docutils literal notranslate"><span class="pre">(save=root+'\\Tslice.png',</span> <span class="pre">cbar=True,</span> <span class="pre">levels=11,</span> <span class="pre">slice=['x',5],</span> <span class="pre">variable='T',</span> <span class="pre">method='linear',</span> <span class="pre">title='temperature</span> <span class="pre">/</span> <span class="pre">degC',</span> <span class="pre">xlabel='y</span> <span class="pre">/</span> <span class="pre">m',</span> <span class="pre">ylabel='z</span> <span class="pre">/</span> <span class="pre">m')</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">c.</span></code><a class="reference internal" href="fpost.html#fpost.fcontour.slice_plot" title="fpost.fcontour.slice_plot"><code class="xref py py-meth docutils literal notranslate"><span class="pre">slice_plot</span></code></a><code class="docutils literal notranslate"><span class="pre">(save=root+'\\Pslice.png',</span> <span class="pre">cbar=True,</span> <span class="pre">levels=np.linspace(4,6,9),</span> <span class="pre">slice=['x',5],</span> <span class="pre">variable='P',</span> <span class="pre">method='linear',</span> <span class="pre">title='pressure</span> <span class="pre">/</span> <span class="pre">MPa',</span> <span class="pre">xlabel='y</span> <span class="pre">/</span> <span class="pre">m',</span> <span class="pre">ylabel='z</span> <span class="pre">/</span> <span class="pre">m')</span></code></p>
+</div>
+<div class="section" id="assembling-the-processing-pool-and-distributing-the-simulations">
+<h3>Assembling the processing pool and distributing the simulations<a class="headerlink" href="#assembling-the-processing-pool-and-distributing-the-simulations" title="Permalink to this headline">¶</a></h3>
+<p>First, we write a simple function that, for a given model index, executes the simulation function (<code class="docutils literal notranslate"><span class="pre">simulation</span></code>) one
+time, passing it the correct input arguments. The name of this function will be <code class="docutils literal notranslate"><span class="pre">execute()</span></code> and its definition
+is given below.</p>
+<p><code class="docutils literal notranslate"><span class="pre">def</span> <span class="pre">execute(j):</span></code></p>
+<blockquote>
+<div><code class="docutils literal notranslate"><span class="pre">simulation(j,params[j-1])</span></code></div></blockquote>
+<p>Now there are simply two commands to submit the batch job. The first, <code class="docutils literal notranslate"><span class="pre">multiprocessing.Pool</span></code> assembles a pool of
+available processors that will be used to run simulations. As a simulation is complete, its processor is returned to the pool
+and is then available to run a new simulation. The second command maps the simulation function, as accessed through
+<code class="docutils literal notranslate"><span class="pre">execution()</span></code> with the set of models to be run <code class="docutils literal notranslate"><span class="pre">models</span></code>, defined in the first section. These two tasks are coded below</p>
+<p><code class="docutils literal notranslate"><span class="pre">if</span> <span class="pre">__name__</span> <span class="pre">==</span> <span class="pre">'__main__':</span></code></p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">p=multiprocessing.Pool(processes</span> <span class="pre">=</span> <span class="pre">processors)</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">p.map(execute,models)</span></code></p>
+</div></blockquote>
+<p>The <code class="docutils literal notranslate"><span class="pre">if</span></code> conditional preceding these commands is very important. Omitting this can lead to an infinite loop that spawns a new
+python process each time - this can rapidly overwhelm the system and is generally counterproductive.</p>
+</div>
+<div class="section" id="basic-operation-of-the-parallel-batch-script">
+<h3>Basic operation of the parallel batch script<a class="headerlink" href="#basic-operation-of-the-parallel-batch-script" title="Permalink to this headline">¶</a></h3>
+<p>When this modified script is executed, the following actions are executed</p>
+<ol class="arabic">
+<li><p class="first">A pool of two available processors is assembled (<code class="docutils literal notranslate"><span class="pre">multiprocessing.Pool</span></code>).</p>
+</li>
+<li><p class="first">Four indices (1,2,3, and 4) corresponding to four models (<code class="docutils literal notranslate"><span class="pre">params[0]</span></code>, <code class="docutils literal notranslate"><span class="pre">params[1]</span></code>, etc.) are submitted to the
+function <code class="docutils literal notranslate"><span class="pre">execute</span></code>. Because there are two available processors, <code class="docutils literal notranslate"><span class="pre">execute</span></code> proceeds with <code class="docutils literal notranslate"><span class="pre">j=1</span></code> on the
+first and <code class="docutils literal notranslate"><span class="pre">j=2</span></code> on the second.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">execute</span></code> passes both <code class="docutils literal notranslate"><span class="pre">j</span></code> and the parameter set <code class="docutils literal notranslate"><span class="pre">params[j-1]</span></code> to the function <code class="docutils literal notranslate"><span class="pre">simulation()</span></code>. This function</p>
+<blockquote>
+<div><ol class="loweralpha simple">
+<li>Creates a new directory numbered by <code class="docutils literal notranslate"><span class="pre">j</span></code>.</li>
+<li>Creates a grid in that directory.</li>
+<li>Constructs and runs an FEHM model with the specific parameters in that directory.</li>
+<li>Post-processes output results in that directory.</li>
+</ol>
+</div></blockquote>
+</li>
+<li><p class="first">When <code class="docutils literal notranslate"><span class="pre">simulation</span></code> and <code class="docutils literal notranslate"><span class="pre">execution</span></code> complete, the processor is returned to the pool. Model indices <code class="docutils literal notranslate"><span class="pre">j=3</span></code> and <code class="docutils literal notranslate"><span class="pre">j=4</span></code> are still waiting
+and will take these returned processors as they become available, executing step 3 themselves.</p>
+</li>
+<li><p class="first">When all model indices have been input to and returned by <code class="docutils literal notranslate"><span class="pre">execute</span></code>, the batch simulation is complete.</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="section" id="dynamic-simulation-monitoring">
+<h2>Dynamic simulation monitoring<a class="headerlink" href="#dynamic-simulation-monitoring" title="Permalink to this headline">¶</a></h2>
+<p>In some instances, the final simulation time for a model is specified as some arbitrarily large value. This is to
+ensure that the model doesn’t finish before the behaviour we are trying to model has. However, if we could observe
+the simulation as it proceeded, we could monitor for an arbitrary finish criterion and terminate the process when it
+is satisfied.</p>
+<p>In this tutorial, we will demonstrate how to specify an arbitrary kill condition for a simulation - in this case,
+when the temperature at a particular node drops below a given value.</p>
+<p>As in the previous tutorial, we will use as a basis the model developed in tutorial 1.</p>
+<div class="section" id="defining-a-kill-condition">
+<h3>Defining a kill condition<a class="headerlink" href="#defining-a-kill-condition" title="Permalink to this headline">¶</a></h3>
+<p>First, the simulation time is doubled to 20 days.</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.tf" title="fdata.fdata.tf"><code class="xref py py-attr docutils literal notranslate"><span class="pre">tf</span></code></a><code class="docutils literal notranslate"><span class="pre">=20.</span></code></p>
+<p>The kill condition is defined as a function with particular input and return conditions. The function must accept
+a single input, an <a class="reference internal" href="fdata.html#fdata.fdata" title="fdata.fdata"><code class="xref py py-class docutils literal notranslate"><span class="pre">fdata</span></code></a> object, and return True or False depending on whether the condition has been satisfied.</p>
+<p>This function is passed to the <code class="docutils literal notranslate"><span class="pre">until</span></code> argument in the <a class="reference internal" href="fdata.html#fdata.fdata.run" title="fdata.fdata.run"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run</span></code></a><code class="docutils literal notranslate"><span class="pre">()</span></code> method when the simulation is
+executed. In operation, the function is passed the <a class="reference internal" href="fdata.html#fdata.fdata" title="fdata.fdata"><code class="xref py py-class docutils literal notranslate"><span class="pre">fdata</span></code></a> instance from which <a class="reference internal" href="fdata.html#fdata.fdata.run" title="fdata.fdata.run"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run</span></code></a><code class="docutils literal notranslate"><span class="pre">()</span></code>
+is called. PyFEHM monitors for output files containing information for a restart simulation that are
+periodically written by FEHM; these are parsed and the information made available at the nodal level. For example, nodal temperatures
+are available through the <a class="reference internal" href="fgrid.html#fgrid.fnode.T" title="fgrid.fnode.T"><code class="xref py py-attr docutils literal notranslate"><span class="pre">fnode.T</span></code></a> attribute inside the function.</p>
+<p>First define the function</p>
+<p><code class="docutils literal notranslate"><span class="pre">def</span> <span class="pre">kill_condition(dat):</span></code></p>
+<p>We want to set a kill condition when the node at position [7,7,9] has a temperature less than 50degC. First we need to
+locate that node</p>
+<blockquote>
+<div><code class="docutils literal notranslate"><span class="pre">nd=dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.grid" title="fdata.fdata.grid"><code class="xref py py-attr docutils literal notranslate"><span class="pre">grid</span></code></a><code class="docutils literal notranslate"><span class="pre">.</span></code><a class="reference internal" href="fgrid.html#fgrid.fgrid.node_nearest_point" title="fgrid.fgrid.node_nearest_point"><code class="xref py py-meth docutils literal notranslate"><span class="pre">node_nearest_point</span></code></a><code class="docutils literal notranslate"><span class="pre">([7.,7.,9.])</span></code></div></blockquote>
+<p>This node’s state attributes are updated at each time step during the simulation. Thus, all that is required is for us to test
+the kill condition</p>
+<blockquote>
+<div><code class="docutils literal notranslate"><span class="pre">return</span> <span class="pre">nd.</span></code><a class="reference internal" href="fgrid.html#fgrid.fnode.T" title="fgrid.fnode.T"><code class="xref py py-attr docutils literal notranslate"><span class="pre">T</span></code></a><code class="docutils literal notranslate"><span class="pre">&lt;50</span></code></div></blockquote>
+<p>Now run the simulation with the modified <a class="reference internal" href="fdata.html#fdata.fdata.run" title="fdata.fdata.run"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run</span></code></a><code class="docutils literal notranslate"><span class="pre">()</span></code> method</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.run" title="fdata.fdata.run"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run</span></code></a><code class="docutils literal notranslate"><span class="pre">(root+'_INPUT.dat',until=kill_condition)</span></code></p>
+<p>This simulation now finishes after 5 time steps or approximately 13 days, instead of the 20 days specified as the end
+of the simulation.</p>
+</div>
+</div>
+<div class="section" id="paraview-visualisation">
+<h2>Paraview visualisation<a class="headerlink" href="#paraview-visualisation" title="Permalink to this headline">¶</a></h2>
+<p>PyFEHM supports 3-D visualisation of model and output data in the software Paraview (www.paraview.org). Paraview must be installed
+ahead of time before For instance, the
+user can visualise various information on the model grid, e.g., material properties like permeability or porosity, zone information,
+or output data such as temperatures and pressures. Once loaded in Paraview, these data can be sliced, contoured and otherwise
+manipulated using Paraview’s built-in tools.</p>
+<p>An instance of Paraview is initialised by calling the <a class="reference internal" href="fdata.html#fdata.fdata.paraview" title="fdata.fdata.paraview"><code class="xref py py-meth docutils literal notranslate"><span class="pre">paraview</span></code></a><code class="docutils literal notranslate"><span class="pre">()</span></code> method,
+either from an <a class="reference internal" href="fdata.html#fdata.fdata" title="fdata.fdata"><code class="xref py py-class docutils literal notranslate"><span class="pre">fdata</span></code></a> or <a class="reference internal" href="fpost.html#fpost.fcontour" title="fpost.fcontour"><code class="xref py py-class docutils literal notranslate"><span class="pre">fcontour</span></code></a> object. Behind the scenes, PyFEHM formats and writes out
+grid, model and output data in the VTK format, and then subsequently loads these files into Paraview.</p>
+<p>If a sequence of contour output data files are loaded in, then the user can optionally request two derived variables types. By
+passing the <a class="reference internal" href="fdata.html#fdata.fdata.paraview" title="fdata.fdata.paraview"><code class="xref py py-meth docutils literal notranslate"><span class="pre">paraview</span></code></a><code class="docutils literal notranslate"><span class="pre">()</span></code> method <code class="docutils literal notranslate"><span class="pre">diff=True</span></code>, variable differences are created, e.g., the
+new variable <code class="docutils literal notranslate"><span class="pre">T_diff</span></code> will plot the change in temperature from its initial simulation value. By passing
+<code class="docutils literal notranslate"><span class="pre">time_derivative=True</span></code>, time derivatives for each variable will be calculated.</p>
+<p>PyFEHM will assume that <code class="docutils literal notranslate"><span class="pre">paraview.exe</span></code> is available for command line execution. The user can ensure this is the case by
+including the folder containing the paraview executable in their PATH environment variable. Alternatively, the user can
+pass <code class="docutils literal notranslate"><span class="pre">exe='/path/to/paraview.exe'</span></code> directly to the <a class="reference internal" href="fdata.html#fdata.fdata.paraview" title="fdata.fdata.paraview"><code class="xref py py-meth docutils literal notranslate"><span class="pre">paraview</span></code></a><code class="docutils literal notranslate"><span class="pre">()</span></code> method, or set this path
+in the config file.</p>
+<div class="section" id="using-the-paraview-method">
+<h3>Using the Paraview method<a class="headerlink" href="#using-the-paraview-method" title="Permalink to this headline">¶</a></h3>
+<p>To get started, in tutorial1.py, uncomment the paraview command near the end of the script</p>
+<blockquote>
+<div><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.paraview" title="fdata.fdata.paraview"><code class="xref py py-meth docutils literal notranslate"><span class="pre">paraview</span></code></a><code class="docutils literal notranslate"><span class="pre">(contour=</span></code><a class="reference internal" href="fpost.html#fpost.fcontour" title="fpost.fcontour"><code class="xref py py-class docutils literal notranslate"><span class="pre">c</span></code></a><code class="docutils literal notranslate"><span class="pre">,</span> <span class="pre">diff=True,</span> <span class="pre">time_derivatives=True)</span></code></div></blockquote>
+<p>Note that we have omitted the <code class="docutils literal notranslate"><span class="pre">exe</span></code> argument as it is expected that <code class="docutils literal notranslate"><span class="pre">paraview.exe</span></code> is available at the command line or
+otherwise defined in the config file. Because <a class="reference internal" href="fdata.html#fdata.fdata.paraview" title="fdata.fdata.paraview"><code class="xref py py-meth docutils literal notranslate"><span class="pre">paraview</span></code></a> is a method of <a class="reference internal" href="fdata.html#fdata.fdata" title="fdata.fdata"><code class="xref py py-class docutils literal notranslate"><span class="pre">fdata</span></code></a>, it has
+access to all the zone, permeability, etc. information defined in that object. However, it has no knowledge of simulation output that
+is encapsulated in the <a class="reference internal" href="fpost.html#fpost.fcontour" title="fpost.fcontour"><code class="xref py py-class docutils literal notranslate"><span class="pre">fcontour</span></code></a> object <code class="docutils literal notranslate"><span class="pre">c</span></code> defined in the previous command. Therefore, this object has to be
+explicitly passed to <a class="reference internal" href="fdata.html#fdata.fdata.paraview" title="fdata.fdata.paraview"><code class="xref py py-meth docutils literal notranslate"><span class="pre">paraview</span></code></a> via <code class="docutils literal notranslate"><span class="pre">contour=c</span></code>.</p>
+<p>Running the script tutorial1.py, you should now see an instance of Paraview opened automatically (once the simulation
+has concluded). There is a short period of activity after Paraview has been opened that it is busy loading files, creating
+layers etc. - after this has finished you should see something like the figure below.</p>
+<div class="figure">
+<a class="reference internal image-reference" href="_images/paraview1.png"><img alt="_images/paraview1.png" src="_images/paraview1.png" style="width: 447.6px; height: 283.2px;" /></a>
+</div>
+</div>
+<div class="section" id="model-information">
+<h3>Model information<a class="headerlink" href="#model-information" title="Permalink to this headline">¶</a></h3>
+<p>In the centre panel, a visualisation of the model is displayed, in this case contouring <code class="docutils literal notranslate"><span class="pre">x</span></code> permeability. A
+low permeability zone in the centre of the model, defined on the line</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.zone" title="fdata.fdata.zone"><code class="xref py py-attr docutils literal notranslate"><span class="pre">zone</span></code></a><code class="docutils literal notranslate"><span class="pre">[2].</span></code><a class="reference internal" href="fdata.html#fdata.fzone.permeability" title="fdata.fzone.permeability"><code class="xref py py-attr docutils literal notranslate"><span class="pre">permeability</span></code></a><code class="docutils literal notranslate"><span class="pre">=kmid</span></code></p>
+<p>is evident, as well as the regular grid spacing, defined on the lines</p>
+<p><code class="docutils literal notranslate"><span class="pre">x=np.linspace(0,10,11)</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.grid" title="fdata.fdata.grid"><code class="xref py py-attr docutils literal notranslate"><span class="pre">grid</span></code></a><code class="docutils literal notranslate"><span class="pre">.</span></code><a class="reference internal" href="fgrid.html#fgrid.fgrid.make" title="fgrid.fgrid.make"><code class="xref py py-meth docutils literal notranslate"><span class="pre">make</span></code></a><code class="docutils literal notranslate"><span class="pre">(root+'_GRID.inp',x=x,y=x,z=x)</span></code></p>
+<p>The top left panel contains a branching structure with members <code class="docutils literal notranslate"><span class="pre">model</span></code> and <code class="docutils literal notranslate"><span class="pre">contour_output</span></code>; these allow us to switch in and
+out various model information. For instance, with <code class="docutils literal notranslate"><span class="pre">model</span></code> selected use the drop-down menu to select <code class="docutils literal notranslate"><span class="pre">zone_996_YMAX</span></code>
+and note how the colouration changes to highlight the location of this zone.</p>
+<div class="figure">
+<a class="reference internal image-reference" href="_images/paraview2.png"><img alt="_images/paraview2.png" src="_images/paraview2.png" style="width: 440.4px; height: 273.6px;" /></a>
+</div>
+<p>This type of visualisation can be a quick means of checking that zones a user has defined in a PyFEHM script (and are consequently
+represented in FEHM) actually correspond to the region of the model they have in mind. The <a class="reference internal" href="fdata.html#fdata.fdata.paraview" title="fdata.fdata.paraview"><code class="xref py py-meth docutils literal notranslate"><span class="pre">paraview</span></code></a> method
+does not require a simulation to have actually been executed before the model can be visualised; the method can be called
+on any ‘half-finished’ <a class="reference internal" href="fdata.html#fdata.fdata" title="fdata.fdata"><code class="xref py py-class docutils literal notranslate"><span class="pre">fdata</span></code></a> object.</p>
+<p>Within the <code class="docutils literal notranslate"><span class="pre">model</span></code> branch, you can choose to switch on node visualisation (by toggling the ‘eye’ symbol next to <code class="docutils literal notranslate"><span class="pre">nodes</span></code>) or just certain zones.
+By default, only user-defined zones are included here; however, visualisations for the boundary zones can be obtained by passing
+<code class="docutils literal notranslate"><span class="pre">zones='all'</span></code> when calling the <a class="reference internal" href="fdata.html#fdata.fdata.paraview" title="fdata.fdata.paraview"><code class="xref py py-meth docutils literal notranslate"><span class="pre">paraview</span></code></a> method.</p>
+<p>Below we show the <code class="docutils literal notranslate"><span class="pre">upper</span></code> zone and nodes superimposed on a distribution of <code class="docutils literal notranslate"><span class="pre">y</span></code> permeability. In this way, it is evident that
+permeability is in some way linked to the definition of the <code class="docutils literal notranslate"><span class="pre">upper</span></code> zone (well obviously!) - in more complex simulations, this can
+be a good way to keep track of what material properties are being assigned where.</p>
+<div class="figure">
+<a class="reference internal image-reference" href="_images/paraview3.png"><img alt="_images/paraview3.png" src="_images/paraview3.png" style="width: 618.6px; height: 384.0px;" /></a>
+</div>
+</div>
+<div class="section" id="contour-output">
+<h3>Contour output<a class="headerlink" href="#contour-output" title="Permalink to this headline">¶</a></h3>
+<p>The branch <code class="docutils literal notranslate"><span class="pre">contour_output</span></code> contains information from the contour object that we passed to <a class="reference internal" href="fdata.html#fdata.fdata.paraview" title="fdata.fdata.paraview"><code class="xref py py-meth docutils literal notranslate"><span class="pre">paraview</span></code></a>. This includes
+differenced or time derivative variables that may have been created by passing the relevant arguments to <a class="reference internal" href="fdata.html#fdata.fdata.paraview" title="fdata.fdata.paraview"><code class="xref py py-meth docutils literal notranslate"><span class="pre">paraview</span></code></a>. The <code class="docutils literal notranslate"><span class="pre">model</span></code>
+and <code class="docutils literal notranslate"><span class="pre">contour_output</span></code> branches are not mutually exclusive. For example, one could superimpose a zone or node visualisation from <code class="docutils literal notranslate"><span class="pre">model</span></code>
+on, say, temperature distributions in <code class="docutils literal notranslate"><span class="pre">contour_output</span></code> to get a sense of any correspondence between these items.</p>
+<p>Turning off the <code class="docutils literal notranslate"><span class="pre">model</span></code> branch, and turning on <code class="docutils literal notranslate"><span class="pre">contour_output</span></code> (again using the ‘eye’ toggles), we are presented with
+a view of model pressures at the end of the simulation.</p>
+<div class="figure">
+<a class="reference internal image-reference" href="_images/paraview4.png"><img alt="_images/paraview4.png" src="_images/paraview4.png" style="width: 438.0px; height: 271.8px;" /></a>
+</div>
+<p>In this view, it is clear that the horizontal pressure gradient has been perturbed by the presence of the low
+permeability zone in the centre of the model.</p>
+<p>We can look at other variables by selecting the <code class="docutils literal notranslate"><span class="pre">model</span></code> branch and using the same drop-down menu we earlier used
+to inspect material properties. Note that, in this menu, are the additional differenced and time derivative variables
+we requested to be defined.</p>
+</div>
+<div class="section" id="some-additional-paraview-tools">
+<h3>Some additional Paraview tools<a class="headerlink" href="#some-additional-paraview-tools" title="Permalink to this headline">¶</a></h3>
+<p>Here we briefly list several of Paraview’s useful visualisation features.</p>
+<ol class="arabic simple">
+<li>Slices can be taken through a model to view material properties or output variables in the interior. Access this
+feature through <code class="docutils literal notranslate"><span class="pre">Filters</span> <span class="pre">&gt;</span> <span class="pre">Common</span> <span class="pre">&gt;</span> <span class="pre">Clip</span></code> or <code class="docutils literal notranslate"><span class="pre">Slice</span></code>.</li>
+<li>Isosurfaces can be defined that follow a specific zone: <code class="docutils literal notranslate"><span class="pre">Filters</span> <span class="pre">&gt;</span> <span class="pre">Common</span> <span class="pre">&gt;</span> <span class="pre">Contour</span></code></li>
+<li>If multiple contour output files have been imported (corresponding to different output times), an animation can be
+played using the green animation buttons at the top of the screen.</li>
+<li>Save a visualisation via <code class="docutils literal notranslate"><span class="pre">File</span> <span class="pre">&gt;</span> <span class="pre">Save</span> <span class="pre">Screenshot</span></code>.</li>
+</ol>
+<p>For example, the figure below shows a vertical slice that clips away half the model. Grid lines are superimposed upon
+the solid section that remains, with the colouration corresponding to permeability. An isosurface has been constructed for
+the base of the reservoir zone and contours of pressure have been plotted on this isosurface.</p>
+<div class="figure">
+<a class="reference internal image-reference" href="_images/paraview5.png"><img alt="_images/paraview5.png" src="_images/paraview5.png" style="width: 439.2px; height: 338.4px;" /></a>
+</div>
+</div>
+<div class="section" id="paraview-script">
+<h3>Paraview script<a class="headerlink" href="#paraview-script" title="Permalink to this headline">¶</a></h3>
+<p>Installation of PyFEHM provides access to the python script ‘fehm_paraview.py’. This script operates as an executable
+that accepts command line arguments and opens a Paraview visualisation of a particular FEHM simulation.</p>
+<p>fehm_paraview.py resides in the /Scripts folder of your Python installation. If /Scripts is included in the PATH environment variable, and the default
+program for *.py files is Python (on Windows), then this script can be called as an executable.</p>
+<p>In its simplest use, fehm_paraview.py can be called without arguments in any directory containing an ‘fehmn.files’ FEHM
+control file. For example, in running the script ‘tutorial1.py’, we created the subdirectory /tut1, which contains various
+simulation files, including ‘fehmn.files’ for that simulation. Navigate to this directory and at the command line execute</p>
+<p><code class="docutils literal notranslate"><span class="pre">..\\pyfehm\\tutorials\\tut1&gt;fehm_paraview.py</span></code></p>
+<p>this will cause an instance of Paraview to be opened and initialised with all model, grid and contour output data. For more
+options on command line use of fehm_paraview.py, call this script with the <code class="docutils literal notranslate"><span class="pre">--help</span></code> argument</p>
+<p><code class="docutils literal notranslate"><span class="pre">fehm_paraview.py</span> <span class="pre">--help</span></code></p>
+</div>
+</div>
+<div class="section" id="diagnostic-window">
+<h2>Diagnostic window<a class="headerlink" href="#diagnostic-window" title="Permalink to this headline">¶</a></h2>
+<p>FEHM supplies a stream of information to the terminal when a simulation is running. For instance, time step size,
+number, elapsed time, mass and energy balances, residuals and some nodal information can all be reported. Often
+it may be useful to track and plot these information in time, particularly for long simulations with many time steps.</p>
+<p>PyFEHM provides a diagnostic tool that both plots these data in real time and dumps the output information in column format
+to several auxiliary *.dgs files. Additional information is provided about ‘Largest N-R’ corrections that occur before
+time step cutbacks and provide and indication of which regions of the model FEHM is struggling to achieve convergence.</p>
+<p>As for the previous section, the PyFEHM diagnostic tool will be demonstrated by modifying and running tutorial1.py. In
+this script, uncomment two lines before the <a class="reference internal" href="fdata.html#fdata.fdata.run" title="fdata.fdata.run"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> method</p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.tf" title="fdata.fdata.tf"><code class="xref py py-attr docutils literal notranslate"><span class="pre">tf</span></code></a><code class="docutils literal notranslate"><span class="pre">=100.</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.iter" title="fdata.fdata.iter"><code class="xref py py-attr docutils literal notranslate"><span class="pre">iter</span></code></a><code class="docutils literal notranslate"><span class="pre">['machine_tolerance_TMCH']=-0.5e-5</span></code></p>
+<p>The increased run time provides a better demo and the lower tolerance allows us to demonstrate time step cutbacks.</p>
+<p>As in tutorial 1, the simulation is performed by calling the <a class="reference internal" href="fdata.html#fdata.fdata.run" title="fdata.fdata.run"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> method, but this time modified
+to pass <code class="docutils literal notranslate"><span class="pre">diagnostic=True</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.run" title="fdata.fdata.run"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run</span></code></a><code class="docutils literal notranslate"><span class="pre">(root+'_INPUT.dat',diagnostic=True)</span></code></p>
+<p>As the simulation executes, a dialogue window will open with several empty ploting axes. These are populated as the
+simulation proceeds with information taken from the output stream.</p>
+<div class="figure">
+<a class="reference internal image-reference" href="_images/diagnostic1.png"><img alt="_images/diagnostic1.png" src="_images/diagnostic1.png" style="width: 439.8px; height: 283.2px;" /></a>
+</div>
+<p>In the figure above, there are five boxes, numbered 1 through 5, containing different information. Each of these is
+explained below:</p>
+<ol class="arabic">
+<li><p class="first">Time step size on a log-plot. Both the x and y axes will readjust dynamically depending on the range of data. If
+this curve starts trending down, it is an indication of time step cutbacks and convergence issues.</p>
+</li>
+<li><p class="first">Net water (black) and energy (red) discharge. Appropriate y-scale is in the corresponding color.</p>
+</li>
+<li><p class="first">Residuals on a log-scale for the each governing equation: mass (blue) and energy (red) balance, and, if running
+with the stress or CO2 modules, the static-force or CO2 balance (black). A dotted line shows the residual tolerance;
+if the residual exceeds this line, FEHM will cutback the time step to achieve better convergence.</p>
+<p>Where Largest N-R corrections occur and the time-step is cutback, star symbols in the appropriate color are plotted, e.g.,
+in the figure above, cutbacks occurred when the energy balance (red) residual exceeded the tolerance, hence red stars
+are plotted.</p>
+</li>
+<li><p class="first">Node properties. FEHM outputs temperature, pressure and flow information to the screen for history nodes in
+<code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.hist" title="fdata.fdata.hist"><code class="xref py py-attr docutils literal notranslate"><span class="pre">hist</span></code></a><code class="docutils literal notranslate"><span class="pre">.</span></code><a class="reference internal" href="fdata.html#fdata.fhist.nodelist" title="fdata.fhist.nodelist"><code class="xref py py-attr docutils literal notranslate"><span class="pre">nodelist</span></code></a>. Up to the first four of these are plotted using
+different line styles (see legend). The first two variables defined in <code class="docutils literal notranslate"><span class="pre">dat.</span></code><a class="reference internal" href="fdata.html#fdata.fdata.hist" title="fdata.fdata.hist"><code class="xref py py-attr docutils literal notranslate"><span class="pre">hist</span></code></a><code class="docutils literal notranslate"><span class="pre">.</span></code><a class="reference internal" href="fdata.html#fdata.fhist.variables" title="fdata.fhist.variables"><code class="xref py py-attr docutils literal notranslate"><span class="pre">variables</span></code></a>are plotted on the two axes.</p>
+</li>
+<li><p class="first">When Largest N-R corrections occur, it is useful to know what node they occurred at, what its material properties are,
+what zone it belongs in etc. This information is provided in Box 5, including (i) the first node to produce a Largest N-R
+cutback, (ii) the two most-frequent nodes that produced cutbacks, and (iii) the most-recent node to produce a cutback. The final
+two update as the simulation proceeds.</p>
+</li>
+</ol>
+<p>The diagnostic window has several interactive properties. It can be maximised/minimised, resized and moved around the screen. It can also be
+closed without interrupting the simulation. However, <a class="reference internal" href="fdata.html#fdata.fdata.run" title="fdata.fdata.run"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> method that produces the diagnostic window will
+not return until the window is closed; scripts will pause at the end of a simulation until the user intervenes.</p>
+<div class="section" id="output-files">
+<h3>Output files<a class="headerlink" href="#output-files" title="Permalink to this headline">¶</a></h3>
+<p>In addition to visualising this information in the diagnostic window, PyFEHM writes the information in delimited format to three output
+files, named `*_convergence.dgs’, `*_NR.dgs’ and `*_node.dgs’. Alternatively, these output files can be produced
+by reading an FEHM ‘*.outp’ file (which contains the same terminal stream) using the <a class="reference internal" href="#fdata.process_output" title="fdata.process_output"><code class="xref py py-func docutils literal notranslate"><span class="pre">process_output</span></code></a> function.</p>
+<dl class="function">
+<dt id="fdata.process_output">
+<code class="descclassname">fdata.</code><code class="descname">process_output</code><span class="sig-paren">(</span><em>filename</em>, <em>input=None</em>, <em>grid=None</em>, <em>hide=False</em>, <em>silent=False</em>, <em>write=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fdata.html#process_output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fdata.process_output" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs an FEHM *.outp file through the diagnostic tool. Writes output files containing simulation balance, 
+convergence, time stepping information.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>filename</strong> (<em>str</em>) – Path to the *.outp file.</li>
+<li><strong>input</strong> (<em>str</em>) – Path to corresponding FEHM input file .</li>
+<li><strong>grid</strong> (<em>str</em>) – Path to corresponding FEHM grid file.</li>
+<li><strong>hide</strong> (<em>bool</em>) – Suppress diagnostic window (default False).</li>
+<li><strong>silent</strong> (<em>bool</em>) – Suppress output to the screen (default False).</li>
+<li><strong>write</strong> (<em>bool</em>) – Write output files (default True).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="diagnostic-script">
+<h3>Diagnostic script<a class="headerlink" href="#diagnostic-script" title="Permalink to this headline">¶</a></h3>
+<p>Similar to Paraview visualisation, a script is supplied on installation for command line execution of the diagnostic tool. This
+script should precede an FEHM executable call that would otherwise execute an FEHM simulation. For example, if the user has prepared
+a directory containing the control file ‘fehmn.files’, with directions to an FEHM input and grid file, then an FEHM simulation
+would be started by typing</p>
+<p><code class="docutils literal notranslate"><span class="pre">tutorials\tut1&gt;fehm.exe</span></code></p>
+<p>at the command line (presuming that ‘fehm.exe’ is in the PATH). To perform the same simulation with a diagnostic window, simply precede
+the executable with ‘diagnose.py’</p>
+<p><code class="docutils literal notranslate"><span class="pre">tutorials\tut1&gt;diagnose.py</span> <span class="pre">fehm.exe</span></code></p>
+<p>This will cause the simulation to be run through PyFEHM and a diagnostic window to be opened.</p>
+<p>Additional instructions on making installed Python scripts available at the command line can be found in the previous section
+on Paraview visualisation.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+            
+  <div class="footer-relations">
+    
+      <div class="pull-left">
+        <a class="btn btn-default" href="fvars.html" title="previous chapter (use the left arrow)">fvars: FEHM thermodynamic calculations</a>
+      </div>
+    
+    </div>
+    <div class="clearer"></div>
+  
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="fvars.html" title="fvars: FEHM thermodynamic calculations"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">PyFEHM 1.0.4 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+<script type="text/javascript">
+  $("#mobile-toggle a").click(function () {
+    $("#left-column").toggle();
+  });
+</script>
+<script type="text/javascript" src="_static/js/bootstrap.js"></script>
+  <div class="footer">
+    &copy; Copyright 2018, Los Alamos National Laboratory. Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+  </div>
+  </body>
+</html>

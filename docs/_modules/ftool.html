@@ -1,0 +1,593 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  
+  <!-- Licensed under the Apache 2.0 License -->
+  <link rel="stylesheet" type="text/css" href="../_static/fonts/open-sans/stylesheet.css" />
+  <!-- Licensed under the SIL Open Font License -->
+  <link rel="stylesheet" type="text/css" href="../_static/fonts/source-serif-pro/source-serif-pro.css" />
+  <link rel="stylesheet" type="text/css" href="../_static/css/bootstrap.min.css" />
+  <link rel="stylesheet" type="text/css" href="../_static/css/bootstrap-theme.min.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+    <title>ftool &#8212; PyFEHM 1.0.4 documentation</title>
+    <link rel="stylesheet" href="../_static/guzzle.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+  
+   
+
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PyFEHM 1.0.4 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="container-wrapper">
+
+      <div id="mobile-toggle">
+        <a href="#"><span class="glyphicon glyphicon-align-justify" aria-hidden="true"></span></a>
+      </div>
+  <div id="left-column">
+    <div class="sphinxsidebar"><a href="
+    ../index.html" class="text-logo">PyFEHM</a>
+<div class="sidebar-block">
+  <div class="sidebar-wrapper">
+    <h2>Table Of Contents</h2>
+  </div>
+  <div class="sidebar-toc">
+    
+    
+      <ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../fgrid.html">fgrid: FEHM grid manipulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../fdata.html">fdata: FEHM input file manipulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../fpost.html">fpost: FEHM output file manipulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../fvars.html">fvars: FEHM thermodynamic calculations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial.html">Tutorials</a></li>
+</ul>
+
+    
+  </div>
+</div>
+<div class="sidebar-block">
+  <div class="sidebar-wrapper">
+    <div id="main-search">
+      <form class="form-inline" action="../search.html" method="GET" role="form">
+        <div class="input-group">
+          <input name="q" type="text" class="form-control" placeholder="Search...">
+        </div>
+        <input type="hidden" name="check_keywords" value="yes" />
+        <input type="hidden" name="area" value="default" />
+      </form>
+    </div>
+  </div>
+</div>
+      
+    </div>
+  </div>
+        <div id="right-column">
+          
+          <div role="navigation" aria-label="breadcrumbs navigation">
+            <ol class="breadcrumb">
+              <li><a href="../index.html">Docs</a></li>
+              
+                <li><a href="index.html">Module code</a></li>
+              
+              <li>ftool</li>
+            </ol>
+          </div>
+          
+          <div class="document clearer body">
+            
+  <h1>Source code for ftool</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Various tools for use with PyFEHM.&quot;&quot;&quot;</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Copyright 2013.</span>
+<span class="sd">Los Alamos National Security, LLC. </span>
+<span class="sd">This material was produced under U.S. Government contract DE-AC52-06NA25396 for </span>
+<span class="sd">Los Alamos National Laboratory (LANL), which is operated by Los Alamos National </span>
+<span class="sd">Security, LLC for the U.S. Department of Energy. The U.S. Government has rights </span>
+<span class="sd">to use, reproduce, and distribute this software.  NEITHER THE GOVERNMENT NOR LOS </span>
+<span class="sd">ALAMOS NATIONAL SECURITY, LLC MAKES ANY WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES </span>
+<span class="sd">ANY LIABILITY FOR THE USE OF THIS SOFTWARE.  If software is modified to produce </span>
+<span class="sd">derivative works, such modified software should be clearly marked, so as not to </span>
+<span class="sd">confuse it with the version available from LANL.</span>
+
+<span class="sd">Additionally, this library is free software; you can redistribute it and/or modify </span>
+<span class="sd">it under the terms of the GNU Lesser General Public License as published by the </span>
+<span class="sd">Free Software Foundation; either version 2.1 of the License, or (at your option) </span>
+<span class="sd">any later version. Accordingly, this library is distributed in the hope that it </span>
+<span class="sd">will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of </span>
+<span class="sd">MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General </span>
+<span class="sd">Public License for more details.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span><span class="nn">math</span><span class="o">,</span><span class="nn">platform</span><span class="o">,</span><span class="nn">string</span><span class="o">,</span><span class="nn">difflib</span>
+<span class="n">WINDOWS</span> <span class="o">=</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span><span class="o">==</span><span class="s1">&#39;Windows&#39;</span>
+<span class="k">if</span> <span class="n">WINDOWS</span><span class="p">:</span> <span class="n">slash</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&#39;</span>
+<span class="k">else</span><span class="p">:</span> <span class="n">slash</span> <span class="o">=</span> <span class="s1">&#39;/&#39;</span>
+
+<span class="kn">from</span> <span class="nn">fdflt</span> <span class="k">import</span><span class="o">*</span>
+
+<span class="n">dflt</span> <span class="o">=</span> <span class="n">fdflt</span><span class="p">()</span>
+
+<span class="c1"># dictionary of unit name, number to multiply by to yield SI measure</span>
+<span class="n">units</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([</span>
+<span class="c1"># flow</span>
+<span class="p">[</span><span class="s1">&#39;gpm&#39;</span><span class="p">,</span><span class="mi">1</span><span class="o">/</span><span class="mf">15.85</span><span class="p">],</span>
+<span class="p">[</span><span class="s1">&#39;tph&#39;</span><span class="p">,</span><span class="mf">1000.</span><span class="o">/</span><span class="mf">3600.</span><span class="p">],</span>
+
+<span class="c1"># pressure</span>
+<span class="p">[</span><span class="s1">&#39;pa&#39;</span><span class="p">,</span><span class="mf">1.e-6</span><span class="p">],</span>
+<span class="p">[</span><span class="s1">&#39;kpa&#39;</span><span class="p">,</span><span class="mf">1.e-3</span><span class="p">],</span>
+<span class="p">[</span><span class="s1">&#39;mpa&#39;</span><span class="p">,</span><span class="mf">1.</span><span class="p">],</span>
+<span class="p">[</span><span class="s1">&#39;psi&#39;</span><span class="p">,</span><span class="mf">1.</span><span class="o">/</span><span class="mf">145.05</span><span class="p">],</span>
+<span class="p">[</span><span class="s1">&#39;bar&#39;</span><span class="p">,</span><span class="mf">0.1</span><span class="p">],</span>
+
+<span class="c1"># volume</span>
+<span class="p">[</span><span class="s1">&#39;gal&#39;</span><span class="p">,</span><span class="mf">3.78541</span><span class="p">],</span>
+<span class="p">[</span><span class="s1">&#39;gallon&#39;</span><span class="p">,</span><span class="mf">3.78541</span><span class="p">],</span>
+<span class="p">[</span><span class="s1">&#39;gallons&#39;</span><span class="p">,</span><span class="mf">3.78541</span><span class="p">],</span>
+
+<span class="c1"># length</span>
+<span class="p">[</span><span class="s1">&#39;ft&#39;</span><span class="p">,</span><span class="mf">0.3048</span><span class="p">],</span>
+<span class="p">[</span><span class="s1">&#39;feet&#39;</span><span class="p">,</span><span class="mf">0.3048</span><span class="p">],</span>
+<span class="p">[</span><span class="s1">&#39;mile&#39;</span><span class="p">,</span><span class="mf">1609.34</span><span class="p">],</span>
+<span class="p">[</span><span class="s1">&#39;miles&#39;</span><span class="p">,</span><span class="mf">1609.34</span><span class="p">],</span>
+
+<span class="c1"># time</span>
+<span class="p">[</span><span class="s1">&#39;day&#39;</span><span class="p">,</span><span class="mf">3600.</span><span class="o">*</span><span class="mi">24</span><span class="p">],</span>
+<span class="p">[</span><span class="s1">&#39;days&#39;</span><span class="p">,</span><span class="mf">3600.</span><span class="o">*</span><span class="mi">24</span><span class="p">],</span>
+<span class="p">[</span><span class="s1">&#39;year&#39;</span><span class="p">,</span><span class="mf">3600.</span><span class="o">*</span><span class="mi">24</span><span class="o">*</span><span class="mf">365.25</span><span class="p">],</span>
+<span class="p">[</span><span class="s1">&#39;yr&#39;</span><span class="p">,</span><span class="mf">3600.</span><span class="o">*</span><span class="mi">24</span><span class="o">*</span><span class="mf">365.25</span><span class="p">],</span>
+<span class="p">[</span><span class="s1">&#39;years&#39;</span><span class="p">,</span><span class="mf">3600.</span><span class="o">*</span><span class="mi">24</span><span class="o">*</span><span class="mf">365.25</span><span class="p">],</span>
+
+<span class="c1"># mass</span>
+<span class="p">[</span><span class="s1">&#39;ton&#39;</span><span class="p">,</span><span class="mf">1000.</span><span class="p">],</span>
+<span class="p">[</span><span class="s1">&#39;tons&#39;</span><span class="p">,</span><span class="mf">1000.</span><span class="p">],</span>
+<span class="p">[</span><span class="s1">&#39;Mt&#39;</span><span class="p">,</span><span class="mf">1.e9</span><span class="p">],</span>
+
+<span class="c1"># temperature</span>
+<span class="p">[</span><span class="s1">&#39;F&#39;</span><span class="p">,[</span><span class="mf">5.</span><span class="o">/</span><span class="mi">9</span><span class="p">,</span><span class="mf">32.</span><span class="p">]],</span>
+<span class="p">[</span><span class="s1">&#39;farenheit&#39;</span><span class="p">,[</span><span class="mf">5.</span><span class="o">/</span><span class="mi">9</span><span class="p">,</span><span class="mf">32.</span><span class="p">]],</span>
+<span class="p">]</span>
+<span class="p">)</span>
+<span class="c1">#-----------------------------------------------------------------------------------------------------</span>
+<span class="c1">#-------------------------------------- USEFUL TOOLS, FUNCTION ---------------------------------------</span>
+<span class="c1">#-----------------------------------------------------------------------------------------------------</span>
+<div class="viewcode-block" id="UTM_to_latlong"><a class="viewcode-back" href="../ftool.html#ftool.UTM_to_latlong">[docs]</a><span class="k">def</span> <span class="nf">UTM_to_latlong</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">zone</span><span class="p">,</span><span class="n">hemisphere</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+	<span class="sd">&#39;&#39;&#39;Return latitude and longitude corresponding to supplied UTM (Universal Transverse Mercator) coordinates.</span>
+<span class="sd">	</span>
+<span class="sd">	:param x: Easting inside of zone.</span>
+<span class="sd">	:type x: fl64</span>
+<span class="sd">	:param y: Northing inside of zone.</span>
+<span class="sd">	:type y: fl64</span>
+<span class="sd">	:param zone: UTM zone (integer between 1 and 60).</span>
+<span class="sd">	:type zone: int</span>
+<span class="sd">	:param hemisphere: Integer denoting hemisphere, 1 = northern, -1 = southern.</span>
+<span class="sd">	:type hemisphere: bool</span>
+<span class="sd">	</span>
+<span class="sd">	:returns: Two column list of latitudes and longitudes.</span>
+<span class="sd">	&#39;&#39;&#39;</span>
+
+	<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x</span><span class="p">);</span> <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">y</span><span class="p">);</span> <span class="n">zone</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">zone</span><span class="p">);</span> <span class="n">hemisphere</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">hemisphere</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">hemisphere</span><span class="o">==-</span><span class="mi">1</span><span class="p">:</span>
+		<span class="n">y</span> <span class="o">=</span> <span class="mf">10000e3</span><span class="o">-</span><span class="n">y</span>
+	<span class="n">x</span><span class="o">=</span><span class="mf">500e3</span><span class="o">-</span><span class="n">x</span>
+	<span class="n">k0</span> <span class="o">=</span> <span class="mf">0.9996</span>
+	<span class="n">M</span> <span class="o">=</span> <span class="n">y</span><span class="o">/</span><span class="n">k0</span>
+	<span class="n">e</span> <span class="o">=</span> <span class="o">.</span><span class="mi">081819191</span>
+	<span class="n">ep2</span> <span class="o">=</span> <span class="mf">0.006739497</span>
+	<span class="n">a</span> <span class="o">=</span> <span class="mf">6378137.</span>
+	<span class="n">mu</span> <span class="o">=</span> <span class="n">M</span><span class="o">/</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">e</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="mi">4</span><span class="o">-</span><span class="mi">3</span><span class="o">*</span><span class="n">e</span><span class="o">**</span><span class="mi">4</span><span class="o">/</span><span class="mi">64</span><span class="o">-</span><span class="mi">5</span><span class="o">*</span><span class="n">e</span><span class="o">**</span><span class="mi">6</span><span class="o">/</span><span class="mi">256</span><span class="p">))</span>
+<span class="c1">#	print mu</span>
+	<span class="n">e1</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">e</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">e</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+<span class="c1">#	print e1</span>
+	<span class="n">J1</span> <span class="o">=</span> <span class="mi">3</span><span class="o">*</span><span class="n">e1</span><span class="o">/</span><span class="mf">2.</span><span class="o">-</span><span class="mi">27</span><span class="o">*</span><span class="n">e1</span><span class="o">**</span><span class="mi">3</span><span class="o">/</span><span class="mi">32</span>
+<span class="c1">#	print J1</span>
+	<span class="n">J2</span> <span class="o">=</span> <span class="mi">21</span><span class="o">*</span><span class="n">e1</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="mi">16</span><span class="o">-</span><span class="mi">55</span><span class="o">*</span><span class="n">e1</span><span class="o">**</span><span class="mi">4</span><span class="o">/</span><span class="mi">32</span>
+<span class="c1">#	print J2</span>
+	<span class="n">J3</span> <span class="o">=</span> <span class="mi">151</span><span class="o">*</span><span class="n">e1</span><span class="o">**</span><span class="mi">3</span><span class="o">/</span><span class="mi">96</span>
+<span class="c1">#	print J3</span>
+	<span class="n">J4</span> <span class="o">=</span> <span class="mi">1097</span><span class="o">*</span><span class="n">e1</span><span class="o">**</span><span class="mi">4</span><span class="o">/</span><span class="mi">512</span>
+<span class="c1">#	print J4</span>
+	<span class="n">fp</span> <span class="o">=</span> <span class="n">mu</span><span class="o">+</span><span class="n">J1</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">mu</span><span class="p">)</span><span class="o">+</span><span class="n">J2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">mu</span><span class="p">)</span><span class="o">+</span><span class="n">J3</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">6</span><span class="o">*</span><span class="n">mu</span><span class="p">)</span><span class="o">+</span><span class="n">J4</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">8</span><span class="o">*</span><span class="n">mu</span><span class="p">)</span>
+<span class="c1">#	print fp</span>
+	<span class="n">C1</span><span class="o">=</span><span class="n">ep2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+<span class="c1">#	print C1</span>
+	<span class="n">T1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+<span class="c1">#	print T1</span>
+	<span class="n">R1</span> <span class="o">=</span> <span class="n">a</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">e</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="mi">1</span><span class="o">-</span><span class="n">e</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span>
+<span class="c1">#	print R1</span>
+	<span class="n">N1</span> <span class="o">=</span> <span class="n">a</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">e</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="c1">#	print N1</span>
+	<span class="n">D</span> <span class="o">=</span> <span class="n">x</span><span class="o">/</span><span class="p">(</span><span class="n">N1</span><span class="o">*</span><span class="n">k0</span><span class="p">)</span>
+<span class="c1">#	print D</span>
+	<span class="n">Q1</span> <span class="o">=</span> <span class="n">N1</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span><span class="o">/</span><span class="n">R1</span>
+<span class="c1">#	print Q1</span>
+	<span class="n">Q2</span> <span class="o">=</span> <span class="n">D</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="mi">2</span>
+<span class="c1">#	print Q2</span>
+	<span class="n">Q3</span> <span class="o">=</span> <span class="p">(</span><span class="mi">5</span><span class="o">+</span><span class="mi">3</span><span class="o">*</span><span class="n">T1</span><span class="o">+</span><span class="mi">10</span><span class="o">*</span><span class="n">C1</span><span class="o">-</span><span class="mi">4</span><span class="o">*</span><span class="n">C1</span><span class="o">**</span><span class="mi">2</span><span class="o">-</span><span class="mi">9</span><span class="o">*</span><span class="n">ep2</span><span class="p">)</span><span class="o">*</span><span class="n">D</span><span class="o">**</span><span class="mi">4</span><span class="o">/</span><span class="mi">24</span>
+<span class="c1">#	print Q3</span>
+	<span class="n">Q4</span> <span class="o">=</span> <span class="p">(</span><span class="mi">61</span><span class="o">+</span><span class="mi">90</span><span class="o">*</span><span class="n">T1</span><span class="o">+</span><span class="mi">298</span><span class="o">*</span><span class="n">C1</span><span class="o">+</span><span class="mi">45</span><span class="o">*</span><span class="n">T1</span><span class="o">**</span><span class="mi">2</span><span class="o">-</span><span class="mi">3</span><span class="o">*</span><span class="n">C1</span><span class="o">**</span><span class="mi">2</span><span class="o">-</span><span class="mi">252</span><span class="o">*</span><span class="n">ep2</span><span class="p">)</span><span class="o">*</span><span class="n">D</span><span class="o">**</span><span class="mi">6</span><span class="o">/</span><span class="mi">720</span>
+<span class="c1">#	print Q4</span>
+	<span class="n">lat</span> <span class="o">=</span> <span class="n">fp</span><span class="o">-</span><span class="n">Q1</span><span class="o">*</span><span class="p">(</span><span class="n">Q2</span><span class="o">-</span><span class="n">Q3</span><span class="o">+</span><span class="n">Q4</span><span class="p">)</span>
+<span class="c1">#	print lat</span>
+	<span class="n">Q5</span> <span class="o">=</span> <span class="n">D</span>
+<span class="c1">#	print Q5</span>
+	<span class="n">Q6</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">T1</span><span class="o">+</span><span class="n">C1</span><span class="p">)</span><span class="o">*</span><span class="n">D</span><span class="o">**</span><span class="mi">3</span><span class="o">/</span><span class="mi">6</span>
+<span class="c1">#	print Q6</span>
+	<span class="n">Q7</span> <span class="o">=</span> <span class="p">(</span><span class="mi">5</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">C1</span><span class="o">+</span><span class="mi">28</span><span class="o">*</span><span class="n">T1</span><span class="o">-</span><span class="mi">3</span><span class="o">*</span><span class="n">C1</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="mi">8</span><span class="o">*</span><span class="n">ep2</span><span class="o">+</span><span class="mi">24</span><span class="o">*</span><span class="n">T1</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">D</span><span class="o">**</span><span class="mi">5</span><span class="o">/</span><span class="mi">120</span>
+<span class="c1">#	print Q7</span>
+	<span class="n">long0</span> <span class="o">=</span> <span class="p">(</span><span class="n">zone</span><span class="o">*</span><span class="mi">6</span><span class="o">-</span><span class="mi">183</span><span class="p">)</span><span class="o">/</span><span class="mf">180.</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span>
+<span class="c1">#	print long0</span>
+	<span class="n">long</span> <span class="o">=</span> <span class="n">long0</span><span class="o">-</span><span class="p">(</span><span class="n">Q5</span><span class="o">-</span><span class="n">Q6</span><span class="o">+</span><span class="n">Q7</span><span class="p">)</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
+<span class="c1">#	print long</span>
+	
+	<span class="k">return</span> <span class="p">[</span><span class="n">hemisphere</span><span class="o">*</span><span class="n">lat</span><span class="o">/</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="mf">180.</span><span class="p">,</span><span class="n">long</span><span class="o">/</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="mf">180.</span><span class="p">]</span></div>
+<div class="viewcode-block" id="latlong_to_UTM"><a class="viewcode-back" href="../ftool.html#ftool.latlong_to_UTM">[docs]</a><span class="k">def</span> <span class="nf">latlong_to_UTM</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span><span class="n">long</span><span class="p">):</span>
+	<span class="sd">&#39;&#39;&#39;Return UTM easting, northing, zone number and hemisphere corresponding to supplied latitude and longitude.</span>
+<span class="sd">	</span>
+<span class="sd">	:param lat: Latitude, in deceimal degrees.</span>
+<span class="sd">	:type lat: fl64</span>
+<span class="sd">	:param long: Longitude, in decimal degrees.</span>
+<span class="sd">	:type long: fl64</span>
+<span class="sd">	</span>
+<span class="sd">	:returns: Four column list of UTM easting, northing, zone and hemisphere (1 = northern, -1 = southern).</span>
+<span class="sd">	&#39;&#39;&#39;</span>
+	
+	<span class="n">k0</span><span class="o">=</span><span class="mf">0.9996</span>
+	<span class="n">e</span><span class="o">=</span><span class="mf">0.081819191</span>
+	<span class="n">ep2</span><span class="o">=</span><span class="mf">0.006739497</span>
+	<span class="n">a</span> <span class="o">=</span> <span class="mf">6378137.</span>
+	<span class="n">A0</span><span class="o">=</span><span class="mf">6367449.146</span>
+	<span class="n">B0</span><span class="o">=</span><span class="mf">16038.42955</span>
+	<span class="n">C0</span><span class="o">=</span><span class="mf">16.83261333</span>
+	<span class="n">D0</span><span class="o">=</span><span class="mf">0.021984404</span>
+	<span class="n">E0</span><span class="o">=</span><span class="mf">0.000312705</span>
+	
+	<span class="n">UTM_zone</span><span class="o">=</span><span class="mi">31</span><span class="o">+</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">long</span><span class="o">/</span><span class="mf">6.</span><span class="p">)</span>
+<span class="c1">#	print UTM_zone</span>
+	<span class="n">UTM_zone_CM</span> <span class="o">=</span> <span class="mf">6.</span><span class="o">*</span><span class="n">UTM_zone</span><span class="o">-</span><span class="mf">183.</span>
+<span class="c1">#	print UTM_zone_CM</span>
+	
+	<span class="n">P</span><span class="o">=</span><span class="p">(</span><span class="n">long</span><span class="o">-</span><span class="n">UTM_zone_CM</span><span class="p">)</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mf">180.</span>
+<span class="c1">#	print P</span>
+	<span class="n">Q</span><span class="o">=</span><span class="n">lat</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mf">180.</span>
+<span class="c1">#	print Q</span>
+	<span class="n">R</span><span class="o">=</span><span class="n">long</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mf">180.</span>
+<span class="c1">#	print R</span>
+	<span class="n">S</span><span class="o">=</span><span class="n">a</span><span class="o">*</span><span class="p">(</span><span class="mf">1.</span><span class="o">-</span><span class="n">e</span><span class="o">*</span><span class="n">e</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">1.</span><span class="o">-</span><span class="p">((</span><span class="n">e</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">Q</span><span class="p">))</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span>
+<span class="c1">#	print S</span>
+	<span class="n">T</span><span class="o">=</span><span class="n">a</span><span class="o">/</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="p">(</span><span class="n">e</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">Q</span><span class="p">))</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+<span class="c1">#	print T</span>
+	<span class="n">V</span><span class="o">=</span><span class="n">A0</span><span class="o">*</span><span class="n">Q</span> <span class="o">-</span> <span class="n">B0</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">Q</span><span class="p">)</span> <span class="o">+</span> <span class="n">C0</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">Q</span><span class="p">)</span> <span class="o">-</span> <span class="n">D0</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">6</span><span class="o">*</span><span class="n">Q</span><span class="p">)</span> <span class="o">+</span> <span class="n">E0</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">8</span><span class="o">*</span><span class="n">Q</span><span class="p">)</span>
+<span class="c1">#	print V</span>
+	<span class="n">X</span><span class="o">=</span><span class="n">V</span><span class="o">*</span><span class="n">k0</span>
+<span class="c1">#	print X</span>
+	<span class="n">Y</span><span class="o">=</span><span class="n">T</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+<span class="c1">#	print Y</span>
+	<span class="n">Z</span><span class="o">=</span><span class="p">((</span><span class="n">T</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span><span class="o">/</span><span class="mi">24</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">5</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="mi">9</span><span class="o">*</span><span class="n">ep2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="mi">4</span><span class="o">*</span><span class="n">ep2</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span><span class="o">**</span><span class="mi">4</span><span class="p">)</span><span class="o">*</span><span class="n">k0</span>
+<span class="c1">#	print Z</span>
+	<span class="n">AA</span><span class="o">=</span><span class="n">T</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span><span class="o">*</span><span class="n">k0</span>
+<span class="c1">#	print AA</span>
+	<span class="n">AB</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">Q</span><span class="p">))</span><span class="o">**</span><span class="mi">3</span><span class="o">*</span><span class="p">(</span><span class="n">T</span><span class="o">/</span><span class="mi">6</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="n">ep2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">k0</span>
+<span class="c1">#	print AB</span>
+	<span class="n">AC</span><span class="o">=</span><span class="p">(</span><span class="n">P</span><span class="o">**</span><span class="mi">6</span><span class="o">*</span><span class="n">T</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span><span class="o">**</span><span class="mi">5</span><span class="o">/</span><span class="mf">720.</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mf">61.</span><span class="o">-</span><span class="mf">58.</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="n">np</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span><span class="o">**</span><span class="mi">4</span><span class="o">+</span><span class="mi">270</span><span class="o">*</span><span class="n">ep2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">-</span><span class="mi">330</span><span class="o">*</span><span class="n">ep2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">k0</span>
+<span class="c1">#	print AC</span>
+	
+	<span class="n">y</span><span class="o">=</span><span class="p">(</span><span class="n">X</span><span class="o">+</span><span class="n">Y</span><span class="o">*</span><span class="n">P</span><span class="o">*</span><span class="n">P</span><span class="o">+</span><span class="n">Z</span><span class="o">*</span><span class="n">P</span><span class="o">**</span><span class="mi">4</span><span class="p">)</span>
+<span class="c1">#	print </span>
+	<span class="k">if</span> <span class="n">y</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">:</span> <span class="n">y</span> <span class="o">+=</span> <span class="mi">10000000</span>
+	
+	<span class="n">x</span><span class="o">=</span><span class="mi">500000</span><span class="o">+</span><span class="p">(</span><span class="n">AA</span><span class="o">*</span><span class="n">P</span><span class="o">+</span><span class="n">AB</span><span class="o">*</span><span class="n">P</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span>
+	
+	<span class="k">if</span> <span class="n">lat</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">:</span> <span class="n">hemisphere</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+	<span class="k">else</span><span class="p">:</span> <span class="n">hemisphere</span> <span class="o">=</span> <span class="mi">1</span>
+	
+	<span class="k">return</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">UTM_zone</span><span class="p">),</span> <span class="n">hemisphere</span><span class="p">]</span></div>
+<div class="viewcode-block" id="powspace"><a class="viewcode-back" href="../ftool.html#ftool.powspace">[docs]</a><span class="k">def</span> <span class="nf">powspace</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span><span class="n">x1</span><span class="p">,</span><span class="n">N</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span><span class="n">power</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+	<span class="sd">&#39;&#39;&#39;Returns a sequence of numbers spaced according to the power law (x1-x0)**(1-power)*linspace(0,(x1-x0),N)**base + x0</span>
+<span class="sd">	</span>
+<span class="sd">	:param x0: First number in sequence.</span>
+<span class="sd">	:type x0: fl64</span>
+<span class="sd">	:param x1: Last number in sequence.</span>
+<span class="sd">	:type x1: fl64</span>
+<span class="sd">	:param N: Total items in sequence.</span>
+<span class="sd">	:type N: int</span>
+<span class="sd">	:param power: Index of power law. If negative, spacing order will be reversed from &quot;big-to-small&quot;.</span>
+<span class="sd">	:type power: fl64</span>
+<span class="sd">	&#39;&#39;&#39;</span>
+	<span class="k">if</span> <span class="n">power</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+		<span class="k">return</span> <span class="p">(</span><span class="n">x1</span><span class="o">-</span><span class="n">x0</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">power</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">x1</span><span class="o">-</span><span class="n">x0</span><span class="p">,</span><span class="n">N</span><span class="p">)</span><span class="o">**</span><span class="n">power</span><span class="o">+</span><span class="n">x0</span>
+	<span class="k">elif</span> <span class="n">power</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">:</span>
+		<span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">x1</span><span class="o">-</span><span class="p">((</span><span class="n">x1</span><span class="o">-</span><span class="n">x0</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="nb">abs</span><span class="p">(</span><span class="n">power</span><span class="p">))</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">x1</span><span class="o">-</span><span class="n">x0</span><span class="p">,</span><span class="n">N</span><span class="p">)</span><span class="o">**</span><span class="nb">abs</span><span class="p">(</span><span class="n">power</span><span class="p">)))</span></div>
+<div class="viewcode-block" id="SI"><a class="viewcode-back" href="../ftool.html#ftool.SI">[docs]</a><span class="k">def</span> <span class="nf">SI</span><span class="p">(</span><span class="n">quantity</span><span class="p">,</span><span class="n">unit</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+	<span class="sd">&#39;&#39;&#39;Returns an SI measurement corresponding to a supplied non standard unit, e.g., &#39;31.6 gpm&#39;. Output reverts to FEHM format, e.g., pressures and stresses quoted in MPa.</span>
+<span class="sd">	</span>
+<span class="sd">	:param quanityt: Number with unit. If a float or list of floats provided, then unit must </span>
+<span class="sd">	:type quantity: str (fl64)</span>
+<span class="sd">	:param unit: Flag indicating unit of float supplied in quantity.</span>
+<span class="sd">	:type unit: str</span>
+<span class="sd">	</span>
+<span class="sd">	:returns: Quantity in SI units.</span>
+<span class="sd">	&#39;&#39;&#39;</span>
+	
+	<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">quantity</span><span class="p">,</span><span class="nb">list</span><span class="p">):</span>
+		<span class="k">return</span> <span class="p">[</span><span class="n">SI</span><span class="p">(</span><span class="n">q</span><span class="p">,</span><span class="n">unit</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">quantity</span><span class="p">]</span>
+	<span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">quantity</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+		<span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">SI</span><span class="p">(</span><span class="n">q</span><span class="p">,</span><span class="n">unit</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">quantity</span><span class="p">])</span>
+	
+	<span class="k">if</span> <span class="n">unit</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>	
+		<span class="c1">#remove any spaces</span>
+		<span class="n">quantity</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">quantity</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+		<span class="c1">#separate number and unit</span>
+		<span class="n">unit</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">quantity</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">i</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">i</span><span class="o">==</span><span class="s1">&#39;.&#39;</span><span class="p">])</span>
+		<span class="n">quantity</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">quantity</span> <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()</span> <span class="ow">or</span> <span class="n">i</span><span class="o">==</span><span class="s1">&#39;.&#39;</span><span class="p">]))</span>
+		
+	<span class="k">try</span><span class="p">:</span>
+		<span class="k">if</span> <span class="n">unit</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;F&#39;</span><span class="p">,</span><span class="s1">&#39;farenheit&#39;</span><span class="p">]:</span>
+			<span class="k">return</span> <span class="n">quantity</span><span class="o">*</span><span class="n">units</span><span class="p">[</span><span class="n">unit</span><span class="p">]</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">return</span> <span class="p">(</span><span class="n">quantity</span><span class="o">-</span><span class="n">units</span><span class="p">[</span><span class="n">unit</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span><span class="o">*</span><span class="n">units</span><span class="p">[</span><span class="n">unit</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+	
+	<span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+		<span class="nb">print</span> <span class="n">unit</span> <span class="o">+</span><span class="s1">&#39; not a valid unit for conversion&#39;</span>
+		<span class="k">return</span>	</div>
+<span class="k">def</span> <span class="nf">pyfehm_print</span><span class="p">(</span><span class="n">s</span><span class="p">,</span><span class="n">silent</span><span class="p">):</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">silent</span><span class="p">:</span> <span class="nb">print</span> <span class="n">s</span>
+<span class="c1">#-----------------------------------------------------------------------------------------------------</span>
+<span class="c1">#------------------------------ FUNCTIONS AND CLASSES FOR INTERNAL USE -------------------------------</span>
+<span class="c1">#-----------------------------------------------------------------------------------------------------</span>
+<span class="k">class</span> <span class="nc">fpath</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="vm">__slots__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;_filename&#39;</span><span class="p">,</span><span class="s1">&#39;absolute_to_file&#39;</span><span class="p">,</span><span class="s1">&#39;absolute_to_workdir&#39;</span><span class="p">,</span><span class="s1">&#39;parent&#39;</span><span class="p">]</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">filename</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span><span class="n">work_dir</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span><span class="n">parent</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_filename</span> <span class="o">=</span> <span class="n">filename</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">absolute_to_file</span> <span class="o">=</span> <span class="kc">None</span>		<span class="c1"># location where originally read DOES NOT CHANGE</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">absolute_to_workdir</span> <span class="o">=</span> <span class="kc">None</span>	<span class="c1"># working directory CAN CHANGE</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="n">parent</span>
+	<span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">return</span> <span class="nb">dict</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__slots__</span><span class="p">)</span>
+	<span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_dict</span><span class="p">):</span>
+		<span class="k">for</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="ow">in</span> <span class="n">data_dict</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+			<span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+	<span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wd</span><span class="p">):</span>
+		<span class="sd">&#39;&#39;&#39;called when work_dir is updated&#39;&#39;&#39;</span>		
+		<span class="k">if</span> <span class="n">wd</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span> 
+			<span class="bp">self</span><span class="o">.</span><span class="n">absolute_to_workdir</span> <span class="o">=</span> <span class="kc">None</span>
+			<span class="k">return</span>
+		
+		<span class="k">if</span> <span class="n">WINDOWS</span><span class="p">:</span> <span class="n">wd</span> <span class="o">=</span> <span class="n">wd</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span> <span class="n">wd</span> <span class="o">=</span> <span class="n">wd</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">,</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+		
+		<span class="n">absolute</span> <span class="o">=</span> <span class="kc">False</span>
+		<span class="k">if</span> <span class="n">WINDOWS</span> <span class="ow">and</span> <span class="n">wd</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="s1">&#39;:&#39;</span><span class="p">:</span> <span class="n">absolute</span> <span class="o">=</span> <span class="kc">True</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">WINDOWS</span> <span class="ow">and</span> <span class="n">wd</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="s1">&#39;/&#39;</span><span class="p">:</span> <span class="n">absolute</span> <span class="o">=</span> <span class="kc">True</span>
+		<span class="k">if</span> <span class="n">absolute</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">absolute_to_workdir</span> <span class="o">=</span> <span class="n">wd</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">absolute_to_workdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span><span class="o">+</span><span class="n">slash</span><span class="o">+</span><span class="n">wd</span>	
+	<span class="k">def</span> <span class="nf">_get_filename</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filename</span>
+	<span class="k">def</span> <span class="nf">_set_filename</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">value</span><span class="p">):</span> 
+		<span class="c1"># ensure path specification consistent with OS</span>
+		<span class="k">if</span> <span class="n">WINDOWS</span><span class="p">:</span> <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span> <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">,</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+		<span class="c1"># check if any slashes exist</span>
+		<span class="k">if</span> <span class="n">slash</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_filename</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">slash</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+		<span class="k">else</span><span class="p">:</span> 
+			<span class="bp">self</span><span class="o">.</span><span class="n">_filename</span> <span class="o">=</span> <span class="n">value</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">absolute_to_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+			<span class="k">return</span>
+		<span class="c1"># check if absoulte or relative specification</span>
+		<span class="n">path</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">slash</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+		<span class="n">path</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span><span class="n">slash</span><span class="p">)</span>
+		
+		<span class="n">absolute</span> <span class="o">=</span> <span class="kc">False</span>
+		<span class="k">if</span> <span class="n">WINDOWS</span> <span class="ow">and</span> <span class="n">path</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="s1">&#39;:&#39;</span><span class="p">:</span> <span class="n">absolute</span> <span class="o">=</span> <span class="kc">True</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">WINDOWS</span> <span class="ow">and</span> <span class="n">path</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="s1">&#39;/&#39;</span><span class="p">:</span> <span class="n">absolute</span> <span class="o">=</span> <span class="kc">True</span>
+		
+		<span class="k">if</span> <span class="n">absolute</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">absolute_to_file</span> <span class="o">=</span> <span class="n">path</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">absolute_to_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span><span class="o">+</span><span class="n">slash</span><span class="o">+</span><span class="n">path</span>
+	<span class="n">filename</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">_get_filename</span><span class="p">,</span> <span class="n">_set_filename</span><span class="p">)</span> <span class="c1">#: (**)</span>
+	<span class="k">def</span> <span class="nf">_get_full_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> 
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">absolute_to_file</span><span class="o">+</span><span class="n">slash</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span>
+	<span class="n">full_path</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">_get_full_path</span><span class="p">)</span> <span class="c1">#: (**)</span>
+<div class="viewcode-block" id="dict_key_check"><a class="viewcode-back" href="../ftool.html#ftool.dict_key_check">[docs]</a><span class="k">def</span> <span class="nf">dict_key_check</span><span class="p">(</span><span class="nb">dict</span><span class="p">,</span><span class="n">keys</span><span class="p">,</span><span class="n">dict_name</span><span class="p">):</span>
+	<span class="sd">&#39;&#39;&#39;Return False if dict contains only the supplied keys and no extras.</span>
+<span class="sd">	&#39;&#39;&#39;</span>
+	<span class="n">returnFlag</span> <span class="o">=</span> <span class="kc">False</span>
+	<span class="n">ws</span> <span class="o">=</span> <span class="s1">&#39;Key error in &#39;</span><span class="o">+</span><span class="n">dict_name</span><span class="o">+</span><span class="s1">&#39;.</span><span class="se">\n</span><span class="s1">&#39;</span>
+	<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+		<span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;sdepth&#39;</span><span class="p">,</span><span class="s1">&#39;gdepth&#39;</span><span class="p">]:</span>
+			<span class="k">continue</span>
+		<span class="k">elif</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+			<span class="n">ws</span> <span class="o">+=</span> <span class="s1">&#39;No such key </span><span class="se">\&#39;</span><span class="s1">&#39;</span><span class="o">+</span><span class="n">k</span><span class="o">+</span><span class="s1">&#39;</span><span class="se">\&#39;</span><span class="s1">&#39;</span>
+			<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">2</span><span class="p">:</span>
+				<span class="n">matches</span> <span class="o">=</span> <span class="n">difflib</span><span class="o">.</span><span class="n">get_close_matches</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">keys</span><span class="p">)</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">matches</span> <span class="o">=</span> <span class="n">difflib</span><span class="o">.</span><span class="n">get_close_matches</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">keys</span><span class="p">,</span><span class="n">cutoff</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">)</span>
+			<span class="nb">print</span> <span class="n">k</span>
+			<span class="nb">print</span> <span class="n">keys</span>
+			<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+				<span class="n">ws</span><span class="o">+=</span><span class="s1">&#39;, did you mean?</span><span class="se">\n</span><span class="s1">&#39;</span>
+				<span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="n">matches</span><span class="p">:</span>
+					<span class="n">ws</span><span class="o">+=</span><span class="s1">&#39;- &#39;</span><span class="o">+</span><span class="n">match</span><span class="o">+</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">ws</span><span class="o">+=</span><span class="s1">&#39;.</span><span class="se">\n</span><span class="s1">&#39;</span>
+			<span class="n">returnFlag</span> <span class="o">=</span> <span class="kc">True</span>
+	<span class="k">if</span> <span class="n">returnFlag</span><span class="p">:</span> <span class="nb">print</span> <span class="n">ws</span>
+	<span class="k">return</span> <span class="n">returnFlag</span></div>
+<span class="k">def</span> <span class="nf">os_path</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+	<span class="k">if</span> <span class="n">WINDOWS</span><span class="p">:</span> <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">)</span>
+	<span class="k">else</span><span class="p">:</span> <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">,</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">path</span>
+<span class="k">def</span> <span class="nf">float0</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+	<span class="k">try</span><span class="p">:</span> <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+	<span class="k">except</span><span class="p">:</span> <span class="k">return</span> <span class="mf">0.</span>
+<span class="k">def</span> <span class="nf">_title_string</span><span class="p">(</span><span class="n">s</span><span class="p">,</span><span class="n">n</span><span class="p">):</span> 						<span class="c1">#prepends headers to sections of FEHM input file</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">n</span><span class="p">:</span> <span class="k">return</span>
+	<span class="n">ws</span> <span class="o">=</span> <span class="s1">&#39;# &#39;</span>
+	<span class="n">pad</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">((</span><span class="n">n</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">))</span>
+	<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">pad</span><span class="p">):</span> <span class="n">ws</span><span class="o">+=</span><span class="s1">&#39;-&#39;</span>
+	<span class="n">ws</span><span class="o">+=</span><span class="n">s</span>
+	<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">pad</span><span class="p">):</span> <span class="n">ws</span><span class="o">+=</span><span class="s1">&#39;-&#39;</span>
+	<span class="n">ws</span><span class="o">+=</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+	<span class="k">return</span> <span class="n">ws</span>
+<span class="k">def</span> <span class="nf">_zone_ind</span><span class="p">(</span><span class="n">indStr</span><span class="p">):</span> <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">indStr</span><span class="p">))</span><span class="o">-</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">indStr</span><span class="p">)</span><span class="o">+</span><span class="nb">abs</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">indStr</span><span class="p">)))</span><span class="o">/</span><span class="mi">2</span>
+<div class="viewcode-block" id="flatten"><a class="viewcode-back" href="../ftool.html#ftool.flatten">[docs]</a><span class="k">def</span> <span class="nf">flatten</span><span class="p">(</span><span class="n">l</span><span class="p">):</span>
+	<span class="sd">&#39;&#39;&#39;Takes a nested list and returns a flattened list (upon list conversion of output).</span>
+<span class="sd">	:param l: Nested list.</span>
+<span class="sd">	:type l: lst</span>
+<span class="sd">	&#39;&#39;&#39;</span>
+	<span class="kn">import</span> <span class="nn">collections</span>
+	<span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="n">l</span><span class="p">:</span>
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">el</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">Iterable</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">el</span><span class="p">,</span> <span class="n">basestring</span><span class="p">):</span>
+			<span class="k">for</span> <span class="n">sub</span> <span class="ow">in</span> <span class="n">flatten</span><span class="p">(</span><span class="n">el</span><span class="p">):</span>
+				<span class="k">yield</span> <span class="n">sub</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">yield</span> <span class="n">el</span></div>
+<span class="k">def</span> <span class="nf">sub_cubes</span><span class="p">(</span><span class="n">cube</span><span class="p">):</span> 			<span class="c1"># returns sub-cubes formed by sub-dividing the given cube into eight equal</span>
+	<span class="n">c</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">cube</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">cube</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> 		<span class="c1"># cube centre</span>
+	
+	<span class="n">dp</span> <span class="o">=</span> <span class="n">c</span> <span class="o">-</span> <span class="n">cube</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+	<span class="n">p1</span><span class="p">,</span><span class="n">p8</span> <span class="o">=</span> <span class="n">cube</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">c</span>
+	<span class="n">p2</span> <span class="o">=</span> <span class="n">p1</span><span class="o">+</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">dp</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+	<span class="n">p3</span> <span class="o">=</span> <span class="n">p1</span><span class="o">+</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="n">dp</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="mi">0</span><span class="p">])</span>
+	<span class="n">p4</span> <span class="o">=</span> <span class="n">p1</span><span class="o">+</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">dp</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">dp</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="mi">0</span><span class="p">])</span>
+	<span class="n">p5</span> <span class="o">=</span> <span class="n">p1</span><span class="o">+</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">dp</span><span class="p">[</span><span class="mi">2</span><span class="p">]])</span>
+	<span class="n">p6</span> <span class="o">=</span> <span class="n">p1</span><span class="o">+</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">dp</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="mi">0</span><span class="p">,</span><span class="n">dp</span><span class="p">[</span><span class="mi">2</span><span class="p">]])</span>
+	<span class="n">p7</span> <span class="o">=</span> <span class="n">p1</span><span class="o">+</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="n">dp</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">dp</span><span class="p">[</span><span class="mi">2</span><span class="p">]])</span>
+	
+	<span class="c1">#c0=[cube[0], c]</span>
+	<span class="c1">#</span>
+	<span class="c1">#c1=[np.array([c[0],cube[0][1],cube[0][2]]),np.array([cube[1][0],c[1],c[2]])]</span>
+	<span class="c1">#</span>
+	<span class="c1">#c2=[np.array([cube[0][0],cube[0][1],c[2]]),np.array([c[0],c[1],cube[1][2]])]</span>
+	<span class="c1">#</span>
+	<span class="c1">#c3=[np.array([c[0],cube[0][1],c[2]]),np.array([cube[1][0],c[1],cube[1][2]])]</span>
+	<span class="c1">#</span>
+	<span class="c1">#c4=[np.array([cube[0][0],c[1],cube[0][2]]),np.array([c[0],cube[1][1],c[2]])]</span>
+	<span class="c1">#</span>
+	<span class="c1">#c5=[np.array([c[0],c[1],cube[0][2]]),np.array([cube[1][0],cube[1][1],c[2]])]</span>
+	<span class="c1">#</span>
+	<span class="c1">#c6=[np.array([cube[0][0],c[1],c[2]]),np.array([c[0],cube[1][1],cube[1][2]])]</span>
+	<span class="c1">#</span>
+	<span class="c1">#c7=[c, cube[1]]</span>
+	
+	<span class="n">c0</span><span class="o">=</span><span class="p">[</span><span class="n">p1</span><span class="p">,</span><span class="n">p1</span><span class="o">+</span><span class="n">dp</span><span class="p">]</span>
+	<span class="n">c1</span><span class="o">=</span><span class="p">[</span><span class="n">p2</span><span class="p">,</span><span class="n">p2</span><span class="o">+</span><span class="n">dp</span><span class="p">]</span>
+	<span class="n">c2</span><span class="o">=</span><span class="p">[</span><span class="n">p3</span><span class="p">,</span><span class="n">p3</span><span class="o">+</span><span class="n">dp</span><span class="p">]</span>
+	<span class="n">c3</span><span class="o">=</span><span class="p">[</span><span class="n">p4</span><span class="p">,</span><span class="n">p4</span><span class="o">+</span><span class="n">dp</span><span class="p">]</span>
+	<span class="n">c4</span><span class="o">=</span><span class="p">[</span><span class="n">p5</span><span class="p">,</span><span class="n">p5</span><span class="o">+</span><span class="n">dp</span><span class="p">]</span>
+	<span class="n">c5</span><span class="o">=</span><span class="p">[</span><span class="n">p6</span><span class="p">,</span><span class="n">p6</span><span class="o">+</span><span class="n">dp</span><span class="p">]</span>
+	<span class="n">c6</span><span class="o">=</span><span class="p">[</span><span class="n">p7</span><span class="p">,</span><span class="n">p7</span><span class="o">+</span><span class="n">dp</span><span class="p">]</span>
+	<span class="n">c7</span><span class="o">=</span><span class="p">[</span><span class="n">p8</span><span class="p">,</span><span class="n">p8</span><span class="o">+</span><span class="n">dp</span><span class="p">]</span>
+	
+	<span class="k">return</span> <span class="p">[</span><span class="n">c0</span><span class="p">,</span><span class="n">c1</span><span class="p">,</span><span class="n">c2</span><span class="p">,</span><span class="n">c3</span><span class="p">,</span><span class="n">c4</span><span class="p">,</span><span class="n">c5</span><span class="p">,</span><span class="n">c6</span><span class="p">,</span><span class="n">c7</span><span class="p">]</span>
+<div class="viewcode-block" id="in_cube"><a class="viewcode-back" href="../ftool.html#ftool.in_cube">[docs]</a><span class="k">def</span> <span class="nf">in_cube</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span><span class="n">cube</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Tests if the 3-D point lies in an axis-aligned cube, defined as a two-element list of arrays</span>
+<span class="sd">	[bottom left front, top right back].&quot;&quot;&quot;</span>
+	<span class="k">return</span> <span class="nb">all</span><span class="p">([</span><span class="n">cube</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="o">&lt;=</span><span class="n">pos</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">&lt;</span><span class="n">cube</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span><span class="mi">3</span><span class="p">)])</span></div>
+<div class="viewcode-block" id="cubes_intersect"><a class="viewcode-back" href="../ftool.html#ftool.cubes_intersect">[docs]</a><span class="k">def</span> <span class="nf">cubes_intersect</span><span class="p">(</span><span class="n">cube1</span><span class="p">,</span><span class="n">cube2</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Returns True if two cubes intersect.&quot;&quot;&quot;</span>
+	<span class="k">return</span> <span class="nb">all</span><span class="p">([(</span><span class="n">cube1</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="o">&gt;=</span><span class="n">cube2</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">])</span> <span class="ow">and</span> <span class="p">(</span><span class="n">cube2</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="o">&gt;=</span><span class="n">cube1</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span><span class="mi">2</span><span class="p">)])</span></div>
+<span class="k">def</span> <span class="nf">save_name</span><span class="p">(</span><span class="n">save</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span><span class="n">variable</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span><span class="n">time</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span> 		<span class="c1"># returns file name and extension for saving</span>
+	<span class="n">pdf</span> <span class="o">=</span> <span class="kc">False</span>
+	<span class="k">if</span> <span class="n">save</span><span class="p">:</span>
+		<span class="n">save</span> <span class="o">=</span> <span class="n">save</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+		<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">save</span><span class="p">)</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span> 
+			<span class="nb">print</span> <span class="s1">&#39;No extension specified, default to .png&#39;</span>
+			<span class="n">ext</span> <span class="o">=</span> <span class="s1">&#39;png&#39;</span>
+		<span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">save</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">2</span><span class="p">:</span> <span class="nb">print</span> <span class="s1">&#39;Too many dots!&#39;</span><span class="p">;</span> <span class="k">return</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">save</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;png&#39;</span><span class="p">,</span><span class="s1">&#39;eps&#39;</span><span class="p">,</span><span class="s1">&#39;pdf&#39;</span><span class="p">]:</span>
+				<span class="n">ext</span> <span class="o">=</span> <span class="n">save</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+			<span class="k">else</span><span class="p">:</span> <span class="nb">print</span> <span class="s1">&#39;Unrecognized extension&#39;</span><span class="p">;</span> <span class="k">return</span>
+		<span class="k">if</span> <span class="n">ext</span> <span class="o">==</span> <span class="s1">&#39;pdf&#39;</span><span class="p">:</span> <span class="n">ext</span> <span class="o">=</span> <span class="s1">&#39;eps&#39;</span><span class="p">;</span> <span class="n">pdf</span> <span class="o">=</span> <span class="kc">True</span>
+		<span class="n">save_fname</span><span class="o">=</span><span class="n">save</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;.&#39;</span><span class="o">+</span><span class="n">ext</span>
+	<span class="k">else</span><span class="p">:</span> 
+		<span class="kn">from</span> <span class="nn">glob</span> <span class="k">import</span> <span class="n">glob</span>
+		<span class="n">ext</span> <span class="o">=</span> <span class="s1">&#39;png&#39;</span>
+		<span class="k">if</span> <span class="n">time</span><span class="p">:</span>
+			<span class="n">varStr</span> <span class="o">=</span> <span class="n">variable</span><span class="o">+</span><span class="s1">&#39;_time&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>
+		<span class="k">elif</span> <span class="n">node</span><span class="p">:</span>
+			<span class="n">varStr</span> <span class="o">=</span> <span class="n">variable</span><span class="o">+</span><span class="s1">&#39;_node&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">varStr</span> <span class="o">=</span> <span class="n">variable</span>
+		<span class="n">files</span><span class="o">=</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;pyfehm_sliceplot_&#39;</span><span class="o">+</span><span class="n">varStr</span><span class="o">+</span><span class="s1">&#39;_*.png&#39;</span><span class="p">)</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">files</span><span class="p">:</span> <span class="n">ind</span> <span class="o">=</span> <span class="mi">1</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">inds</span> <span class="o">=</span> <span class="p">[]</span>
+			<span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+				<span class="n">file</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;pyfehm_sliceplot_&#39;</span><span class="o">+</span><span class="n">varStr</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="p">)</span>
+				<span class="n">inds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">file</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.png&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]))</span>
+			<span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">inds</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span>	
+		<span class="n">save_fname</span><span class="o">=</span><span class="s1">&#39;pyfehm_sliceplot_&#39;</span><span class="o">+</span><span class="n">varStr</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">ind</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;.png&#39;</span>
+	<span class="k">return</span> <span class="n">ext</span><span class="p">,</span> <span class="n">save_fname</span><span class="p">,</span> <span class="n">pdf</span>	
+<span class="k">def</span> <span class="nf">make_directory</span><span class="p">(</span><span class="n">fname</span><span class="p">):</span>
+	<span class="n">fname</span> <span class="o">=</span> <span class="n">fname</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">)</span>
+	<span class="n">fname</span> <span class="o">=</span> <span class="n">fname</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+	<span class="n">dirname</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+	<span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fname</span><span class="p">:</span> <span class="n">dirname</span> <span class="o">+=</span> <span class="n">f</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">dirname</span><span class="p">):</span> <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">&#39;mkdir &#39;</span><span class="o">+</span><span class="n">dirname</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">valgen</span><span class="p">(</span><span class="n">fhandle</span><span class="p">):</span>
+	<span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">fhandle</span><span class="p">:</span>
+		<span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">():</span>
+			<span class="k">yield</span> <span class="n">v</span>
+	
+</pre></div>
+
+          </div>
+            
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PyFEHM 1.0.4 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+<script type="text/javascript">
+  $("#mobile-toggle a").click(function () {
+    $("#left-column").toggle();
+  });
+</script>
+<script type="text/javascript" src="../_static/js/bootstrap.js"></script>
+  <div class="footer">
+    &copy; Copyright 2018, Los Alamos National Laboratory. Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+  </div>
+  </body>
+</html>

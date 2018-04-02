@@ -1,0 +1,306 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  
+  <!-- Licensed under the Apache 2.0 License -->
+  <link rel="stylesheet" type="text/css" href="_static/fonts/open-sans/stylesheet.css" />
+  <!-- Licensed under the SIL Open Font License -->
+  <link rel="stylesheet" type="text/css" href="_static/fonts/source-serif-pro/source-serif-pro.css" />
+  <link rel="stylesheet" type="text/css" href="_static/css/bootstrap.min.css" />
+  <link rel="stylesheet" type="text/css" href="_static/css/bootstrap-theme.min.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+    <title>ftemp: PyFEHM template models &#8212; PyFEHM 1.0.4 documentation</title>
+    <link rel="stylesheet" href="_static/guzzle.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+  
+   
+
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">PyFEHM 1.0.4 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="container-wrapper">
+
+      <div id="mobile-toggle">
+        <a href="#"><span class="glyphicon glyphicon-align-justify" aria-hidden="true"></span></a>
+      </div>
+  <div id="left-column">
+    <div class="sphinxsidebar"><a href="
+    index.html" class="text-logo">PyFEHM</a>
+<div class="sidebar-block">
+  <div class="sidebar-wrapper">
+    <h2>Table Of Contents</h2>
+  </div>
+  <div class="sidebar-toc">
+    
+    
+      <ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fgrid.html">fgrid: FEHM grid manipulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fdata.html">fdata: FEHM input file manipulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fpost.html">fpost: FEHM output file manipulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fvars.html">fvars: FEHM thermodynamic calculations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorials</a></li>
+</ul>
+
+    
+  </div>
+</div>
+<div class="sidebar-block">
+  <div class="sidebar-wrapper">
+    <div id="main-search">
+      <form class="form-inline" action="search.html" method="GET" role="form">
+        <div class="input-group">
+          <input name="q" type="text" class="form-control" placeholder="Search...">
+        </div>
+        <input type="hidden" name="check_keywords" value="yes" />
+        <input type="hidden" name="area" value="default" />
+      </form>
+    </div>
+  </div>
+</div>
+      
+    </div>
+  </div>
+        <div id="right-column">
+          
+          <div role="navigation" aria-label="breadcrumbs navigation">
+            <ol class="breadcrumb">
+              <li><a href="index.html">Docs</a></li>
+              
+              <li>ftemp: PyFEHM template models</li>
+            </ol>
+          </div>
+          
+          <div class="document clearer body">
+            
+  <div class="section" id="ftemp-pyfehm-template-models">
+<h1>ftemp: PyFEHM template models<a class="headerlink" href="#ftemp-pyfehm-template-models" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="ftemp.wellbore_model">
+<em class="property">class </em><code class="descclassname">ftemp.</code><code class="descname">wellbore_model</code><span class="sig-paren">(</span><em>xL</em>, <em>zL</em>, <em>wellbore_radius</em>, <em>wellbore_xdiv</em>, <em>pipe_width</em>, <em>pipe_xdiv</em>, <em>casing_width</em>, <em>casing_xdiv</em>, <em>reservoir_xdiv</em>, <em>zdiv</em>, <em>zprop</em>, <em>injection_temperature</em>, <em>injection_flow_rate</em>, <em>initial_temperature</em>, <em>simulation_time</em>, <em>inputfilename=''</em>, <em>gridfilename=''</em>, <em>work_dir=None</em>, <em>pipe_density=2500.0</em>, <em>pipe_specific_heat=1000.0</em>, <em>pipe_conductivity=2.0</em>, <em>casing_density=2500.0</em>, <em>casing_specific_heat=1000.0</em>, <em>casing_conductivity=0.5</em>, <em>reservoir_density=2500.0</em>, <em>reservoir_specific_heat=1000.0</em>, <em>reservoir_conductivity=1.0</em>, <em>reservoir_porosity=0.1</em>, <em>reservoir_permeability=1e-15</em>, <em>wellbore_permeability=0.0001</em>, <em>surface_pressure=0.1</em>, <em>surface_temperature=25.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftemp.html#wellbore_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftemp.wellbore_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a simple 2D radial well bore model. Returns an fdata object corresponding to the model.</p>
+<p>User inputs dimensions of the wellbore, steel pipe, casing and reservoir, their material properties and 
+permeability, information about initial reservoir conditions and the injection operation. 
+The model grid is generated on initialisation
+but this can be replaced with a more complex mesh by calling <code class="docutils literal notranslate"><span class="pre">read_grid()</span></code> - zones will be automatically 
+reassigned.</p>
+<p>The simulation is executed by calling the <code class="docutils literal notranslate"><span class="pre">run()</span></code> method.</p>
+<p>Output data are visualised by calling <code class="docutils literal notranslate"><span class="pre">plot()</span></code> or <code class="docutils literal notranslate"><span class="pre">summarise()</span></code> methods.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>xL</strong> (<em>fl64</em>) – Horizontal dimension of model.</li>
+<li><strong>zL</strong> (<em>fl64</em>) – Vertical dimension of model.</li>
+<li><strong>wellbore_radius</strong> (<em>fl64</em>) – Well-bore radius.</li>
+<li><strong>wellbore_xdiv</strong> (<em>int</em>) – Horizontal grid divisions in wellbore.</li>
+<li><strong>pipe_width</strong> (<em>fl64</em>) – Steel pipe width.</li>
+<li><strong>pipe_xdiv</strong> (<em>int</em>) – Horizontal grid divisions in steel pipe.</li>
+<li><strong>casing_width</strong> (<em>fl64</em>) – Casing width.</li>
+<li><strong>casing_xdiv</strong> (<em>int</em>) – Horizontal grid divisions in casing.</li>
+<li><strong>reservoir_xdiv</strong> (<em>int</em>) – Horizontal grid divisions in reservoir.</li>
+<li><strong>zdiv</strong> (<em>lst</em><em>[</em><em>int</em><em>]</em>) – Number of vertical divisions for the grid (not including the feedzone).</li>
+<li><strong>zprop</strong> (<em>lst</em><em>[</em><em>fl64</em><em>]</em>) – Proportioning of vertical dimension for gridding.</li>
+<li><strong>injection_temperature</strong> (<em>fl64</em>) – Temperature of fluid injected at the wellhead.</li>
+<li><strong>injection_flow_rate</strong> (<em>fl64</em>) – Flow rate of fluid injected at the wellhead.</li>
+<li><strong>initial_temperature</strong> (<em>fl64</em><em>, </em><em>str</em>) – Specifies initial temperature conditions in the reservoir. If positive, initial temperature is interpreted as isotropic. If negative, initial temperature is interpreted as a vertical gradient. If a string, initial temperature corresponds to a text file containing a temperature-depth profile and applies this as the initial reservoir temperatures.</li>
+<li><strong>simulation_time</strong> (<em>fl64</em>) – Length of simulation in days.</li>
+<li><strong>inputfilename</strong> (<em>str</em>) – Name of input file.</li>
+<li><strong>gridfilename</strong> (<em>str</em>) – Name of grid file.</li>
+<li><strong>pipe_density</strong> (<em>fl64</em>) – Density of steel pipe.</li>
+<li><strong>pipe_specific_heat</strong> (<em>fl64</em>) – Specific heat of steel pipe.</li>
+<li><strong>casing_density</strong> (<em>fl64</em>) – Density of casing.</li>
+<li><strong>casing_specific_heat</strong> (<em>fl64</em>) – Specific heat of casing.</li>
+<li><strong>reservoir_density</strong> (<em>fl64</em>) – Density of reservoir.</li>
+<li><strong>reservoir_specific_heat</strong> (<em>fl64</em>) – Specific heat of reservoir.</li>
+<li><strong>reservoir_permeability</strong> (<em>fl64</em><em>, </em><em>lst</em><em>[</em><em>fl64</em><em>]</em>) – Reservoir permeability, specified as either isotropic k0 or anisotropic [kx,ky,kz].</li>
+<li><strong>wellbore_permeability</strong> (<em>fl64</em><em>, </em><em>lst</em><em>[</em><em>fl64</em><em>]</em>) – Wellbore permeability, surrogate representing rapid transport down well. Set to high value.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="ftemp.wellbore_model.casing_conductivity">
+<code class="descname">casing_conductivity</code><a class="headerlink" href="#ftemp.wellbore_model.casing_conductivity" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) Thermal conductivity of the casing.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ftemp.wellbore_model.casing_density">
+<code class="descname">casing_density</code><a class="headerlink" href="#ftemp.wellbore_model.casing_density" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) Density of casing.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ftemp.wellbore_model.casing_specific_heat">
+<code class="descname">casing_specific_heat</code><a class="headerlink" href="#ftemp.wellbore_model.casing_specific_heat" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) Specific heat of casing</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ftemp.wellbore_model.initial_temperature">
+<code class="descname">initial_temperature</code><a class="headerlink" href="#ftemp.wellbore_model.initial_temperature" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>, <em>str</em>) Specifies initial temperature conditions in the reservoir. If positive, initial temperature is interpreted as isotropic. If negative, initial temperature is interpreted as a vertical gradient. If a string, initial temperature corresponds to a text file containing a temperature-depth profile and applies this as the initial reservoir temperatures.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ftemp.wellbore_model.injection_flow_rate">
+<code class="descname">injection_flow_rate</code><a class="headerlink" href="#ftemp.wellbore_model.injection_flow_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) Flow rate of fluid injected at the wellhead.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ftemp.wellbore_model.injection_temperature">
+<code class="descname">injection_temperature</code><a class="headerlink" href="#ftemp.wellbore_model.injection_temperature" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) Temperature of the fluid injected at the wellhead.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ftemp.wellbore_model.pipe_conductivity">
+<code class="descname">pipe_conductivity</code><a class="headerlink" href="#ftemp.wellbore_model.pipe_conductivity" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) Thermal conductivity of the steel pipe.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ftemp.wellbore_model.pipe_density">
+<code class="descname">pipe_density</code><a class="headerlink" href="#ftemp.wellbore_model.pipe_density" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) Density of pipe.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ftemp.wellbore_model.pipe_specific_heat">
+<code class="descname">pipe_specific_heat</code><a class="headerlink" href="#ftemp.wellbore_model.pipe_specific_heat" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) Specific heat of pipe.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ftemp.wellbore_model.plot">
+<code class="descname">plot</code><span class="sig-paren">(</span><em>temperature_lims=[], pdf='', combineString='gswin64', Tslice=True, Tslice_xlims=[], Tslice_ylims=[], Tslice_divisions=[100, 100], Tslice_method='nearest', Pslice=True, Pslice_xlims=[], Pslice_ylims=[], Pslice_divisions=[100, 100], Pslice_method='nearest', Ttime=True, Ttime_xlims=[], Ttime_ylims=[], Twell=True, Twell_times=[], Twell_xlims=[], Twell_ylims=[], Twell_initial=True, Twell_profiles=None, Twell_output=False, Pcorrection=True, Pcorrection_xlims=[], Pcorrection_ylims=[], imperial_units=False, write_out=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftemp.html#wellbore_model.plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftemp.wellbore_model.plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate plots of wellbore simulation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>temperature_lims</strong> (<em>lst</em><em>[</em><em>fl64</em><em>,</em><em>fl64</em><em>]</em>) – Limits on temperature axis of temperature vs. time plot.</li>
+<li><strong>pdf</strong> (<em>str</em>) – Name of pdf file to combine all output plots. If not specified, pdf will not be created.</li>
+<li><strong>combineString</strong> (<em>str</em>) – Name of ghostscript executable.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ftemp.wellbore_model.reservoir_conductivity">
+<code class="descname">reservoir_conductivity</code><a class="headerlink" href="#ftemp.wellbore_model.reservoir_conductivity" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) Thermal conductivity of the reservoir.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ftemp.wellbore_model.reservoir_density">
+<code class="descname">reservoir_density</code><a class="headerlink" href="#ftemp.wellbore_model.reservoir_density" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) Density of reservoir.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ftemp.wellbore_model.reservoir_permeability">
+<code class="descname">reservoir_permeability</code><a class="headerlink" href="#ftemp.wellbore_model.reservoir_permeability" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) Permeability of reservoir. If three element list, tuple or ndarray is passed, this is assumed to correspond to [kx,ky,kz].</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ftemp.wellbore_model.reservoir_porosity">
+<code class="descname">reservoir_porosity</code><a class="headerlink" href="#ftemp.wellbore_model.reservoir_porosity" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) Porosity of reservoir.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ftemp.wellbore_model.reservoir_specific_heat">
+<code class="descname">reservoir_specific_heat</code><a class="headerlink" href="#ftemp.wellbore_model.reservoir_specific_heat" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) Specific heat of reservoir</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ftemp.wellbore_model.simulation_time">
+<code class="descname">simulation_time</code><a class="headerlink" href="#ftemp.wellbore_model.simulation_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) Length of simulation in days</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ftemp.wellbore_model.surface_pressure">
+<code class="descname">surface_pressure</code><a class="headerlink" href="#ftemp.wellbore_model.surface_pressure" title="Permalink to this definition">¶</a></dt>
+<dd><p>(**) Pressure at top surface of model, default is atmospheric.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ftemp.wellbore_model.surface_temperature">
+<code class="descname">surface_temperature</code><a class="headerlink" href="#ftemp.wellbore_model.surface_temperature" title="Permalink to this definition">¶</a></dt>
+<dd><p>(**) Temperature at top surface of model, default is 25degC.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ftemp.wellbore_model.wellbore_permeability">
+<code class="descname">wellbore_permeability</code><a class="headerlink" href="#ftemp.wellbore_model.wellbore_permeability" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) Permeability in the wellbore. This should be set to a high number, representing free-flowing water.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+            
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">PyFEHM 1.0.4 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+<script type="text/javascript">
+  $("#mobile-toggle a").click(function () {
+    $("#left-column").toggle();
+  });
+</script>
+<script type="text/javascript" src="_static/js/bootstrap.js"></script>
+  <div class="footer">
+    &copy; Copyright 2018, Los Alamos National Laboratory. Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+  </div>
+  </body>
+</html>

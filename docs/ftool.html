@@ -1,0 +1,244 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  
+  <!-- Licensed under the Apache 2.0 License -->
+  <link rel="stylesheet" type="text/css" href="_static/fonts/open-sans/stylesheet.css" />
+  <!-- Licensed under the SIL Open Font License -->
+  <link rel="stylesheet" type="text/css" href="_static/fonts/source-serif-pro/source-serif-pro.css" />
+  <link rel="stylesheet" type="text/css" href="_static/css/bootstrap.min.css" />
+  <link rel="stylesheet" type="text/css" href="_static/css/bootstrap-theme.min.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+    <title>ftool: Some useful tools for use with PyFEHM &#8212; PyFEHM 1.0.4 documentation</title>
+    <link rel="stylesheet" href="_static/guzzle.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+  
+   
+
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">PyFEHM 1.0.4 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="container-wrapper">
+
+      <div id="mobile-toggle">
+        <a href="#"><span class="glyphicon glyphicon-align-justify" aria-hidden="true"></span></a>
+      </div>
+  <div id="left-column">
+    <div class="sphinxsidebar"><a href="
+    index.html" class="text-logo">PyFEHM</a>
+<div class="sidebar-block">
+  <div class="sidebar-wrapper">
+    <h2>Table Of Contents</h2>
+  </div>
+  <div class="sidebar-toc">
+    
+    
+      <ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fgrid.html">fgrid: FEHM grid manipulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fdata.html">fdata: FEHM input file manipulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fpost.html">fpost: FEHM output file manipulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fvars.html">fvars: FEHM thermodynamic calculations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorials</a></li>
+</ul>
+
+    
+  </div>
+</div>
+<div class="sidebar-block">
+  <div class="sidebar-wrapper">
+    <div id="main-search">
+      <form class="form-inline" action="search.html" method="GET" role="form">
+        <div class="input-group">
+          <input name="q" type="text" class="form-control" placeholder="Search...">
+        </div>
+        <input type="hidden" name="check_keywords" value="yes" />
+        <input type="hidden" name="area" value="default" />
+      </form>
+    </div>
+  </div>
+</div>
+      
+    </div>
+  </div>
+        <div id="right-column">
+          
+          <div role="navigation" aria-label="breadcrumbs navigation">
+            <ol class="breadcrumb">
+              <li><a href="index.html">Docs</a></li>
+              
+              <li>ftool: Some useful tools for use with PyFEHM</li>
+            </ol>
+          </div>
+          
+          <div class="document clearer body">
+            
+  <div class="section" id="module-ftool">
+<span id="ftool-some-useful-tools-for-use-with-pyfehm"></span><h1>ftool: Some useful tools for use with PyFEHM<a class="headerlink" href="#module-ftool" title="Permalink to this headline">¶</a></h1>
+<p>Various tools for use with PyFEHM.</p>
+<dl class="function">
+<dt id="ftool.SI">
+<code class="descclassname">ftool.</code><code class="descname">SI</code><span class="sig-paren">(</span><em>quantity</em>, <em>unit=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftool.html#SI"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftool.SI" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an SI measurement corresponding to a supplied non standard unit, e.g., ‘31.6 gpm’. Output reverts to FEHM format, e.g., pressures and stresses quoted in MPa.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>quanityt</strong> – Number with unit. If a float or list of floats provided, then unit must</li>
+<li><strong>unit</strong> (<em>str</em>) – Flag indicating unit of float supplied in quantity.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Quantity in SI units.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="ftool.UTM_to_latlong">
+<code class="descclassname">ftool.</code><code class="descname">UTM_to_latlong</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>zone</em>, <em>hemisphere=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftool.html#UTM_to_latlong"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftool.UTM_to_latlong" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return latitude and longitude corresponding to supplied UTM (Universal Transverse Mercator) coordinates.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>x</strong> (<em>fl64</em>) – Easting inside of zone.</li>
+<li><strong>y</strong> (<em>fl64</em>) – Northing inside of zone.</li>
+<li><strong>zone</strong> (<em>int</em>) – UTM zone (integer between 1 and 60).</li>
+<li><strong>hemisphere</strong> (<em>bool</em>) – Integer denoting hemisphere, 1 = northern, -1 = southern.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Two column list of latitudes and longitudes.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="ftool.cubes_intersect">
+<code class="descclassname">ftool.</code><code class="descname">cubes_intersect</code><span class="sig-paren">(</span><em>cube1</em>, <em>cube2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftool.html#cubes_intersect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftool.cubes_intersect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if two cubes intersect.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ftool.dict_key_check">
+<code class="descclassname">ftool.</code><code class="descname">dict_key_check</code><span class="sig-paren">(</span><em>dict</em>, <em>keys</em>, <em>dict_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftool.html#dict_key_check"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftool.dict_key_check" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return False if dict contains only the supplied keys and no extras.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ftool.flatten">
+<code class="descclassname">ftool.</code><code class="descname">flatten</code><span class="sig-paren">(</span><em>l</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftool.html#flatten"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftool.flatten" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes a nested list and returns a flattened list (upon list conversion of output).
+:param l: Nested list.
+:type l: lst</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ftool.in_cube">
+<code class="descclassname">ftool.</code><code class="descname">in_cube</code><span class="sig-paren">(</span><em>pos</em>, <em>cube</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftool.html#in_cube"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftool.in_cube" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests if the 3-D point lies in an axis-aligned cube, defined as a two-element list of arrays
+[bottom left front, top right back].</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ftool.latlong_to_UTM">
+<code class="descclassname">ftool.</code><code class="descname">latlong_to_UTM</code><span class="sig-paren">(</span><em>lat</em>, <em>long</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftool.html#latlong_to_UTM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftool.latlong_to_UTM" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return UTM easting, northing, zone number and hemisphere corresponding to supplied latitude and longitude.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>lat</strong> (<em>fl64</em>) – Latitude, in deceimal degrees.</li>
+<li><strong>long</strong> (<em>fl64</em>) – Longitude, in decimal degrees.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Four column list of UTM easting, northing, zone and hemisphere (1 = northern, -1 = southern).</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="ftool.powspace">
+<code class="descclassname">ftool.</code><code class="descname">powspace</code><span class="sig-paren">(</span><em>x0</em>, <em>x1</em>, <em>N=10</em>, <em>power=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftool.html#powspace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftool.powspace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a sequence of numbers spaced according to the power law (x1-x0)**(1-power)*linspace(0,(x1-x0),N)**base + x0</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>x0</strong> (<em>fl64</em>) – First number in sequence.</li>
+<li><strong>x1</strong> (<em>fl64</em>) – Last number in sequence.</li>
+<li><strong>N</strong> (<em>int</em>) – Total items in sequence.</li>
+<li><strong>power</strong> (<em>fl64</em>) – Index of power law. If negative, spacing order will be reversed from “big-to-small”.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+            
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">PyFEHM 1.0.4 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+<script type="text/javascript">
+  $("#mobile-toggle a").click(function () {
+    $("#left-column").toggle();
+  });
+</script>
+<script type="text/javascript" src="_static/js/bootstrap.js"></script>
+  <div class="footer">
+    &copy; Copyright 2018, Los Alamos National Laboratory. Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+  </div>
+  </body>
+</html>

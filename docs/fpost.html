@@ -1,0 +1,870 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  
+  <!-- Licensed under the Apache 2.0 License -->
+  <link rel="stylesheet" type="text/css" href="_static/fonts/open-sans/stylesheet.css" />
+  <!-- Licensed under the SIL Open Font License -->
+  <link rel="stylesheet" type="text/css" href="_static/fonts/source-serif-pro/source-serif-pro.css" />
+  <link rel="stylesheet" type="text/css" href="_static/css/bootstrap.min.css" />
+  <link rel="stylesheet" type="text/css" href="_static/css/bootstrap-theme.min.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+    <title>fpost: FEHM output file manipulation &#8212; PyFEHM 1.0.4 documentation</title>
+    <link rel="stylesheet" href="_static/guzzle.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="fvars: FEHM thermodynamic calculations" href="fvars.html" />
+    <link rel="prev" title="fdata: FEHM input file manipulation" href="fdata.html" />
+  
+   
+
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="fvars.html" title="fvars: FEHM thermodynamic calculations"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="fdata.html" title="fdata: FEHM input file manipulation"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">PyFEHM 1.0.4 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="container-wrapper">
+
+      <div id="mobile-toggle">
+        <a href="#"><span class="glyphicon glyphicon-align-justify" aria-hidden="true"></span></a>
+      </div>
+  <div id="left-column">
+    <div class="sphinxsidebar"><a href="
+    index.html" class="text-logo">PyFEHM</a>
+<div class="sidebar-block">
+  <div class="sidebar-wrapper">
+    <h2>Table Of Contents</h2>
+  </div>
+  <div class="sidebar-toc">
+    
+    
+      <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fgrid.html">fgrid: FEHM grid manipulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fdata.html">fdata: FEHM input file manipulation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">fpost: FEHM output file manipulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fvars.html">fvars: FEHM thermodynamic calculations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorials</a></li>
+</ul>
+
+    
+  </div>
+</div>
+<div class="sidebar-block">
+  <div class="sidebar-wrapper">
+    <h2>Contents</h2>
+    <div class="sidebar-localtoc">
+      <ul>
+<li><a class="reference internal" href="#">fpost: FEHM output file manipulation</a><ul>
+<li><a class="reference internal" href="#contour-output">Contour output</a><ul>
+<li><a class="reference internal" href="#attributes">Attributes</a></li>
+<li><a class="reference internal" href="#grid-attributes">Grid attributes</a></li>
+<li><a class="reference internal" href="#methods">Methods</a></li>
+<li><a class="reference internal" href="#examples">Examples</a></li>
+<li><a class="reference internal" href="#slice-plots">Slice plots</a></li>
+<li><a class="reference internal" href="#profile-plots">Profile plots</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#history-output">History output</a><ul>
+<li><a class="reference internal" href="#zone-fluxes">Zone fluxes</a></li>
+<li><a class="reference internal" href="#tracers">Tracers</a></li>
+<li><a class="reference internal" href="#particle-tracking">Particle tracking</a></li>
+<li><a class="reference internal" href="#id1">Attributes</a></li>
+<li><a class="reference internal" href="#id2">Methods</a></li>
+<li><a class="reference internal" href="#time-series-plots">Time series plots</a></li>
+<li><a class="reference internal" href="#node-fluxes">Node fluxes</a></li>
+<li><a class="reference internal" href="#id3">Attributes</a></li>
+<li><a class="reference internal" href="#id4">Methods</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#multi-document-pdf">Multi document pdf</a><ul>
+<li><a class="reference internal" href="#id5">Attributes</a></li>
+<li><a class="reference internal" href="#id6">Methods</a></li>
+<li><a class="reference internal" href="#id7">Examples</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+    </div>
+  </div>
+</div>
+<div class="sidebar-block">
+  <div class="sidebar-wrapper">
+    <div id="main-search">
+      <form class="form-inline" action="search.html" method="GET" role="form">
+        <div class="input-group">
+          <input name="q" type="text" class="form-control" placeholder="Search...">
+        </div>
+        <input type="hidden" name="check_keywords" value="yes" />
+        <input type="hidden" name="area" value="default" />
+      </form>
+    </div>
+  </div>
+</div>
+      
+    </div>
+  </div>
+        <div id="right-column">
+          
+          <div role="navigation" aria-label="breadcrumbs navigation">
+            <ol class="breadcrumb">
+              <li><a href="index.html">Docs</a></li>
+              
+              <li>fpost: FEHM output file manipulation</li>
+            </ol>
+          </div>
+          
+          <div class="document clearer body">
+            
+  <div class="section" id="fpost-fehm-output-file-manipulation">
+<span id="fpost-chapter"></span><h1>fpost: FEHM output file manipulation<a class="headerlink" href="#fpost-fehm-output-file-manipulation" title="Permalink to this headline">¶</a></h1>
+<p>Processing simulation output data is as important as the generation of the data itself. PyFEHM contains a range of
+basic plotting tools to visualise FEHM output, all based on the matplotlib python library.</p>
+<p>FEHM can output both time history data for specified variables at specified nodes () and contour data for specified
+variables at specified times. PyFEHM can read in any output data format, e.g., <em>surfer, tecplot</em>, so the user is not
+required to output in a specific format (although <em>surfer</em> format is likely to be the least buggy).</p>
+<div class="section" id="contour-output">
+<h2>Contour output<a class="headerlink" href="#contour-output" title="Permalink to this headline">¶</a></h2>
+<p>Data are read from a list of FEHM output files corresponding to a particular time during a simulation.
+Depending on input specifications in <a class="reference internal" href="fdata.html#fdata.fdata.cont" title="fdata.fdata.cont"><code class="xref py py-attr docutils literal notranslate"><span class="pre">fdata.cont</span></code></a>, for each node, x, y, z data, pressure,
+temperature, permeability information is available.</p>
+<p>Setting the target filename using wildcards will cause PyFEHM to read in multiple input files for
+different times. This format will accommodate FEHM’s distinction of scalar, vector and concentration output, e.g.,
+information from run.0001_con_node.dat and run.0001_sca_node.data will be read into a single object.</p>
+<p>This format also supports material property files, generally denoted with ‘mat_node’ in the title. This information,
+when parsed, is made available through the <code class="xref py py-attr docutils literal notranslate"><span class="pre">material</span></code> attribute.</p>
+<dl class="class">
+<dt id="fpost.fcontour">
+<em class="property">class </em><code class="descclassname">fpost.</code><code class="descname">fcontour</code><span class="sig-paren">(</span><em>filename=None</em>, <em>latest=False</em>, <em>first=False</em>, <em>nearest=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fpost.html#fcontour"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fpost.fcontour" title="Permalink to this definition">¶</a></dt>
+<dd><p>Contour output information object.</p>
+</dd></dl>
+
+<div class="section" id="attributes">
+<h3>Attributes<a class="headerlink" href="#attributes" title="Permalink to this headline">¶</a></h3>
+<dl class="attribute">
+<dt id="fpost.fcontour.times">
+<code class="descclassname">fcontour.</code><code class="descname">times</code><a class="headerlink" href="#fpost.fcontour.times" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>lst[fl64]</em>) List of times (in seconds) for which output data are available.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fpost.fcontour.variables">
+<code class="descclassname">fcontour.</code><code class="descname">variables</code><a class="headerlink" href="#fpost.fcontour.variables" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>lst[str]</em>) List of variables for which output data are available.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fpost.fcontour.user_variables">
+<code class="descclassname">fcontour.</code><code class="descname">user_variables</code><a class="headerlink" href="#fpost.fcontour.user_variables" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>lst[str]</em>) List of user-defined variables for which output data are available.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fpost.fcontour.material">
+<code class="descclassname">fcontour.</code><code class="descname">material</code><a class="headerlink" href="#fpost.fcontour.material" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>dict[str]</em>) Dictionary of material properties, keyed by property name, items indexed by node_number - 1. This attribute is empty if no material property file supplied.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fpost.fcontour.format">
+<code class="descclassname">fcontour.</code><code class="descname">format</code><a class="headerlink" href="#fpost.fcontour.format" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>str</em>) Format of output file, options are ‘tec’, ‘surf’, ‘avs’ and ‘avsx’.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fpost.fcontour.filename">
+<code class="descclassname">fcontour.</code><code class="descname">filename</code><a class="headerlink" href="#fpost.fcontour.filename" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>str</em>) Name of FEHM contour output file. Wildcards can be used to define multiple input files.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="grid-attributes">
+<h3>Grid attributes<a class="headerlink" href="#grid-attributes" title="Permalink to this headline">¶</a></h3>
+<dl class="attribute">
+<dt id="fpost.fcontour.x">
+<code class="descclassname">fcontour.</code><code class="descname">x</code><a class="headerlink" href="#fpost.fcontour.x" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>lst[fl64]</em>) Unique list of nodal x-coordinates for grid.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fpost.fcontour.y">
+<code class="descclassname">fcontour.</code><code class="descname">y</code><a class="headerlink" href="#fpost.fcontour.y" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>lst[fl64]</em>) Unique list of nodal y-coordinates for grid.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fpost.fcontour.z">
+<code class="descclassname">fcontour.</code><code class="descname">z</code><a class="headerlink" href="#fpost.fcontour.z" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>lst[fl64]</em>) Unique list of nodal z-coordinates for grid.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fpost.fcontour.xmin">
+<code class="descclassname">fcontour.</code><code class="descname">xmin</code><a class="headerlink" href="#fpost.fcontour.xmin" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) Minimum nodal x-coordinate for grid.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fpost.fcontour.xmax">
+<code class="descclassname">fcontour.</code><code class="descname">xmax</code><a class="headerlink" href="#fpost.fcontour.xmax" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) Maximum nodal x-coordinate for grid.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fpost.fcontour.ymin">
+<code class="descclassname">fcontour.</code><code class="descname">ymin</code><a class="headerlink" href="#fpost.fcontour.ymin" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) Minimum nodal y-coordinate for grid.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fpost.fcontour.ymax">
+<code class="descclassname">fcontour.</code><code class="descname">ymax</code><a class="headerlink" href="#fpost.fcontour.ymax" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) Maximum nodal y-coordinate for grid.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fpost.fcontour.zmin">
+<code class="descclassname">fcontour.</code><code class="descname">zmin</code><a class="headerlink" href="#fpost.fcontour.zmin" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) Minimum nodal z-coordinate for grid.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fpost.fcontour.zmax">
+<code class="descclassname">fcontour.</code><code class="descname">zmax</code><a class="headerlink" href="#fpost.fcontour.zmax" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>fl64</em>) Maximum nodal z-coordinate for grid.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="methods">
+<h3>Methods<a class="headerlink" href="#methods" title="Permalink to this headline">¶</a></h3>
+<dl class="method">
+<dt id="fpost.fcontour.read">
+<code class="descclassname">fcontour.</code><code class="descname">read</code><span class="sig-paren">(</span><em>filename</em>, <em>latest=False</em>, <em>first=False</em>, <em>nearest=[]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fpost.html#fcontour.read"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fpost.fcontour.read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read in FEHM contour output information.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>filename</strong> (<em>str</em>) – File name for output data, can include wildcards to define multiple output files.</li>
+<li><strong>latest</strong> (<em>bool</em>) – Boolean indicating PyFEHM should read the latest entry in a wildcard search.</li>
+<li><strong>first</strong> (<em>bool</em>) – Boolean indicating PyFEHM should read the first entry in a wildcard search.</li>
+<li><strong>nearest</strong> (<em>fl64</em><em>,</em><em>list</em>) – Read in the file with date closest to the day supplied. List input will parse multiple output files.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="fpost.fcontour.node">
+<code class="descclassname">fcontour.</code><code class="descname">node</code><span class="sig-paren">(</span><em>node</em>, <em>time=None</em>, <em>variable=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fpost.html#fcontour.node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fpost.fcontour.node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns all information for a specific node.</p>
+<p>If time and variable not specified, a dictionary of time series is returned with variables as the dictionary keys.</p>
+<p>If only time is specified, a dictionary of variable values at that time is returned, with variables as dictionary keys.</p>
+<p>If only variable is specified, a time series vector is returned for that variable.</p>
+<p>If both time and variable are specified, a single value is returned, corresponding to the variable value at that time, at that node.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>node</strong> (<em>int</em>) – Node index for which variable information required.</li>
+<li><strong>time</strong> (<em>fl64</em>) – Time at which variable information required. If not specified, all output.</li>
+<li><strong>variable</strong> (<em>str</em>) – Variable for which information requested. If not specified, all output.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="fpost.fcontour.new_variable">
+<code class="descclassname">fcontour.</code><code class="descname">new_variable</code><span class="sig-paren">(</span><em>name</em>, <em>time</em>, <em>data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fpost.html#fcontour.new_variable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fpost.fcontour.new_variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new variable, which is some combination of the available variables.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>name</strong> (<em>str</em>) – Name for the variable.</li>
+<li><strong>time</strong> (<em>fl64</em>) – Time key which the variable should be associated with. Must be one of the existing keys, i.e., an item in fcontour.times.</li>
+<li><strong>data</strong> (<em>lst</em><em>[</em><em>fl64</em><em>]</em>) – Variable data, most likely some combination of the available parameters, e.g., pressure*temperature, pressure[t=10] - pressure[t=5]</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="fpost.fcontour.paraview">
+<code class="descclassname">fcontour.</code><code class="descname">paraview</code><span class="sig-paren">(</span><em>grid</em>, <em>stor=None</em>, <em>exe='paraview'</em>, <em>filename='temp.vtk'</em>, <em>show=None</em>, <em>diff=False</em>, <em>zscale=1.0</em>, <em>time_derivatives=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fpost.html#fcontour.paraview"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fpost.fcontour.paraview" title="Permalink to this definition">¶</a></dt>
+<dd><p>Launches an instance of Paraview that displays the contour object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>grid</strong> (<em>str</em>) – Path to grid file associated with FEHM simulation that produced the contour output.</li>
+<li><strong>stor</strong> (<em>str</em>) – Path to grid file associated with FEHM simulation that produced the contour output.</li>
+<li><strong>exe</strong> (<em>str</em>) – Path to Paraview executable.</li>
+<li><strong>filename</strong> (<em>str</em>) – Name of VTK file to be output.</li>
+<li><strong>show</strong> (<em>str</em>) – Variable to show when Paraview starts up (default = first available variable in contour object).</li>
+<li><strong>diff</strong> (<em>bool</em>) – Flag to request PyFEHM to also plot differences of contour variables (from initial state) with time.</li>
+<li><strong>zscale</strong> (<em>fl64</em>) – Factor by which to scale z-axis. Useful for visualising laterally extensive flow systems.</li>
+<li><strong>time_derivatives</strong> (<em>bool</em>) – Calculate new fields for time derivatives of contour data. For precision reasons, derivatives are calculated with units of ‘per day’.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fpost.fcontour.what">
+<code class="descclassname">fcontour.</code><code class="descname">what</code><a class="headerlink" href="#fpost.fcontour.what" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>str</em>) Print out information about the fcontour object.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="slice-plots">
+<h3>Slice plots<a class="headerlink" href="#slice-plots" title="Permalink to this headline">¶</a></h3>
+<dl class="method">
+<dt id="fpost.fcontour.slice">
+<code class="descclassname">fcontour.</code><code class="descname">slice</code><span class="sig-paren">(</span><em>variable</em>, <em>slice</em>, <em>divisions</em>, <em>time=None</em>, <em>method='nearest'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fpost.html#fcontour.slice"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fpost.fcontour.slice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns mesh data for a specified slice orientation from 3-D contour output data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> (<em>str</em>) – Output data variable, for example ‘P’ = pressure. Alternatively, variable can be a five element list, first element ‘cfs’, remaining elements fault azimuth (relative to x), dip, friction coefficient and cohesion. Will return coulomb failure stress.</li>
+<li><strong>time</strong> (<em>fl64</em>) – Time for which output data is requested. Can be supplied via <code class="docutils literal notranslate"><span class="pre">fcontour.times</span></code> list. Default is most recently available data.</li>
+<li><strong>slice</strong> (<em>lst</em><em>[</em><em>str</em><em>,</em><em>fl64</em><em>]</em>) – List specifying orientation of output slice, e.g., [‘x’,200.] is a vertical slice at <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">200</span></code>, [‘z’,-500.] is a horizontal slice at <code class="docutils literal notranslate"><span class="pre">z</span> <span class="pre">=</span> <span class="pre">-500.</span></code>, [point1, point2] is a fixed limit vertical or horizontal domain corresponding to the bounding box defined by point1 and point2.</li>
+<li><strong>divisions</strong> (<em>[</em><em>int</em><em>,</em><em>int</em><em>]</em>) – Resolution to supply mesh data.</li>
+<li><strong>method</strong> (<em>str:</em>) – Method of interpolation, options are ‘nearest’, ‘linear’.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">X – x-coordinates of mesh data.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="fpost.fcontour.slice_plot">
+<code class="descclassname">fcontour.</code><code class="descname">slice_plot</code><span class="sig-paren">(</span><em>variable=None, time=None, slice='', divisions=[20, 20], levels=10, cbar=False, xlims=[], ylims=[], colors='k', linestyle='-', save='', xlabel='x / m', ylabel='y / m', title='', font_size='medium', method='nearest', equal_axes=True, mesh_lines=None, perm_contrasts=None, scale=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fpost.html#fcontour.slice_plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fpost.fcontour.slice_plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a filled plot of contour data. Invokes the <code class="docutils literal notranslate"><span class="pre">slice()</span></code> method to interpolate slice data for plotting.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>variable</strong> (<em>str</em>) – Output data variable, for example ‘P’ = pressure.</li>
+<li><strong>time</strong> (<em>fl64</em>) – Time for which output data is requested. Can be supplied via <code class="docutils literal notranslate"><span class="pre">fcontour.times</span></code> list. Default is most recently available data. If a list of two times is passed, the difference between the first and last is plotted.</li>
+<li><strong>slice</strong> (<em>lst</em><em>[</em><em>str</em><em>,</em><em>fl64</em><em>]</em>) – List specifying orientation of output slice, e.g., [‘x’,200.] is a vertical slice at <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">200</span></code>, [‘z’,-500.] is a horizontal slice at <code class="docutils literal notranslate"><span class="pre">z</span> <span class="pre">=</span> <span class="pre">-500.</span></code>, [point1, point2] is a fixed limit vertical or horizontal domain corresponding to the bounding box defined by point1 and point2.</li>
+<li><strong>divisions</strong> (<em>[</em><em>int</em><em>,</em><em>int</em><em>]</em>) – Resolution to supply mesh data.</li>
+<li><strong>method</strong> (<em>str</em>) – Method of interpolation, options are ‘nearest’, ‘linear’.</li>
+<li><strong>levels</strong> (<em>lst</em><em>[</em><em>fl64</em><em>]</em><em>, </em><em>int</em>) – Contour levels to plot. Can specify specific levels in list form, or a single integer indicating automatic assignment of levels.</li>
+<li><strong>cbar</strong> (<em>bool</em>) – Add colour bar to plot.</li>
+<li><strong>xlims</strong> (<em>[</em><em>fl64</em><em>, </em><em>fl64</em><em>]</em>) – Plot limits on x-axis.</li>
+<li><strong>ylims</strong> (<em>[</em><em>fl64</em><em>, </em><em>fl64</em><em>]</em>) – Plot limits on y-axis.</li>
+<li><strong>colors</strong> (<em>lst</em><em>[</em><em>str</em><em>]</em>) – Specify colour string for contour levels.</li>
+<li><strong>linestyle</strong> (<em>str</em>) – Style of contour lines, e.g., ‘k-‘ = solid black line, ‘r:’ red dotted line.</li>
+<li><strong>save</strong> (<em>str</em>) – Name to save plot. Format specified extension (default .png if none give). Supported extensions: .png, .eps, .pdf.</li>
+<li><strong>xlabel</strong> (<em>str</em>) – Label on x-axis.</li>
+<li><strong>ylabel</strong> (<em>str</em>) – Label on y-axis.</li>
+<li><strong>title</strong> (<em>str</em>) – Plot title.</li>
+<li><strong>font_size</strong> (<em>str</em><em>, </em><em>int</em>) – Specify text size, either as an integer or string, e.g., 10, ‘small’, ‘x-large’.</li>
+<li><strong>equal_axes</strong> (<em>bool</em>) – Specify equal scales on axes.</li>
+<li><strong>mesh_lines</strong> (<em>bool</em>) – Superimpose mesh on the plot (line intersections correspond to node positions) according to specified linestyle, e.g., ‘k:’ is a dotted black line.</li>
+<li><strong>perm_contrasts</strong> (<em>bool</em>) – Superimpose permeability contours on the plot according to specified linestyle, e.g., ‘k:’ is a dotted black line. A gradient method is used to pick out sharp changes in permeability.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="fpost.fcontour.cutaway_plot">
+<code class="descclassname">fcontour.</code><code class="descname">cutaway_plot</code><span class="sig-paren">(</span><em>variable=None, time=None, divisions=[20, 20, 20], levels=10, cbar=False, angle=[45, 45], xlims=[], method='nearest', ylims=[], zlims=[], colors='k', linestyle='-', save='', xlabel='x / m', ylabel='y / m', zlabel='z / m', title='', font_size='medium', equal_axes=True, grid_lines=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fpost.html#fcontour.cutaway_plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fpost.fcontour.cutaway_plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a filled plot of contour data on each of 3 planes in a cutaway plot. Invokes the <code class="docutils literal notranslate"><span class="pre">slice()</span></code> method to interpolate slice data for plotting.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>variable</strong> (<em>str</em>) – Output data variable, for example ‘P’ = pressure.</li>
+<li><strong>time</strong> (<em>fl64</em>) – Time for which output data is requested. Can be supplied via <code class="docutils literal notranslate"><span class="pre">fcontour.times</span></code> list. Default is most recently available data. If a list of two times is passed, the difference between the first and last is plotted.</li>
+<li><strong>divisions</strong> (<em>[</em><em>int</em><em>,</em><em>int</em><em>,</em><em>int</em><em>]</em>) – Resolution to supply mesh data in [x,y,z] coordinates.</li>
+<li><strong>levels</strong> (<em>lst</em><em>[</em><em>fl64</em><em>]</em><em>, </em><em>int</em>) – Contour levels to plot. Can specify specific levels in list form, or a single integer indicating automatic assignment of levels.</li>
+<li><strong>cbar</strong> (<em>bool</em>) – Include colour bar.</li>
+<li><strong>angle</strong> (<em>[</em><em>fl64</em><em>,</em><em>fl64</em><em>]</em><em>, </em><em>str</em>) – View angle of zone. First number is tilt angle in degrees, second number is azimuth. Alternatively, if angle is ‘x’, ‘y’, ‘z’, view is aligned along the corresponding axis.</li>
+<li><strong>method</strong> (<em>str</em>) – Method of interpolation, options are ‘nearest’, ‘linear’.</li>
+<li><strong>xlims</strong> (<em>[</em><em>fl64</em><em>, </em><em>fl64</em><em>]</em>) – Plot limits on x-axis.</li>
+<li><strong>ylims</strong> (<em>[</em><em>fl64</em><em>, </em><em>fl64</em><em>]</em>) – Plot limits on y-axis.</li>
+<li><strong>zlims</strong> (<em>[</em><em>fl64</em><em>, </em><em>fl64</em><em>]</em>) – Plot limits on z-axis.</li>
+<li><strong>colors</strong> (<em>lst</em><em>[</em><em>str</em><em>]</em>) – Specify colour string for contour levels.</li>
+<li><strong>linestyle</strong> (<em>str</em>) – Style of contour lines, e.g., ‘k-‘ = solid black line, ‘r:’ red dotted line.</li>
+<li><strong>save</strong> (<em>str</em>) – Name to save plot. Format specified extension (default .png if none give). Supported extensions: .png, .eps, .pdf.</li>
+<li><strong>xlabel</strong> (<em>str</em>) – Label on x-axis.</li>
+<li><strong>ylabel</strong> (<em>str</em>) – Label on y-axis.</li>
+<li><strong>zlabel</strong> (<em>str</em>) – Label on z-axis.</li>
+<li><strong>title</strong> (<em>str</em>) – Plot title.</li>
+<li><strong>font_size</strong> (<em>str</em><em>, </em><em>int</em>) – Specify text size, either as an integer or string, e.g., 10, ‘small’, ‘x-large’.</li>
+<li><strong>equal_axes</strong> (<em>bool</em>) – Force plotting with equal aspect ratios for all axes.</li>
+<li><strong>grid_lines</strong> (<em>bool</em>) – Extend tick lines across plot according to specified linestyle, e.g., ‘k:’ is a dotted black line.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="fpost.fcontour.slice_plot_line">
+<code class="descclassname">fcontour.</code><code class="descname">slice_plot_line</code><span class="sig-paren">(</span><em>variable=None, time=None, slice='', divisions=[20, 20], labels=False, label_size=10.0, levels=10, xlims=[], ylims=[], colors='k', linestyle='-', save='', xlabel='x / m', ylabel='y / m', title='', font_size='medium', method='nearest', equal_axes=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fpost.html#fcontour.slice_plot_line"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fpost.fcontour.slice_plot_line" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a line plot of contour data. Invokes the <code class="docutils literal notranslate"><span class="pre">slice()</span></code> method to interpolate slice data for plotting.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>variable</strong> (<em>str</em>) – Output data variable, for example ‘P’ = pressure.</li>
+<li><strong>time</strong> (<em>fl64</em>) – Time for which output data is requested. Can be supplied via <code class="docutils literal notranslate"><span class="pre">fcontour.times</span></code> list. Default is most recently available data. If a list of two times is passed, the difference between the first and last is plotted.</li>
+<li><strong>slice</strong> (<em>lst</em><em>[</em><em>str</em><em>,</em><em>fl64</em><em>]</em>) – List specifying orientation of output slice, e.g., [‘x’,200.] is a vertical slice at <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">200</span></code>, [‘z’,-500.] is a horizontal slice at <code class="docutils literal notranslate"><span class="pre">z</span> <span class="pre">=</span> <span class="pre">-500.</span></code>, [point1, point2] is a fixed limit vertical or horizontal domain corresponding to the bounding box defined by point1 and point2.</li>
+<li><strong>divisions</strong> (<em>[</em><em>int</em><em>,</em><em>int</em><em>]</em>) – Resolution to supply mesh data.</li>
+<li><strong>method</strong> (<em>str</em>) – Method of interpolation, options are ‘nearest’, ‘linear’.</li>
+<li><strong>labels</strong> (<em>bool</em>) – Specify whether labels should be added to contour plot.</li>
+<li><strong>label_size</strong> (<em>str</em><em>, </em><em>int</em>) – Specify text size of labels on contour plot, either as an integer or string, e.g., 10, ‘small’, ‘x-large’.</li>
+<li><strong>levels</strong> (<em>lst</em><em>[</em><em>fl64</em><em>]</em><em>, </em><em>int</em>) – Contour levels to plot. Can specify specific levels in list form, or a single integer indicating automatic assignment of levels.</li>
+<li><strong>xlims</strong> (<em>[</em><em>fl64</em><em>, </em><em>fl64</em><em>]</em>) – Plot limits on x-axis.</li>
+<li><strong>ylims</strong> (<em>[</em><em>fl64</em><em>, </em><em>fl64</em><em>]</em>) – Plot limits on y-axis.</li>
+<li><strong>linestyle</strong> (<em>str</em>) – Style of contour lines, e.g., ‘k-‘ = solid black line, ‘r:’ red dotted line.</li>
+<li><strong>save</strong> (<em>str</em>) – Name to save plot. Format specified extension (default .png if none give). Supported extensions: .png, .eps, .pdf.</li>
+<li><strong>xlabel</strong> (<em>str</em>) – Label on x-axis.</li>
+<li><strong>ylabel</strong> (<em>str</em>) – Label on y-axis.</li>
+<li><strong>title</strong> (<em>str</em>) – Plot title.</li>
+<li><strong>font_size</strong> (<em>str</em><em>, </em><em>int</em>) – Specify text size, either as an integer or string, e.g., 10, ‘small’, ‘x-large’.</li>
+<li><strong>equal_axes</strong> (<em>bool</em>) – Specify equal scales on axes.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="profile-plots">
+<h3>Profile plots<a class="headerlink" href="#profile-plots" title="Permalink to this headline">¶</a></h3>
+<dl class="method">
+<dt id="fpost.fcontour.profile">
+<code class="descclassname">fcontour.</code><code class="descname">profile</code><span class="sig-paren">(</span><em>variable</em>, <em>profile</em>, <em>time=None</em>, <em>divisions=30</em>, <em>method='nearest'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fpost.html#fcontour.profile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fpost.fcontour.profile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return variable data along the specified line in 3-D space. If only two points are supplied,
+the profile is assumed to be a straight line between them.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> (<em>str</em><em>, </em><em>lst</em><em>[</em><em>str</em><em>]</em>) – Output data variable, for example ‘P’ = pressure. Can specify multiple variables with a list.</li>
+<li><strong>time</strong> (<em>fl64</em>) – Time for which output data is requested. Can be supplied via <code class="docutils literal notranslate"><span class="pre">fcontour.times</span></code> list. Default is most recently available data.</li>
+<li><strong>profile</strong> (<em>ndarray</em>) – Three column array with each row corresponding to a point in the profile.</li>
+<li><strong>divisions</strong> (<em>int</em>) – Number of points in profile. Only relevant if straight line profile being constructed from two points.</li>
+<li><strong>method</strong> (<em>str</em>) – Interpolation method, options are ‘nearest’ (default) and ‘linear’.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Multi-column array. Columns are in order x, y and z coordinates of profile, followed by requested variables.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="fpost.fcontour.profile_plot">
+<code class="descclassname">fcontour.</code><code class="descname">profile_plot</code><span class="sig-paren">(</span><em>variable=None</em>, <em>time=None</em>, <em>profile=[]</em>, <em>divisions=30</em>, <em>xlims=[]</em>, <em>ylims=[]</em>, <em>color='k'</em>, <em>marker='x-'</em>, <em>save=''</em>, <em>xlabel='distance / m'</em>, <em>ylabel=''</em>, <em>title=''</em>, <em>font_size='medium'</em>, <em>method='nearest'</em>, <em>verticalPlot=False</em>, <em>elevationPlot=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fpost.html#fcontour.profile_plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fpost.fcontour.profile_plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a plot of the given variable along a specified profile. If the profile comprises two points, 
+these are interpreted as the start and end points of a straight line profile.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>variable</strong> (<em>str</em><em>, </em><em>lst</em><em>[</em><em>str</em><em>]</em>) – Output data variable, for example ‘P’ = pressure. Can specify multiple variables with a list.</li>
+<li><strong>time</strong> (<em>fl64</em>) – Time for which output data is requested. Can be supplied via <code class="docutils literal notranslate"><span class="pre">fcontour.times</span></code> list. Default is most recently available data. If a list of two times is passed, the difference between the first and last is plotted.</li>
+<li><strong>profile</strong> (<em>ndarray</em>) – Three column array with each row corresponding to a point in the profile.</li>
+<li><strong>divisions</strong> (<em>int</em>) – Number of points in profile. Only relevant if straight line profile being constructed from two points.</li>
+<li><strong>method</strong> (<em>str</em>) – Interpolation method, options are ‘nearest’ (default) and ‘linear’.</li>
+<li><strong>xlims</strong> (<em>[</em><em>fl64</em><em>, </em><em>fl64</em><em>]</em>) – Plot limits on x-axis.</li>
+<li><strong>ylims</strong> (<em>[</em><em>fl64</em><em>, </em><em>fl64</em><em>]</em>) – Plot limits on y-axis.</li>
+<li><strong>color</strong> (<em>str</em>) – Colour of profile.</li>
+<li><strong>marker</strong> (<em>str</em>) – Style of line, e.g., ‘x-‘ = solid line with crosses, ‘o:’ dotted line with circles.</li>
+<li><strong>save</strong> (<em>str</em>) – Name to save plot. Format specified extension (default .png if none give). Supported extensions: .png, .eps, .pdf.</li>
+<li><strong>xlabel</strong> (<em>str</em>) – Label on x-axis.</li>
+<li><strong>ylabel</strong> (<em>str</em>) – Label on y-axis.</li>
+<li><strong>title</strong> (<em>str</em>) – Plot title.</li>
+<li><strong>font_size</strong> (<em>str</em><em>, </em><em>int</em>) – Specify text size, either as an integer or string, e.g., 10, ‘small’, ‘x-large’.</li>
+<li><strong>verticalPlot</strong> (<em>bool</em>) – Flag to plot variable against profile distance on the y-axis.</li>
+<li><strong>elevationPlot</strong> (<em>bool</em>) – Flag to plot variable against elevation on the y-axis.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="history-output">
+<h2>History output<a class="headerlink" href="#history-output" title="Permalink to this headline">¶</a></h2>
+<p>Data are read from a list of FEHM output files corresponding to a particular variable during a simulation.
+Depending on input specifications in <a class="reference internal" href="fdata.html#fdata.fdata.hist" title="fdata.fdata.hist"><code class="xref py py-attr docutils literal notranslate"><span class="pre">fdata.hist</span></code></a>, for each requested node, time series data is available.</p>
+<p>Setting the target filename using wildcards will cause PyFEHM to read in multiple input files for
+different times.</p>
+<dl class="class">
+<dt id="fpost.fhistory">
+<em class="property">class </em><code class="descclassname">fpost.</code><code class="descname">fhistory</code><span class="sig-paren">(</span><em>filename=None</em>, <em>verbose=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fpost.html#fhistory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fpost.fhistory" title="Permalink to this definition">¶</a></dt>
+<dd><p>History output information object.</p>
+</dd></dl>
+
+<div class="section" id="zone-fluxes">
+<h3>Zone fluxes<a class="headerlink" href="#zone-fluxes" title="Permalink to this headline">¶</a></h3>
+<p>Zone flux information is parsed using the <a class="reference internal" href="#fpost.fzoneflux" title="fpost.fzoneflux"><code class="xref py py-class docutils literal notranslate"><span class="pre">fzoneflux</span></code></a> class, which is a derived class of
+<a class="reference internal" href="#fpost.fhistory" title="fpost.fhistory"><code class="xref py py-class docutils literal notranslate"><span class="pre">fhistory</span></code></a>. Where identical, methods and attributes are shown only for <a class="reference internal" href="#fpost.fhistory" title="fpost.fhistory"><code class="xref py py-class docutils literal notranslate"><span class="pre">fhistory</span></code></a>.</p>
+<dl class="class">
+<dt id="fpost.fzoneflux">
+<em class="property">class </em><code class="descclassname">fpost.</code><code class="descname">fzoneflux</code><span class="sig-paren">(</span><em>filename=None</em>, <em>verbose=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fpost.html#fzoneflux"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fpost.fzoneflux" title="Permalink to this definition">¶</a></dt>
+<dd><p>Zone flux history output information object.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="tracers">
+<h3>Tracers<a class="headerlink" href="#tracers" title="Permalink to this headline">¶</a></h3>
+<p>Tracer information is parsed using the <a class="reference internal" href="#fpost.ftracer" title="fpost.ftracer"><code class="xref py py-class docutils literal notranslate"><span class="pre">ftracer</span></code></a> class, which is a derived class of
+<a class="reference internal" href="#fpost.fhistory" title="fpost.fhistory"><code class="xref py py-class docutils literal notranslate"><span class="pre">fhistory</span></code></a>. Where identical, methods and attributes are shown only for <a class="reference internal" href="#fpost.fhistory" title="fpost.fhistory"><code class="xref py py-class docutils literal notranslate"><span class="pre">fhistory</span></code></a>.</p>
+<dl class="class">
+<dt id="fpost.ftracer">
+<em class="property">class </em><code class="descclassname">fpost.</code><code class="descname">ftracer</code><span class="sig-paren">(</span><em>filename=None</em>, <em>verbose=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fpost.html#ftracer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fpost.ftracer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tracer history output information object.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="particle-tracking">
+<h3>Particle tracking<a class="headerlink" href="#particle-tracking" title="Permalink to this headline">¶</a></h3>
+<p>Particle tracking information is parsed using the <a class="reference internal" href="#fpost.fptrk" title="fpost.fptrk"><code class="xref py py-class docutils literal notranslate"><span class="pre">fptrk</span></code></a> class, which is a derived class of
+<a class="reference internal" href="#fpost.fhistory" title="fpost.fhistory"><code class="xref py py-class docutils literal notranslate"><span class="pre">fhistory</span></code></a>. Where identical, methods and attributes are shown only for <a class="reference internal" href="#fpost.fhistory" title="fpost.fhistory"><code class="xref py py-class docutils literal notranslate"><span class="pre">fhistory</span></code></a>.</p>
+<dl class="class">
+<dt id="fpost.fptrk">
+<em class="property">class </em><code class="descclassname">fpost.</code><code class="descname">fptrk</code><span class="sig-paren">(</span><em>filename=None</em>, <em>verbose=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fpost.html#fptrk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fpost.fptrk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tracer history output information object.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="id1">
+<h3>Attributes<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<dl class="attribute">
+<dt id="fpost.fhistory.times">
+<code class="descclassname">fhistory.</code><code class="descname">times</code><a class="headerlink" href="#fpost.fhistory.times" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>lst[fl64]</em>) List of times (in seconds) for which output data are available.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fpost.fhistory.variables">
+<code class="descclassname">fhistory.</code><code class="descname">variables</code><a class="headerlink" href="#fpost.fhistory.variables" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>lst[str]</em>) List of variables for which output data are available.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fpost.fhistory.nodes">
+<code class="descclassname">fhistory.</code><code class="descname">nodes</code><a class="headerlink" href="#fpost.fhistory.nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>lst[fl64]</em>) List of node indices for which output data are available.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fpost.fzoneflux.zones">
+<code class="descclassname">fzoneflux.</code><code class="descname">zones</code><a class="headerlink" href="#fpost.fzoneflux.zones" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>lst[int]</em>) List of zone indices for which output data are available.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fpost.fhistory.format">
+<code class="descclassname">fhistory.</code><code class="descname">format</code><a class="headerlink" href="#fpost.fhistory.format" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>str</em>) Format of output file, options are ‘tec’, ‘surf’, ‘avs’ and ‘avsx’.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fpost.fhistory.filename">
+<code class="descclassname">fhistory.</code><code class="descname">filename</code><a class="headerlink" href="#fpost.fhistory.filename" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>str</em>) Name of FEHM contour output file. Wildcards can be used to define multiple input files.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="id2">
+<h3>Methods<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<dl class="method">
+<dt id="fpost.fhistory.read">
+<code class="descclassname">fhistory.</code><code class="descname">read</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fpost.html#fhistory.read"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fpost.fhistory.read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read in FEHM history output information.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<em>str</em>) – File name for output data, can include wildcards to define multiple output files.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="time-series-plots">
+<h3>Time series plots<a class="headerlink" href="#time-series-plots" title="Permalink to this headline">¶</a></h3>
+<dl class="method">
+<dt id="fpost.fhistory.time_plot">
+<code class="descclassname">fhistory.</code><code class="descname">time_plot</code><span class="sig-paren">(</span><em>variable=None</em>, <em>node=0</em>, <em>t_lim=[]</em>, <em>var_lim=[]</em>, <em>marker='x-'</em>, <em>color='k'</em>, <em>save=''</em>, <em>xlabel=''</em>, <em>ylabel=''</em>, <em>title=''</em>, <em>font_size='medium'</em>, <em>scale=1.0</em>, <em>scale_t=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fpost.html#fhistory.time_plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fpost.fhistory.time_plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate and save a time series plot of the history data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>variable</strong> (<em>str</em>) – Variable to plot.</li>
+<li><strong>node</strong> (<em>int</em>) – Node number to plot.</li>
+<li><strong>t_lim</strong> (<em>lst</em><em>[</em><em>fl64</em><em>,</em><em>fl64</em><em>]</em>) – Time limits on x axis.</li>
+<li><strong>var_lim</strong> (<em>lst</em><em>[</em><em>fl64</em><em>,</em><em>fl64</em><em>]</em>) – Variable limits on y axis.</li>
+<li><strong>marker</strong> (<em>str</em>) – String denoting marker and linetype, e.g., ‘:s’, ‘o–’. Default is ‘x-‘ (solid line with crosses).</li>
+<li><strong>color</strong> (<em>str</em>) – String denoting colour. Default is ‘k’ (black).</li>
+<li><strong>save</strong> (<em>str</em>) – Name to save plot.</li>
+<li><strong>xlabel</strong> (<em>str</em>) – Label on x axis.</li>
+<li><strong>ylabel</strong> (<em>str</em>) – Label on y axis.</li>
+<li><strong>title</strong> (<em>str</em>) – Title of plot.</li>
+<li><strong>font_size</strong> (<em>str</em>) – Font size for axis labels.</li>
+<li><strong>scale</strong> (<em>fl64</em>) – If a single number is given, then the output variable will be multiplied by this number. If a two element list is supplied then the output variable will be transformed according to y = scale[0]*x+scale[1]. Useful for transforming between coordinate systems.</li>
+<li><strong>scale_t</strong> (<em>fl64</em>) – As for scale but applied to the time axis.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="node-fluxes">
+<h3>Node fluxes<a class="headerlink" href="#node-fluxes" title="Permalink to this headline">¶</a></h3>
+<p>Inter node flux information is parsed using the <a class="reference internal" href="#fpost.fnodeflux" title="fpost.fnodeflux"><code class="xref py py-class docutils literal notranslate"><span class="pre">fnodeflux</span></code></a> class. Time plotting functionality is not
+currently available for this class.</p>
+<dl class="class">
+<dt id="fpost.fnodeflux">
+<em class="property">class </em><code class="descclassname">fpost.</code><code class="descname">fnodeflux</code><span class="sig-paren">(</span><em>filename=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fpost.html#fnodeflux"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fpost.fnodeflux" title="Permalink to this definition">¶</a></dt>
+<dd><p>Internode flux information.</p>
+<p>Can read either water or CO2 internode flux files.</p>
+<p>The fnodeflux object is indexed first by node pair - represented as a tuple of node indices - and then
+by either the string ‘liquid’ or ‘vapor’. Data values are in time order, as given in the ‘times’ attribute.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="id3">
+<h3>Attributes<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<dl class="attribute">
+<dt id="fpost.fnodeflux.times">
+<code class="descclassname">fnodeflux.</code><code class="descname">times</code><a class="headerlink" href="#fpost.fnodeflux.times" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>lst</em>) times for which node flux information is reported.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fpost.fnodeflux.nodepairs">
+<code class="descclassname">fnodeflux.</code><code class="descname">nodepairs</code><a class="headerlink" href="#fpost.fnodeflux.nodepairs" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>lst</em>) node pairs for which node flux information is available. Each node pair is represented as a two item tuple of node indices.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fpost.fnodeflux.filename">
+<code class="descclassname">fnodeflux.</code><code class="descname">filename</code><a class="headerlink" href="#fpost.fnodeflux.filename" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>str</em>) filename target for internode flux file.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="id4">
+<h3>Methods<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<dl class="method">
+<dt id="fpost.fnodeflux.read">
+<code class="descclassname">fnodeflux.</code><code class="descname">read</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fpost.html#fnodeflux.read"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fpost.fnodeflux.read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read in FEHM contour output information.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<em>str</em>) – File name for output data, can include wildcards to define multiple output files.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="multi-document-pdf">
+<h2>Multi document pdf<a class="headerlink" href="#multi-document-pdf" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="fpost.multi_pdf">
+<em class="property">class </em><code class="descclassname">fpost.</code><code class="descname">multi_pdf</code><span class="sig-paren">(</span><em>combineString='gswin64'</em>, <em>save='multi_plot.pdf'</em>, <em>files=[]</em>, <em>delete_files=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fpost.html#multi_pdf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fpost.multi_pdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tool for making a single pdf document from multiple eps files.</p>
+</dd></dl>
+
+<div class="section" id="id5">
+<h3>Attributes<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<dl class="attribute">
+<dt id="fpost.multi_pdf.save">
+<code class="descclassname">multi_pdf.</code><code class="descname">save</code><a class="headerlink" href="#fpost.multi_pdf.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>str</em>) Name of the final pdf to output.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fpost.multi_pdf.files">
+<code class="descclassname">multi_pdf.</code><code class="descname">files</code><a class="headerlink" href="#fpost.multi_pdf.files" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>lst[str]</em>) List of eps files to be assembled into pdf.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="fpost.multi_pdf.combineString">
+<code class="descclassname">multi_pdf.</code><code class="descname">combineString</code><a class="headerlink" href="#fpost.multi_pdf.combineString" title="Permalink to this definition">¶</a></dt>
+<dd><p>(<em>str</em>)	Command line command, with options, generate pdf from multiple eps files. See manual for further instructions.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="id6">
+<h3>Methods<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<dl class="method">
+<dt id="fpost.multi_pdf.add">
+<code class="descclassname">multi_pdf.</code><code class="descname">add</code><span class="sig-paren">(</span><em>filename</em>, <em>pagenum=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fpost.html#multi_pdf.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fpost.multi_pdf.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a new page. If a page number is specified, the page will replace the current. 
+Otherwise it will be appended to the end of the document.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>filename</strong> (<em>str</em>) – Name of .eps file to be added.</li>
+<li><strong>pagenum</strong> (<em>int</em>) – Page number of file to be added.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="fpost.multi_pdf.insert">
+<code class="descclassname">multi_pdf.</code><code class="descname">insert</code><span class="sig-paren">(</span><em>filename</em>, <em>pagenum</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fpost.html#multi_pdf.insert"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fpost.multi_pdf.insert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Insert a new page at the given page number.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>filename</strong> (<em>str</em>) – Name of .eps file to be inserted.</li>
+<li><strong>pagenum</strong> (<em>int</em>) – Page number of file to be inserted.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="fpost.multi_pdf.make">
+<code class="descclassname">multi_pdf.</code><code class="descname">make</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fpost.html#multi_pdf.make"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fpost.multi_pdf.make" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct the pdf.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="id7">
+<h3>Examples<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
+</div>
+</div>
+</div>
+
+
+          </div>
+            
+  <div class="footer-relations">
+    
+      <div class="pull-left">
+        <a class="btn btn-default" href="fdata.html" title="previous chapter (use the left arrow)">fdata: FEHM input file manipulation</a>
+      </div>
+    
+      <div class="pull-right">
+        <a class="btn btn-default" href="fvars.html" title="next chapter (use the right arrow)">fvars: FEHM thermodynamic calculations</a>
+      </div>
+    </div>
+    <div class="clearer"></div>
+  
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="fvars.html" title="fvars: FEHM thermodynamic calculations"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="fdata.html" title="fdata: FEHM input file manipulation"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">PyFEHM 1.0.4 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+<script type="text/javascript">
+  $("#mobile-toggle a").click(function () {
+    $("#left-column").toggle();
+  });
+</script>
+<script type="text/javascript" src="_static/js/bootstrap.js"></script>
+  <div class="footer">
+    &copy; Copyright 2018, Los Alamos National Laboratory. Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+  </div>
+  </body>
+</html>
