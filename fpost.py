@@ -42,7 +42,8 @@ WINDOWS = platform.system()=='Windows'
 if WINDOWS: copyStr = 'copy'; delStr = 'del'
 else: copyStr = 'cp'; delStr = 'rm'
 
-if True: 					# output variable dictionaries defined in here, indented for code collapse
+if True:
+	# output variable dictionaries defined in here, indented for code collapse
 	cont_var_names_avs=dict([
 	('X coordinate (m)','x'),
 	('Y coordinate (m)','y'),
@@ -266,10 +267,10 @@ if True: 					# output variable dictionaries defined in here, indented for code 
 	'co2_sinkG',
 	'co2_inG',
 	'co2_outG']
-class fcontour(object): 					# Reading and plotting methods associated with contour output data.
-	'''Contour output information object.
-	
-	'''
+
+
+class fcontour(object):
+	'''Contour output information object.'''
 	def __init__(self,filename=None,latest=False,first=False,nearest=None):
 		if not isinstance(filename,list):
 			self._filename=os_path(filename)
@@ -308,7 +309,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 			ind = np.argmin(abs(self.times-key))
 			return self._data[self.times[ind]]
 		else: return None
-	def read(self,filename,latest=False,first=False,nearest=[]): 						# read contents of file
+	def read(self,filename,latest=False,first=False,nearest=[]):
 		'''Read in FEHM contour output information.
 		
 		:param filename: File name for output data, can include wildcards to define multiple output files.
@@ -578,13 +579,14 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 					var = cont_var_names_surf[varname]
 				else: var = varname
 				if var not in self._variables: self._variables.append(var)
-	def _read_data_surf(self,files,mat_file):		# read data in SURF format
+
+	def _read_data_surf(self, files, mat_file):
+		# read data in SURF format
 		datas = []
 		for file in sorted(files):
 			first = (file == sorted(files)[0])
 			fp = open(file,'rU')
 			lni = file.split('.',1)[1]
-			
 			if first: 
 				file = file.split('_node')[0]
 				file = file.split('_sca')[0]
@@ -596,19 +598,20 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 				file = [fl for fl in file if fl.isdigit() or 'E-' in fl]
 				time = float('.'.join(file))
 				self._times.append(time)
-			
 			lni=fp.readline()			
 			lns = fp.readlines()
 			fp.close()
-			
 			if first: 
-				datas.append(np.array([[float0(d) for d in ln.strip().split(',')] for ln in lns]))
+				datas.append(np.array([[float0(d) for d
+										in ln.strip().split(',')]
+									   for ln in lns]))
 			else:
-				datas.append(np.array([[float0(d) for d in ln.strip().split(',')[4:]] for ln in lns]))
-			
-		data = np.concatenate(datas,1)
-		self._data[time] = dict([(var,data[:,icol]) for icol,var in enumerate(self.variables)])
-		
+				datas.append(np.array([[float0(d) for d
+										in ln.strip().split(',')[4:]]
+									   for ln in lns]))
+		data = np.concatenate(datas, 1)
+		self._data[time] = dict([(var,data[:,icol]) for icol,var
+								 in enumerate(self.variables)])
 		if mat_file and not self._material_properties:
 			fp = open(mat_file,'rU')
 			header = fp.readline()
@@ -619,6 +622,7 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 			fp.close()
 			data = np.array([[float(d) for d in ln.strip().split(',')[1:]] for ln in lns])
 			self._material= dict([(var,data[:,icol]) for icol,var in enumerate(self._material_properties)])
+
 	def _setup_headers_tec(self,headers): 		# headers for the TEC output format
 		for header in headers:
 			header = header.split(' "')
@@ -742,9 +746,14 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 		if name not in self._user_variables:
 			self._user_variables.append(name)
 	def slice(self, variable, slice, divisions, time=None, method='nearest'):
-		'''Returns mesh data for a specified slice orientation from 3-D contour output data.
+		'''Returns mesh data for a specified slice orientation from 3-D
+		contour output data.
 		
-		:param variable: Output data variable, for example 'P' = pressure. Alternatively, variable can be a five element list, first element 'cfs', remaining elements fault azimuth (relative to x), dip, friction coefficient and cohesion. Will return coulomb failure stress.
+		:param variable: Output data variable, for example 'P' = pressure.
+			Alternatively, variable can be a five element list, first element
+			'cfs', remaining elements fault azimuth (relative to x), dip,
+			friction coefficient and cohesion. Will return coulomb failure
+			stress.
 		:type variable: str
 		:param time: Time for which output data is requested. Can be supplied via ``fcontour.times`` list. Default is most recently available data.
 		:type time: fl64
@@ -1525,10 +1534,10 @@ class fcontour(object): 					# Reading and plotting methods associated with cont
 		for var in self.user_variables: prntStr += str(var)+', '
 		print prntStr
 	what = property(_get_information) #:(*str*) Print out information about the fcontour object.
-class fhistory(object):						# Reading and plotting methods associated with history output data.
-	'''History output information object.
-	
-	'''
+
+
+class fhistory(object):
+	'''History output information object.'''
 	def __init__(self,filename=None,verbose=True):
 		self._filename=None	
 		self._silent = dflt.silent
@@ -1546,12 +1555,16 @@ class fhistory(object):						# Reading and plotting methods associated with hist
 		self.num_columns=0
 		self._nkeys=1
 		filename = os_path(filename)
-		if filename: self._filename=filename; self.read(filename)
+		if filename:
+			self._filename=filename
+			self.read(filename)
+
 	def __getitem__(self,key):
 		if key in self.variables or key in self.user_variables:
 			return self._data[key]
 		else: return None
-	def __repr__(self): 
+
+	def __repr__(self):
 		retStr =  'History output for variables '
 		for var in self.variables:
 			retStr += var+', '
@@ -1567,110 +1580,146 @@ class fhistory(object):						# Reading and plotting methods associated with hist
 				retStr += str(nd) + ', '
 			retStr = retStr[:-2] + '.'
 		return retStr
-	def read(self,filename): 						# read contents of file
+
+	def read(self, filename):
 		'''Read in FEHM history output information.
 		
-		:param filename: File name for output data, can include wildcards to define multiple output files.
+		:param filename: File name for output data, can include wildcards to
+			define multiple output files.
 		:type filename: str
 		'''
 		from glob import glob
 		import re
-		glob_pattern = re.sub(r'\[','[[]',filename)
-		glob_pattern = re.sub(r'(?<!\[)\]','[]]', glob_pattern)
+		glob_pattern = re.sub(r'\[','[[]', filename)
+		glob_pattern = re.sub(r'(?<!\[)\]', '[]]', glob_pattern)
 		files=glob(glob_pattern)
-		configured=False
-		for i,fname in enumerate(files):
+		configured = False
+		for i, fname in enumerate(files):
 			if self._verbose:
-				pyfehm_print(fname,self._silent)
-			self._file=open(fname,'rU')
-			header=self._file.readline()
-			if header.strip()=='': continue				# empty file
+				pyfehm_print(fname, self._silent)
+			self._file = open(fname, 'rU')
+			header = self._file.readline()
+			if header.strip() == '': continue  # empty file
 			self._detect_format(header)
-			if self.format=='tec': 
-				header=self._file.readline()
-				if header.strip()=='': continue 		# empty file
-				i = 0; sum_file = False
+			if self.format == 'tec':
+				header = self._file.readline()
+				if header.strip() == '': continue  # empty file
+				i = 0
+				sum_file = False
 				while not header.startswith('variables'): 
-					header=self._file.readline()
+					header = self._file.readline()
 					i = i+1
-					if i==10: sum_file=True; break
+					if i == 10:
+						sum_file = True
+						break
 				if sum_file: continue
 				self._setup_headers_tec(header)
-			elif self.format=='surf': 
+			elif self.format == 'surf':
 				self._setup_headers_surf(header)
-			elif self.format=='default': 
-				header=self._file.readline()
-				header=self._file.readline()
-				if header.strip()=='': continue 		# empty file
-				i = 0; sum_file = False
+			elif self.format == 'default':
+				# header=self._file.readline()
+				header = self._file.readline()
+				if header.strip() == '': continue  # empty file
+				i = 0
+				sum_file = False
 				while not header.startswith('Time '): 
-					header=self._file.readline()
+					header = self._file.readline()
 					i = i+1
-					if i==10: sum_file=True; break
+					if i == 10:
+						sum_file=True
+						break
 				if sum_file: continue
 				self._setup_headers_default(header)
-			else: pyfehm_print('Unrecognised format',self._silent);return
+			else:
+				pyfehm_print('Unrecognised format', self._silent)
+				return
 			if not configured:
-				self.num_columns = len(self.nodes)+1
-			if self.num_columns>0: configured=True
-			if self.format=='tec':
+				self.num_columns = len(self.nodes) + 1
+			if self.num_columns > 0:
+				configured = True
+			if self.format == 'tec':
 				self._read_data_tec(fname.split('_')[-2])
-			elif self.format=='surf':
+			elif self.format == 'surf':
 				self._read_data_surf(fname.split('_')[-2])
-			elif self.format=='default':
+			elif self.format == 'default':
 				self._read_data_default(fname.split('_')[-1].split('.')[0])
 			self._file.close()
-	def _detect_format(self,header):
+
+	def _detect_format(self, header):
 		if header.startswith('TITLE'):
 			self._format = 'tec'
 		elif header.startswith('Time '):
 			self._format = 'surf'
 		else:
 			self._format = 'default'
-	def _setup_headers_tec(self,header):
-		header=header.split('" "Node')
+
+	def _setup_headers_tec(self, header):
+		header = header.split('" "Node')
 		if self.nodes: return
-		for key in header[1:-1]: self._nodes.append(int(key))
+		for key in header[1:-1]:
+			self._nodes.append(int(key))
 		self._nodes.append(int(header[-1].split('"')[0]))
-	def _setup_headers_surf(self,header):
-		header=header.split(', Node')
+
+	def _setup_headers_surf(self, header):
+		header = header.split(', Node')
 		if self.nodes: return
-		for key in header[1:]: self._nodes.append(int(key))
-	def _setup_headers_default(self,header):
-		header=header.split(' Node')
+		for key in header[1:]:
+			self._nodes.append(int(key))
+
+	def _setup_headers_default(self, header):
+		header = header.split(' Node')
 		if self.nodes: return
-		for key in header[1:]: self._nodes.append(int(key))
-	def _read_data_tec(self,var_key):
+		for key in header[1:]:
+			self._nodes.append(int(key))
+
+	def _read_data_tec(self, var_key):
 		self._variables.append(hist_var_names[var_key])
 		lns = self._file.readlines()
 		i = 0
-		while lns[i].startswith('text'): i+=1
+		while lns[i].startswith('text'):
+			i+=1
 		data = []
-		for ln in lns[i:]: data.append([float(d) for d in ln.strip().split()])
+		for ln in lns[i:]:
+			data.append([float(d) for d in ln.strip().split()])
 		data = np.array(data)
-		if data[-1,0]<data[-2,0]: data = data[:-1,:]
-		self._times = np.array(data[:,0])
-		self._data[hist_var_names[var_key]] = dict([(node,data[:,icol+1]) for icol,node in enumerate(self.nodes)])
-	def _read_data_surf(self,var_key):
+		if data[-1,0] < data[-2,0]:
+			data = data[:-1, :]
+		self._times = np.array(data[:, 0])
+		self._data[hist_var_names[var_key]] = dict([(node,data[:, icol + 1])
+													for icol, node
+													in enumerate(self.nodes)])
+
+	def _read_data_surf(self, var_key):
 		self._variables.append(hist_var_names[var_key])
 		lns = self._file.readlines()
 		data = []
-		for ln in lns: data.append([float(d) for d in ln.strip().split(',')])
+		for ln in lns:
+			data.append([float(d) for d in ln.strip().split(',')])
 		data = np.array(data)
-		if data[-1,0]<data[-2,0]: data = data[:-1,:]
-		self._times = np.array(data[:,0])
-		self._data[hist_var_names[var_key]] = dict([(node,data[:,icol+1]) for icol,node in enumerate(self.nodes)])
-	def _read_data_default(self,var_key):
+		if data[-1, 0] < data[-2, 0]:
+			data = data[:-1, :]
+		self._times = np.array(data[:, 0])
+		self._data[hist_var_names[var_key]] = dict([(node, data[:, icol + 1])
+													for icol, node
+													in enumerate(self.nodes)])
+
+	def _read_data_default(self, var_key):
 		self._variables.append(hist_var_names[var_key])
 		lns = self._file.readlines()
 		data = []
-		for ln in lns: data.append([float(d) for d in ln.strip().split()])
+		for ln in lns:
+			data.append([float(d) for d in ln.strip().split()])
 		data = np.array(data)
-		if data[-1,0]<data[-2,0]: data = data[:-1,:]
-		self._times = np.array(data[:,0])
-		self._data[hist_var_names[var_key]] = dict([(node,data[:,icol+1]) for icol,node in enumerate(self.nodes)])
-	def time_plot(self, variable=None, node=0, t_lim=[],var_lim=[],marker='x-',color='k',save='',xlabel='',ylabel='',
-		title='',font_size='medium',scale=1.,scale_t=1.): 		# produce a time plot
+		if data[-1, 0] < data[-2, 0]:
+			data = data[:-1, :]
+		self._times = np.array(data[:, 0])
+		self._data[hist_var_names[var_key]] = dict([(node, data[:, icol + 1])
+													for icol, node
+													in enumerate(self.nodes)])
+
+	def time_plot(self, variable=None, node=0, t_lim=[], var_lim=[],
+				  marker='x-', color='k', save='', xlabel='', ylabel='',
+				  title='', font_size='medium', scale=1., scale_t=1.):
 		'''Generate and save a time series plot of the history data.
 		
 		:param variable: Variable to plot.
@@ -1681,7 +1730,8 @@ class fhistory(object):						# Reading and plotting methods associated with hist
 		:type t_lim: lst[fl64,fl64]
 		:param var_lim: Variable limits on y axis.
 		:type var_lim: lst[fl64,fl64]
-		:param marker: String denoting marker and linetype, e.g., ':s', 'o--'. Default is 'x-' (solid line with crosses).
+		:param marker: String denoting marker and linetype, e.g., ':s', 'o--'.
+			Default is 'x-' (solid line with crosses).
 		:type marker: str
 		:param color: String denoting colour. Default is 'k' (black).
 		:type color: str
@@ -1695,72 +1745,90 @@ class fhistory(object):						# Reading and plotting methods associated with hist
 		:type title: str
 		:param font_size: Font size for axis labels.
 		:type font_size: str
-		:param scale: If a single number is given, then the output variable will be multiplied by this number. If a two element list is supplied then the output variable will be transformed according to y = scale[0]*x+scale[1]. Useful for transforming between coordinate systems.
+		:param scale: If a single number is given, then the output variable
+			will be multiplied by this number. If a two element list is
+			supplied then the output variable will be transformed according
+			to y = scale[0]*x+scale[1]. Useful for transforming between
+			coordinate systems.
 		:type scale: fl64
 		:param scale_t: As for scale but applied to the time axis.
 		:type scale_t: fl64
 		'''
 		save = os_path(save)
-		if not node: pyfehm_print('ERROR: no plot node specified.',self._silent); return
+		if not node:
+			pyfehm_print('ERROR: no plot node specified.', self._silent)
+			return
 		if not variable: 
 			s = ['ERROR: no plot variable specified.']
 			s.append('Options are')
-			for var in self.variables: s.append(var)
+			for var in self.variables:
+				s.append(var)
 			s = '\n'.join(s)
-			pyfehm_print(s,self._silent)
+			pyfehm_print(s, self._silent)
 			return True
 		if not node: 
 			s = ['ERROR: no plot node specified.']
 			s.append('Options are')
-			for node in self.nodes: s.append(node)
+			for node in self.nodes:
+				s.append(node)
 			s = '\n'.join(s)
-			pyfehm_print(s,self._silent)
+			pyfehm_print(s, self._silent)
 			return True
-		
 		plt.clf()
-		plt.figure(figsize=[8,8])
-		ax = plt.axes([0.15,0.15,0.75,0.75])
-		if not isinstance(scale,list):
-			if not isinstance(scale_t,list):
-				plt.plot(self.times*scale_t,self[variable][node]*scale,marker)
+		plt.figure(figsize=[8, 8])
+		ax = plt.axes([0.15, 0.15, 0.75, 0.75])
+		if not isinstance(scale, list):
+			if not isinstance(scale_t, list):
+				plt.plot(self.times * scale_t,
+						 self[variable][node] * scale, marker)
 			elif len(scale_t) == 2:
-				plt.plot(self.times*scale_t[0]+scale_t[1],self[variable][node]*scale,marker)
+				plt.plot(self.times * scale_t[0] + scale_t[1],
+						 self[variable][node] * scale, marker)
 		elif len(scale) == 2:
-			if not isinstance(scale_t,list):
-				plt.plot(self.times*scale_t,self[variable][node]*scale[0]+scale[1],marker)
+			if not isinstance(scale_t, list):
+				plt.plot(self.times * scale_t,
+						 self[variable][node] * scale[0] + scale[1], marker)
 			elif len(scale_t) == 2:
-				plt.plot(self.times*scale_t[0]+scale_t[1],self[variable][node]*scale[0]+scale[1],marker)
+				plt.plot(self.times * scale_t[0] + scale_t[1],
+						 self[variable][node] * scale[0] + scale[1], marker)
 		if t_lim: ax.set_xlim(t_lim)
 		if var_lim: ax.set_ylim(var_lim)
-		if xlabel: plt.xlabel(xlabel,size=font_size)		
-		if ylabel: plt.ylabel(ylabel,size=font_size)
-		if title: plt.title(title,size=font_size)
+		if xlabel: plt.xlabel(xlabel, size=font_size)
+		if ylabel: plt.ylabel(ylabel, size=font_size)
+		if title: plt.title(title, size=font_size)
 		for t in ax.get_xticklabels():
 			t.set_fontsize(font_size)
 		for t in ax.get_yticklabels():
 			t.set_fontsize(font_size)
-		
-		extension, save_fname, pdf = save_name(save,variable=variable,node=node)
-		plt.savefig(save_fname, dpi=100, facecolor='w', edgecolor='w',orientation='portrait', 
-		format=extension,transparent=True, bbox_inches=None, pad_inches=0.1)
+		extension, save_fname, pdf = save_name(save, variable=variable,
+											   node=node)
+		plt.savefig(save_fname, dpi=100, facecolor='w', edgecolor='w',
+					orientation='portrait', format=extension, transparent=True,
+					bbox_inches=None, pad_inches=0.1)
 		if pdf: 
 			os.system('epstopdf ' + save_fname)
 			os.remove(save_fname)	
-	def new_variable(self,name,node,data): 	
-		'''Creates a new variable, which is some combination of the available variables.
+
+	def new_variable(self, name, node, data):
+		'''Creates a new variable, which is some combination of the available
+		variables.
 		
 		:param name: Name for the variable.
 		:type name: str
-		:param time: Node key which the variable should be associated with. Must be one of the existing keys, i.e., an item in fhistory.nodes.
+		:param time: Node key which the variable should be associated with.
+			Must be one of the existing keys, i.e., an item in fhistory.nodes.
 		:type time: fl64
-		:param data: Variable data, most likely some combination of the available parameters, e.g., pressure*temperature, pressure[t=10] - pressure[t=5]
+		:param data: Variable data, most likely some combination of the
+			available parameters, e.g., pressure*temperature,
+			pressure[t=10] - pressure[t=5]
 		:type data: lst[fl64]
 		'''
 		if node not in self.nodes: 
-			pyfehm_print('ERROR: supplied node must correspond to an existing node in fhistory.nodes',self._silent)
+			pyfehm_print('ERROR: supplied node must correspond to an existing '
+						 + 'node in fhistory.nodes', self._silent)
 			return
 		if name not in self._user_variables:
-			self._data.update({name:dict([(nd,None) for nd in self.nodes])})
+			self._data.update({name:dict([(nd, None) for nd in self.nodes])})
 			if name not in self._user_variables:
 				self._user_variables.append(name)
 		self._data[name][node] = data
@@ -1790,6 +1858,8 @@ class fhistory(object):						# Reading and plotting methods associated with hist
 		for var in self.variables: prntStr += str(var)+', '
 		print prntStr
 	what = property(_get_information) #:(*str*) Print out information about the fhistory object.
+
+
 class fzoneflux(fhistory): 					# Derived class of fhistory, for zoneflux output
 	'''Zone flux history output information object.
 	'''

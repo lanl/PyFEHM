@@ -288,6 +288,7 @@ class fnode(object):				#Node object.
 	pormodel = property(_get_pormodel) #: (*int*) index of variable porosity model assigned to node.
 	def _get_condmodel(self): return self._condmodel
 	condmodel = property(_get_condmodel) #: (*int*) index of variable conductivity model assigned to node.
+
 class fconn(object):				#Connection object.
 	"""Connection object, comprising two connected nodes, separated by some distance.
 
@@ -296,7 +297,7 @@ class fconn(object):				#Connection object.
 	def __init__(self,nodes=[fnode(),fnode()]):
 		self._nodes = nodes		
 		pos1 = self.nodes[0].position; pos2 = self.nodes[1].position
-		if pos1 == None and pos2 == None: self._distance = None
+		if pos1 is None and pos2 is None: self._distance = None
 		else: self._distance = np.sqrt((pos1[0]-pos2[0])**2+(pos1[1]-pos2[1])**2+(pos1[2]-pos2[2])**2)
 		self._geom_coef = None
 	def __repr__(self):	return 'n'+str(self.nodes[0].index)+':n'+str(self.nodes[1].index)	
@@ -306,6 +307,7 @@ class fconn(object):				#Connection object.
 	nodes = property(_get_nodes)#: (*lst[fnode]*) List of node objects (fnode()) that define the connection.
 	def _get_geom_coef(self): return self._geom_coef
 	geom_coef = property(_get_geom_coef)#: (*fl64*) Geometric coefficient associated with the connection (connected area divided by distance).
+
 class felem(object):				#Element object.
 	"""Finite element object, comprising a set of connected nodes.
 	
