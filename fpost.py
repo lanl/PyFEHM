@@ -1261,21 +1261,31 @@ class fcontour(object):
 			outpoints.append(list(valsI))
 		return np.array(outpoints).transpose()
 
-	def profile_plot(self,variable=None,time=None, profile=[],divisions = 30,xlims=[],ylims=[],
-		color='k',marker='x-',save='',xlabel='distance / m',ylabel='',title='',font_size='medium',method='nearest',
-		verticalPlot=False,elevationPlot=False):
-		'''Return a plot of the given variable along a specified profile. If the profile comprises two points, 
-		these are interpreted as the start and end points of a straight line profile.
+	def profile_plot(self, variable=None, time=None, profile=[], divisions=30,
+					 xlims=[], ylims=[], color='k', marker='x-', save='',
+					 xlabel='distance / m', ylabel='', title='',
+					 font_size='medium', method='nearest',
+					 verticalPlot=False, elevationPlot=False, ax=None):
+		'''Return a plot of the given variable along a specified profile.
+		If the profile comprises two points, these are interpreted as the
+		start and end points of a straight line profile.
 		
-		:param variable: Output data variable, for example 'P' = pressure. Can specify multiple variables with a list.
+		:param variable: Output data variable, for example 'P' = pressure.
+			Can specify multiple variables with a list.
 		:type variable: str, lst[str]
-		:param time: Time for which output data is requested. Can be supplied via ``fcontour.times`` list. Default is most recently available data. If a list of two times is passed, the difference between the first and last is plotted.
+		:param time: Time for which output data is requested. Can be supplied
+			via ``fcontour.times`` list. Default is most recently available
+			data. If a list of two times is passed, the difference between
+			the first and last is plotted.
 		:type time: fl64
-		:param profile: Three column array with each row corresponding to a point in the profile.
+		:param profile: Three column array with each row corresponding to a
+			point in the profile.
 		:type profile: ndarray
-		:param divisions: Number of points in profile. Only relevant if straight line profile being constructed from two points.
+		:param divisions: Number of points in profile. Only relevant if
+			straight line profile being constructed from two points.
 		:type divisions: int
-		:param method: Interpolation method, options are 'nearest' (default) and 'linear'.
+		:param method: Interpolation method, options are 'nearest' (default)
+			and 'linear'.
 		:type method: str
 		:param xlims: Plot limits on x-axis.
 		:type xlims: [fl64, fl64]
@@ -1283,9 +1293,11 @@ class fcontour(object):
 		:type ylims: [fl64, fl64]
 		:param color: Colour of profile.
 		:type color: str
-		:param marker: Style of line, e.g., 'x-' = solid line with crosses, 'o:' dotted line with circles.
+		:param marker: Style of line, e.g., 'x-' = solid line with crosses,
+			'o:' dotted line with circles.
 		:type marker: str
-		:param save: Name to save plot. Format specified extension (default .png if none give). Supported extensions: .png, .eps, .pdf.
+		:param save: Name to save plot. Format specified extension (default
+			.png if none give). Supported extensions: .png, .eps, .pdf.
 		:type save: str
 		:param xlabel: Label on x-axis.
 		:type xlabel: str
@@ -1293,18 +1305,22 @@ class fcontour(object):
 		:type ylabel: str
 		:param title: Plot title.
 		:type title: str
-		:param font_size: Specify text size, either as an integer or string, e.g., 10, 'small', 'x-large'.
+		:param font_size: Specify text size, either as an integer or string,
+			e.g., 10, 'small', 'x-large'.
 		:type font_size: str, int
-		:param verticalPlot: Flag to plot variable against profile distance on the y-axis.
+		:param verticalPlot: Flag to plot variable against profile distance
+			on the y-axis.
 		:type verticalPlot: bool
-		:param elevationPlot: Flag to plot variable against elevation on the y-axis.
+		:param elevationPlot: Flag to plot variable against elevation on the
+			y-axis.
 		:type elevationPlot: bool
 		'''
 		save = os_path(save)
-		if time==None: time = self.times[-1]	
+		if time == None:
+				time = self.times[-1]
 		delta = False
-		if isinstance(time,list) or isinstance(time,np.ndarray):
-			if len(time)>1: 
+		if isinstance(time, list) or isinstance(time, np.ndarray):
+			if len(time) > 1:
 				time0 = np.min(time)
 				time = np.max(time)
 				delta=True
@@ -1313,48 +1329,58 @@ class fcontour(object):
 			s.append('Options are')
 			for var in self.variables: s.append(var)
 			s = '\n'.join(s)
-			pyfehm_print(s,self._silent)
+			pyfehm_print(s, self._silent)
 			return True
-		if not ylabel: ylabel = variable
-		
-		plt.clf()
-		plt.figure(figsize=[8,8])
-		ax = plt.axes([0.15,0.15,0.75,0.75])
-		outpts = self.profile(variable=variable,profile=profile,time=time,divisions=divisions,method=method)
+		if not ylabel:
+			ylabel = variable
+		# plt.clf()
+		if not ax:
+			plt.figure(figsize=[8, 8])
+			ax = plt.axes([0.15, 0.15, 0.75, 0.75])
+		outpts = self.profile(variable=variable, profile=profile, time=time,
+							  divisions=divisions, method=method)
 		if delta:
-			outptsI = self.profile(variable=variable,profile=profile,time=time,divisions=divisions,method=method)
-			outpts[:,3] = outpts[:,3] - outptsI[:,3]
-		
-		x0,y0,z0 = outpts[0,:3]
-		x = np.sqrt((outpts[:,0]-x0)**2+(outpts[:,1]-y0)**2+(outpts[:,2]-z0)**2)
-		y = outpts[:,3]
+			outptsI = self.profile(variable=variable, profile=profile,
+								   time=time, divisions=divisions,
+								   method=method)
+			outpts[:, 3] = outpts[:, 3] - outptsI[:, 3]
+		x0, y0, z0 = outpts[0, :3]
+		x = np.sqrt((outpts[:, 0] - x0) ** 2 + (outpts[:, 1] - y0) ** 2
+					+ (outpts[:, 2] - z0) ** 2)
+		y = outpts[:, 3]
 		if verticalPlot:
 			temp = x; x = y; y = temp
 			temp = xlabel; xlabel = ylabel; ylabel = temp
 			temp = xlims; xlims = ylims; ylims = temp
 		if elevationPlot:
-			x = outpts[:,3]
-			y = outpts[:,2]
+			x = outpts[:, 3]
+			y = outpts[:, 2]
 			temp = xlabel; xlabel = ylabel; ylabel = temp
 			temp = xlims; xlims = ylims; ylims = temp
-		plt.plot(x,y,marker,color=color)
-		
-		if xlims: ax.set_xlim(xlims)
-		if ylims: ax.set_ylim(ylims)
-		if xlabel: plt.xlabel(xlabel,size=font_size)		
-		if ylabel: plt.ylabel(ylabel,size=font_size)
-		if title: plt.title(title,size=font_size)
+		ax.plot(x, y, marker, color=color)
+		if xlims:
+			ax.set_xlim(xlims)
+		if ylims:
+			ax.set_ylim(ylims)
+		if xlabel:
+			plt.xlabel(xlabel, size=font_size)
+		if ylabel:
+			plt.ylabel(ylabel, size=font_size)
+		if title:
+			plt.title(title, size=font_size)
 		for t in ax.get_xticklabels():
 			t.set_fontsize(font_size)
 		for t in ax.get_yticklabels():
 			t.set_fontsize(font_size)
-		
-		extension, save_fname, pdf = save_name(save,variable=variable,time=time)
-		plt.savefig(save_fname, dpi=100, facecolor='w', edgecolor='w',orientation='portrait', 
-		format=extension,transparent=True, bbox_inches=None, pad_inches=0.1)
+		extension, save_fname, pdf = save_name(save, variable=variable,
+											   time=time)
+		plt.savefig(save_fname, dpi=100, facecolor='w', edgecolor='w',
+					orientation='portrait', format=extension, transparent=True,
+					bbox_inches=None, pad_inches=0.1)
 		if pdf: 
 			os.system('epstopdf ' + save_fname)
-			os.remove(save_fname)	
+			os.remove(save_fname)
+		return ax
 
 	def cutaway_plot(self, variable=None, time=None, divisions=[20, 20, 20],
 					 levels=10, cbar=False, angle=[45, 45], xlims=[],
