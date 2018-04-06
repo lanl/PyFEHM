@@ -1012,7 +1012,7 @@ class fcontour(object):
 	def slice_plot(self, variable=None, time=None, slice='',
 				   divisions=[20, 20], levels=10, cbar=False, xlims=[],
 				   ylims=[], colors='k', linestyle='-', save='',
-				   xlabel='x / m', ylabel='y / m', title='',
+				   xlabel='x / m', ylabel='y / m', cbar_label='', title='',
 				   font_size='medium', method='nearest', equal_axes=True,
 				   mesh_lines=None, perm_contrasts=None, scale = 1.):
 		'''Returns a filled plot of contour data. Invokes the ``slice()``
@@ -1058,6 +1058,8 @@ class fcontour(object):
 		:type xlabel: str
 		:param ylabel: Label on y-axis.
 		:type ylabel: str
+		:param cbar_label: Label for the colorbar
+		:type cbar_label: str
 		:param title: Plot title.
 		:type title: str
 		:param font_size: Specify text size, either as an integer or string,
@@ -1078,26 +1080,29 @@ class fcontour(object):
 		if save:
 			save = os_path(save)
 		# at this stage, only structured grids are supported
-		if time==None: 
-			if np.min(self.times)<0: time = self.times[0]
-			else: time = self.times[-1]
+		if time == None:
+			if np.min(self.times) < 0:
+				time = self.times[0]
+			else:
+				time = self.times[-1]
 		delta = False
-		if isinstance(time,list) or isinstance(time,np.ndarray):
-			if len(time)>1: 
+		if isinstance(time, list) or isinstance(time, np.ndarray):
+			if len(time) > 1:
 				time0 = np.min(time)
 				time = np.max(time)
 				delta=True
 		# if data not available for one coordinate, assume 2-D simulation,
 		# adjust slice accordingly
 		if 'x' not in self.variables:
-			slice = ['x',None]
+			slice = ['x', None]
 		if 'y' not in self.variables:
-			slice = ['y',None]
+			slice = ['y', None]
 		if 'z' not in self.variables:
-			slice = ['z',None]
+			slice = ['z', None]
 		return_flag = self._check_inputs(variable=variable, time=time,
 										 slice=slice)
-		if return_flag: return
+		if return_flag:
+			return
 		# gather plot data
 		X, Y, Z, valsI = self.slice(variable=variable, time=time, slice=slice,
 									divisions=divisions, method=method)
@@ -1136,6 +1141,7 @@ class fcontour(object):
 			plt.title(title, size=font_size)
 		if cbar:			
 			cbar = plt.colorbar(CS)
+			cbar.set_label(cbar_label)
 			for t in cbar.ax.get_yticklabels():
 				t.set_fontsize(font_size)
 		for t in ax.get_xticklabels():
@@ -1350,24 +1356,38 @@ class fcontour(object):
 			os.system('epstopdf ' + save_fname)
 			os.remove(save_fname)	
 
-	def cutaway_plot(self,variable=None,time=None,divisions=[20,20,20],levels=10,cbar=False,angle=[45,45],xlims=[],method='nearest',
-		ylims=[],zlims=[],colors='k',linestyle='-',save='',	xlabel='x / m', ylabel='y / m', zlabel='z / m', title='', 
-		font_size='medium',equal_axes=True,grid_lines=None):
-		'''Returns a filled plot of contour data on each of 3 planes in a cutaway plot. Invokes the ``slice()`` method to interpolate slice data for plotting.
+	def cutaway_plot(self, variable=None, time=None, divisions=[20, 20, 20],
+					 levels=10, cbar=False, angle=[45, 45], xlims=[],
+					 method='nearest', ylims=[], zlims=[], colors='k',
+					 linestyle='-', save='', xlabel='x / m', ylabel='y / m',
+					 zlabel='z / m', cbar_label='', title='',
+					 font_size='medium', equal_axes=True, grid_lines=None):
+		'''Returns a filled plot of contour data on each of 3 planes in a
+		cutaway plot. Invokes the ``slice()`` method to interpolate slice data
+		for plotting.
 		
 		:param variable: Output data variable, for example 'P' = pressure.
 		:type variable: str
-		:param time: Time for which output data is requested. Can be supplied via ``fcontour.times`` list. Default is most recently available data. If a list of two times is passed, the difference between the first and last is plotted.
+		:param time: Time for which output data is requested. Can be supplied
+			via ``fcontour.times`` list. Default is most recently available
+			data. If a list of two times is passed, the difference between
+			the first and last is plotted.
 		:type time: fl64
-		:param divisions: Resolution to supply mesh data in [x,y,z] coordinates.
+		:param divisions: Resolution to supply mesh data in [x,y,z]
+			coordinates.
 		:type divisions: [int,int,int]
-		:param levels: Contour levels to plot. Can specify specific levels in list form, or a single integer indicating automatic assignment of levels. 
+		:param levels: Contour levels to plot. Can specify specific levels
+			in list form, or a single integer indicating automatic assignment
+			of levels.
 		:type levels: lst[fl64], int
 		:param cbar: Include colour bar.
 		:type cbar: bool
-		:param angle: 	View angle of zone. First number is tilt angle in degrees, second number is azimuth. Alternatively, if angle is 'x', 'y', 'z', view is aligned along the corresponding axis.
+		:param angle: 	View angle of zone. First number is tilt angle in
+			degrees, second number is azimuth. Alternatively, if angle is
+			'x', 'y', 'z', view is aligned along the corresponding axis.
 		:type angle: [fl64,fl64], str
-		:param method: Method of interpolation, options are 'nearest', 'linear'.
+		:param method: Method of interpolation, options are 'nearest',
+			'linear'.
 		:type method: str
 		:param xlims: Plot limits on x-axis.
 		:type xlims: [fl64, fl64]
@@ -1377,9 +1397,11 @@ class fcontour(object):
 		:type zlims: [fl64, fl64]
 		:param colors: Specify colour string for contour levels.
 		:type colors: lst[str]
-		:param linestyle: Style of contour lines, e.g., 'k-' = solid black line, 'r:' red dotted line.
+		:param linestyle: Style of contour lines, e.g., 'k-' = solid black
+			line, 'r:' red dotted line.
 		:type linestyle: str
-		:param save: Name to save plot. Format specified extension (default .png if none give). Supported extensions: .png, .eps, .pdf.
+		:param save: Name to save plot. Format specified extension (default
+			.png if none give). Supported extensions: .png, .eps, .pdf.
 		:type save: str
 		:param xlabel: Label on x-axis.
 		:type xlabel: str
@@ -1387,152 +1409,189 @@ class fcontour(object):
 		:type ylabel: str
 		:param zlabel: Label on z-axis.
 		:type zlabel: str
+		:param cbar_label: Label for the optional colorbar
+		:type cbar_label: str
 		:param title: Plot title.
 		:type title: str
-		:param font_size: Specify text size, either as an integer or string, e.g., 10, 'small', 'x-large'.
+		:param font_size: Specify text size, either as an integer or string,
+			e.g., 10, 'small', 'x-large'.
 		:type font_size: str, int
-		:param equal_axes: Force plotting with equal aspect ratios for all axes.
+		:param equal_axes: Force plotting with equal aspect ratios for all
+			axes.
 		:type equal_axes: bool
-		:param grid_lines: Extend tick lines across plot according to specified linestyle, e.g., 'k:' is a dotted black line.
+		:param grid_lines: Extend tick lines across plot according to
+			specified linestyle, e.g., 'k:' is a dotted black line.
 		:type grid_lines: bool
 		 
 		'''	
 		save = os_path(save)
 		# check inputs
-		if time==None: time = self.times[-1]
+		if time==None:
+			time = self.times[-1]
 		delta = False
-		if isinstance(time,list) or isinstance(time,np.ndarray):
-			if len(time)>1: 
+		if isinstance(time, list) or isinstance(time, np.ndarray):
+			if len(time) > 1:
 				time0 = np.min(time)
 				time = np.max(time)
 				delta=True
-		return_flag = self._check_inputs(variable=variable,time=time,slice=slice)
+		return_flag = self._check_inputs(variable=variable, time=time,
+										 slice=slice)
 		if return_flag: return
 		# set up axes
-		fig = plt.figure(figsize=[11.7,8.275])
+		fig = plt.figure(figsize=[11.7, 8.275])
 		ax = plt.axes(projection='3d')
 		ax.set_aspect('equal', 'datalim')
 		# make axes equal
-		if 'x' not in self.variables or 'y' not in self.variables or 'z' not in self.variables: 
-			pyfehm_print('ERROR: No xyz data, skipping',self._silent) 
+		if ('x' not in self.variables or 'y' not in self.variables
+			or 'z' not in self.variables):
+			pyfehm_print('ERROR: No xyz data, skipping', self._silent)
 			return
-		xmin,xmax = np.min(self[time]['x']),np.max(self[time]['x'])
-		ymin,ymax = np.min(self[time]['y']),np.max(self[time]['y'])
-		zmin,zmax = np.min(self[time]['z']),np.max(self[time]['z'])		
+		xmin, xmax = np.min(self[time]['x']), np.max(self[time]['x'])
+		ymin, ymax = np.min(self[time]['y']), np.max(self[time]['y'])
+		zmin, zmax = np.min(self[time]['z']), np.max(self[time]['z'])
 		if equal_axes:
-			MAX = np.max([xmax-xmin,ymax-ymin,zmax-zmin])/2
-			C = np.array([xmin+xmax,ymin+ymax,zmin+zmax])/2
+			MAX = np.max([xmax - xmin, ymax - ymin, zmax - zmin]) / 2
+			C = np.array([xmin + xmax, ymin + ymax, zmin + zmax]) / 2
 			for direction in (-1, 1):
-				for point in np.diag(direction * MAX * np.array([1,1,1])):
-					ax.plot([point[0]+C[0]], [point[1]+C[1]], [point[2]+C[2]], 'w')
-		if not xlims: xlims = [xmin,xmax]
-		if not ylims: ylims = [ymin,ymax]
-		if not zlims: zlims = [zmin,zmax]
+				for point in np.diag(direction * MAX * np.array([1, 1, 1])):
+					ax.plot([point[0] + C[0]], [point[1] + C[1]],
+							[point[2] + C[2]], 'w')
+		if not xlims: xlims = [xmin, xmax]
+		if not ylims: ylims = [ymin, ymax]
+		if not zlims: zlims = [zmin, zmax]
 		# set view angle
-		ax.view_init(angle[0],angle[1])
-		
-		ax.set_xlabel(xlabel,size=font_size)
-		ax.set_ylabel(ylabel,size=font_size)
-		ax.set_zlabel(zlabel,size=font_size)
-
-		plt.title(title+'\n\n\n\n',size=font_size)
-		
+		ax.view_init(angle[0], angle[1])
+		ax.set_xlabel(xlabel, size=font_size)
+		ax.set_ylabel(ylabel, size=font_size)
+		ax.set_zlabel(zlabel, size=font_size)
+		plt.title(title + '\n\n\n\n', size=font_size)
 		scale = 1e6
-		levels = [l/scale for l in levels]
-	
-		X, Y, Z, valsI = self.slice(variable, [[xlims[0],ylims[0],zlims[0]],[xlims[1],ylims[1],zlims[0]]], [divisions[0],divisions[1]], time, method)
+		levels = [l / scale for l in levels]
+		X, Y, Z, valsI = self.slice(variable, [[xlims[0], ylims[0], zlims[0]],
+											   [xlims[1], ylims[1], zlims[0]]],
+									[divisions[0], divisions[1]], time, method)
 		if delta:
-			X, Y, Z, valsIi = self.slice(variable, [[xlims[0],ylims[0],zlims[0]],[xlims[1],ylims[1],zlims[0]]], [divisions[0],divisions[1]], time0, method)
+			X, Y, Z, valsIi = self.slice(variable,
+										 [[xlims[0], ylims[0],zlims[0]],
+										  [xlims[1], ylims[1], zlims[0]]],
+										 [divisions[0], divisions[1]], time0,
+										 method)
 			valsI = valsI - valsIi
-		cset = ax.contourf(X, Y, valsI/scale, zdir='z', offset=zlims[0], cmap=cm.coolwarm,levels=levels)
-		
-		X, Y, Z, valsI = self.slice(variable, [[xlims[0],ylims[0],zlims[0]],[xlims[0],ylims[1],zlims[1]]], [divisions[1],divisions[2]], time, method)
+		cset = ax.contourf(X, Y, valsI / scale, zdir='z', offset=zlims[0],
+						   cmap=cm.coolwarm, levels=levels)
+		X, Y, Z, valsI = self.slice(variable, [[xlims[0], ylims[0], zlims[0]],
+											   [xlims[0], ylims[1], zlims[1]]],
+									[divisions[1], divisions[2]], time, method)
 		if delta:
-			X, Y, Z, valsIi = self.slice(variable, [[xlims[0],ylims[0],zlims[0]],[xlims[0],ylims[1],zlims[1]]], [divisions[1],divisions[2]], time0, method)
+			X, Y, Z, valsIi = self.slice(variable,
+										 [[xlims[0], ylims[0], zlims[0]],
+										  [xlims[0], ylims[1], zlims[1]]],
+										 [divisions[1], divisions[2]], time0,
+										 method)
 			valsI = valsI - valsIi
-		cset = ax.contourf(valsI/scale, Y, Z,  zdir='x', offset=xlims[0], cmap=cm.coolwarm,levels=levels)
-		
-		X, Y, Z, valsI = self.slice(variable, [[xlims[0],ylims[0],zlims[0]],[xlims[1],ylims[0],zlims[1]]], [divisions[0],divisions[2]], time, method)
+		cset = ax.contourf(valsI / scale, Y, Z,  zdir='x', offset=xlims[0],
+						   cmap=cm.coolwarm, levels=levels)
+		X, Y, Z, valsI = self.slice(variable, [[xlims[0], ylims[0], zlims[0]],
+											   [xlims[1], ylims[0], zlims[1]]],
+									[divisions[0], divisions[2]], time, method)
 		if delta:
-			X, Y, Z, valsIi = self.slice(variable, [[xlims[0],ylims[0],zlims[0]],[xlims[1],ylims[0],zlims[1]]], [divisions[0],divisions[2]], time0, method)
+			X, Y, Z, valsIi = self.slice(variable,
+										 [[xlims[0], ylims[0], zlims[0]],
+										  [xlims[1], ylims[0], zlims[1]]],
+										 [divisions[0], divisions[2]], time0,
+										 method)
 			valsI = valsI - valsIi
-		cset = ax.contourf(X, valsI/scale, Z,  zdir='y', offset=ylims[0], cmap=cm.coolwarm,levels=levels)
-
+		cset = ax.contourf(X, valsI / scale, Z,  zdir='y', offset=ylims[0],
+						   cmap=cm.coolwarm, levels=levels)
 		if cbar:
 			cbar=plt.colorbar(cset)
-			tick_labels = [str(float(t*scale)) for t in levels]
+			# Limit to two dec. places
+			tick_labels = ['{:.2f}'.format(t * scale) for t in levels]
 			cbar.locator = matplotlib.ticker.FixedLocator(levels)
 			cbar.formatter = matplotlib.ticker.FixedFormatter(tick_labels)
+			cbar.set_label(cbar_label)
 			cbar.update_ticks()
-
 		if grid_lines:
 			# add grid lines
-			ax.set_xlim(xlims[0],xlims[1])
-			ax.set_ylim(ylims[0],ylims[1])
-			ax.set_zlim(zlims[0],zlims[1])
+			ax.set_xlim(xlims[0], xlims[1])
+			ax.set_ylim(ylims[0], ylims[1])
+			ax.set_zlim(zlims[0], zlims[1])
 			xticks = ax.get_xticks()
 			yticks = ax.get_yticks()
 			zticks = ax.get_zticks()
-
 			off = 0.
 			for t in xticks:
-				ax.plot([t,t],[ylims[0],ylims[1]],[zlims[0]+off,zlims[0]+off],grid_lines,zorder=100)
-				ax.plot([t,t],[ylims[0]+off,ylims[0]+off],[zlims[0],zlims[1]],grid_lines,zorder=100)
+				ax.plot([t, t],
+						[ylims[0], ylims[1]], [zlims[0] + off, zlims[0] + off],
+						grid_lines, zorder=100)
+				ax.plot([t, t],
+						[ylims[0] + off, ylims[0] + off], [zlims[0], zlims[1]],
+						grid_lines, zorder=100)
 			for t in yticks:
-				ax.plot([xlims[0],xlims[1]],[t,t],[zlims[0]+off,zlims[0]+off],grid_lines,zorder=100)
-				ax.plot([xlims[0]+off,xlims[0]+off],[t,t],[zlims[0],zlims[1]],grid_lines,zorder=100)
+				ax.plot([xlims[0], xlims[1]], [t, t],
+						[zlims[0] + off, zlims[0] + off], grid_lines,
+						zorder=100)
+				ax.plot([xlims[0] + off, xlims[0] + off], [t, t],
+						[zlims[0], zlims[1]], grid_lines, zorder=100)
 			for t in zticks:
-				ax.plot([xlims[0],xlims[1]],[ylims[0]+off,ylims[0]+off],[t,t],grid_lines,zorder=100)
-				ax.plot([xlims[0]+off,xlims[0]+off],[ylims[0],ylims[1]],[t,t],grid_lines,zorder=100)
-		
+				ax.plot([xlims[0], xlims[1]], [ylims[0] + off, ylims[0] + off],
+						[t, t], grid_lines, zorder=100)
+				ax.plot([xlims[0] + off, xlims[0] + off], [ylims[0], ylims[1]],
+						[t, t], grid_lines, zorder=100)
 		for t in ax.get_yticklabels():
 			t.set_fontsize(font_size)	
 		for t in ax.get_xticklabels():
 			t.set_fontsize(font_size)	
 		for t in ax.get_zticklabels():
-			t.set_fontsize(font_size)	
-		
+			t.set_fontsize(font_size)
 		ax.set_xlim(xlims)
 		ax.set_ylim(ylims)
 		ax.set_zlim(zlims)
-		
-		extension, save_fname, pdf = save_name(save=save,variable=variable,time=time)
-		plt.savefig(save_fname, dpi=100, facecolor='w', edgecolor='w',orientation='portrait', 
-		format=extension,transparent=True, bbox_inches=None, pad_inches=0.1)
+		extension, save_fname, pdf = save_name(save=save, variable=variable,
+											   time=time)
+		plt.savefig(save_fname, dpi=100, facecolor='w', edgecolor='w',
+					orientation='portrait', format=extension, transparent=True,
+					bbox_inches=None, pad_inches=0.1)
 
-	def node(self,node,time=None,variable=None):
+	def node(self, node, time=None, variable=None):
 		'''Returns all information for a specific node.
 		
-		If time and variable not specified, a dictionary of time series is returned with variables as the dictionary keys.
+		If time and variable not specified, a dictionary of time series is
+		returned with variables as the dictionary keys.
 		
-		If only time is specified, a dictionary of variable values at that time is returned, with variables as dictionary keys.
+		If only time is specified, a dictionary of variable values at that
+		time is returned, with variables as dictionary keys.
 		
-		If only variable is specified, a time series vector is returned for that variable.
+		If only variable is specified, a time series vector is returned for
+		that variable.
 		
-		If both time and variable are specified, a single value is returned, corresponding to the variable value at that time, at that node.
+		If both time and variable are specified, a single value is returned,
+		corresponding to the variable value at that time, at that node.
 		
 		:param node: Node index for which variable information required.
 		:type node: int 
-		:param time: Time at which variable information required. If not specified, all output.
+		:param time: Time at which variable information required. If not
+			specified, all output.
 		:type time: fl64
-		:param variable: Variable for which information requested. If not specified, all output.
+		:param variable: Variable for which information requested. If not
+			specified, all output.
 		:type variable: str
-		
 		'''
 		if 'n' not in self.variables: 
-			pyfehm_print('Node information not available',self._silent)
+			pyfehm_print('Node information not available', self._silent)
 			return
-		nd = np.where(self[self.times[0]]['n']==node)[0][0]
+		nd = np.where(self[self.times[0]]['n'] == node)[0][0]
 		if time is None and variable is None:
-			ks = copy(self.variables); ks.remove('n')
-			outdat = dict([(k,[]) for k in ks])
+			ks = copy(self.variables)
+			ks.remove('n')
+			outdat = dict([(k, []) for k in ks])
 			for t in self.times:
 				dat = self[t]
 				for k in outdat.keys():
 					outdat[k].append(dat[k][nd])
 		elif time is None:
 			if variable not in self.variables: 
-				pyfehm_print('ERROR: no variable by that name',self._silent)
+				pyfehm_print('ERROR: no variable by that name', self._silent)
 				return
 			outdat = []
 			for t in self.times:
@@ -1540,40 +1599,54 @@ class fcontour(object):
 				outdat.append(dat[variable][nd])
 			outdat = np.array(outdat)
 		elif variable is None:
-			ks = copy(self.variables); ks.remove('n')
-			outdat = dict([(k,self[time][k][nd]) for k in ks])			
+			ks = copy(self.variables)
+			ks.remove('n')
+			outdat = dict([(k, self[time][k][nd]) for k in ks])
 		else:
 			outdat = self[time][variable][nd]
 		return outdat
 
-	def paraview(self, grid, stor = None, exe = dflt.paraview_path,filename = 'temp.vtk',show=None,diff = False,zscale = 1., time_derivatives = False):
+	def paraview(self, grid, stor=None, exe=dflt.paraview_path,
+				 filename='temp.vtk', show=None, diff=False, zscale=1.,
+				 time_derivatives=False):
 		""" Launches an instance of Paraview that displays the contour object.
 		
-		:param grid: Path to grid file associated with FEHM simulation that produced the contour output.
+		:param grid: Path to grid file associated with FEHM simulation that
+			produced the contour output.
 		:type grid: str
-		:param stor: Path to grid file associated with FEHM simulation that produced the contour output.
+		:param stor: Path to grid file associated with FEHM simulation that
+			produced the contour output.
 		:type stor: str
 		:param exe: Path to Paraview executable.
 		:type exe: str
 		:param filename: Name of VTK file to be output.
 		:type filename: str
-		:param show: Variable to show when Paraview starts up (default = first available variable in contour object).
+		:param show: Variable to show when Paraview starts up
+			(default = first available variable in contour object).
 		:type show: str
-		:param diff: Flag to request PyFEHM to also plot differences of contour variables (from initial state) with time.
+		:param diff: Flag to request PyFEHM to also plot differences of
+			contour variables (from initial state) with time.
 		:type diff: bool
-		:param zscale: Factor by which to scale z-axis. Useful for visualising laterally extensive flow systems.
+		:param zscale: Factor by which to scale z-axis. Useful for visualising
+			laterally extensive flow systems.
 		:type zscale: fl64
-		:param time_derivatives: Calculate new fields for time derivatives of contour data. For precision reasons, derivatives are calculated with units of 'per day'.
+		:param time_derivatives: Calculate new fields for time derivatives of
+			contour data. For precision reasons, derivatives are calculated
+			with units of 'per day'.
 		:type time_derivatives: bool
 		"""
 		from fdata import fdata
 		dat = fdata()
-		dat.grid.read(grid,storfilename=stor)
+		dat.grid.read(grid, storfilename=stor)
 		if show is None: 
 			for var in self.variables:
-				if var not in ['x','y','z','n']: break
+				if var not in ['x', 'y', 'z', 'n']:
+					break
 			show = var
-		dat.paraview(exe=exe,filename=filename,contour=self,show=show,diff=diff,zscale=zscale,time_derivatives=time_derivatives)
+		dat.paraview(exe=exe, filename=filename, contour=self, show=show,
+					 diff=diff, zscale=zscale,
+					 time_derivatives=time_derivatives)
+
 	def _get_variables(self): return self._variables
 	variables = property(_get_variables)#: (*lst[str]*) List of variables for which output data are available.
 	def _get_user_variables(self): return self._user_variables
@@ -1818,14 +1891,15 @@ class fhistory(object):
 		else:
 			delim = ''
 		data = [float('inf') if '+' in d and not 'E' in d
-				else 0.0 if '-' in d and not 'E' in d
+				else 0.0 if '-' in d and not 'E' in d and d[0] != '-'
 				else float(d)
 				for d in line.strip().split(delim)]
 		return data
 
 	def time_plot(self, variable=None, node=0, t_lim=[], var_lim=[],
 				  marker='x-', color='k', save='', xlabel='', ylabel='',
-				  title='', font_size='medium', scale=1., scale_t=1.):
+				  title='', font_size='medium', scale=1., scale_t=1.,
+				  ax=None, legend=False):
 		'''Generate and save a time series plot of the history data.
 		
 		:param variable: Variable to plot.
@@ -1859,6 +1933,10 @@ class fhistory(object):
 		:type scale: fl64
 		:param scale_t: As for scale but applied to the time axis.
 		:type scale_t: fl64
+		:param ax: Axes to which we'll add this line
+		:type ax: matplotlib.pyplot.Axes
+		:param legend: Plot the legend?
+		:type legend: bool
 		'''
 		save = os_path(save)
 		if not node:
@@ -1880,32 +1958,43 @@ class fhistory(object):
 			s = '\n'.join(s)
 			pyfehm_print(s, self._silent)
 			return True
-		plt.clf()
-		plt.figure(figsize=[8, 8])
-		ax = plt.axes([0.15, 0.15, 0.75, 0.75])
+		# plt.clf()
+		if not ax:
+			plt.figure(figsize=[8, 8])
+			ax = plt.axes([0.15, 0.15, 0.75, 0.75])
 		if not isinstance(scale, list):
 			if not isinstance(scale_t, list):
-				plt.plot(self.times * scale_t,
-						 self[variable][node] * scale, marker)
+				ax.plot(self.times * scale_t,
+						self[variable][node] * scale, marker,
+						label=variable, color=color)
 			elif len(scale_t) == 2:
-				plt.plot(self.times * scale_t[0] + scale_t[1],
-						 self[variable][node] * scale, marker)
+				ax.plot(self.times * scale_t[0] + scale_t[1],
+						self[variable][node] * scale, marker,
+						label=variable, color=color)
 		elif len(scale) == 2:
 			if not isinstance(scale_t, list):
-				plt.plot(self.times * scale_t,
-						 self[variable][node] * scale[0] + scale[1], marker)
+				ax.plot(self.times * scale_t,
+						self[variable][node] * scale[0] + scale[1], marker,
+						label=variable, color=color)
 			elif len(scale_t) == 2:
-				plt.plot(self.times * scale_t[0] + scale_t[1],
-						 self[variable][node] * scale[0] + scale[1], marker)
-		if t_lim: ax.set_xlim(t_lim)
-		if var_lim: ax.set_ylim(var_lim)
-		if xlabel: plt.xlabel(xlabel, size=font_size)
-		if ylabel: plt.ylabel(ylabel, size=font_size)
+				ax.plot(self.times * scale_t[0] + scale_t[1],
+						self[variable][node] * scale[0] + scale[1], marker,
+						label=variable, color=color)
+		if t_lim:
+			ax.set_xlim(t_lim)
+		if var_lim:
+			ax.set_ylim(var_lim)
+		if xlabel:
+			ax.xlabel(xlabel, size=font_size)
+		if ylabel:
+			ax.ylabel(ylabel, size=font_size)
 		if title: plt.title(title, size=font_size)
 		for t in ax.get_xticklabels():
 			t.set_fontsize(font_size)
 		for t in ax.get_yticklabels():
 			t.set_fontsize(font_size)
+		if legend:
+			plt.legend()
 		extension, save_fname, pdf = save_name(save, variable=variable,
 											   node=node)
 		plt.savefig(save_fname, dpi=100, facecolor='w', edgecolor='w',
@@ -1913,7 +2002,8 @@ class fhistory(object):
 					bbox_inches=None, pad_inches=0.1)
 		if pdf: 
 			os.system('epstopdf ' + save_fname)
-			os.remove(save_fname)	
+			os.remove(save_fname)
+		return ax
 
 	def new_variable(self, name, node, data):
 		'''Creates a new variable, which is some combination of the available
@@ -1966,10 +2056,9 @@ class fhistory(object):
 	what = property(_get_information) #:(*str*) Print out information about the fhistory object.
 
 
-class fzoneflux(fhistory): 					# Derived class of fhistory, for zoneflux output
-	'''Zone flux history output information object.
-	'''
-#	__slots__ = ['_filename','_times','_verbose','_data','_row','_zones','_variables','_keyrows','column_name','num_columns','_nkeys']
+class fzoneflux(fhistory):
+	'''Zone flux history output information object.'''
+	# __slots__ = ['_filename','_times','_verbose','_data','_row','_zones','_variables','_keyrows','column_name','num_columns','_nkeys']
 	def __init__(self,filename=None,verbose=True):
 		super(fzoneflux,self).__init__(filename, verbose)
 		self._filename=None	
@@ -2059,7 +2148,7 @@ class fzoneflux(fhistory): 					# Derived class of fhistory, for zoneflux output
 	zones = property(_get_zones, _set_zones) #: (*lst[int]*) List of zone indices for which output data are available.
 
 
-class fnodeflux(object): 					# Reading and plotting methods associated with internode flux files.
+class fnodeflux(object):
 	'''Internode flux information.
 		
 		Can read either water or CO2 internode flux files.
@@ -2124,6 +2213,8 @@ class fnodeflux(object): 					# Reading and plotting methods associated with int
 	def _get_nodepairs(self): return self._nodepairs
 	def _set_nodepairs(self,value): self._nodepairs = value
 	nodepairs = property(_get_nodepairs, _set_nodepairs) #: (*lst*) node pairs for which node flux information is available. Each node pair is represented as a two item tuple of node indices.
+
+
 class ftracer(fhistory): 					# Derived class of fhistory, for tracer output
 	'''Tracer history output information object.
 	'''
@@ -2152,6 +2243,8 @@ class ftracer(fhistory): 					# Derived class of fhistory, for tracer output
 		if data[-1,0]<data[-2,0]: data = data[:-1,:]
 		self._times = np.array(data[:,0])
 		self._data[var_key] = dict([(node,data[:,icol+1]) for icol,node in enumerate(self.nodes)])
+
+
 class fptrk(fhistory): 						# Derived class of fhistory, for particle tracking output
 	'''Tracer history output information object.
 	'''
@@ -2313,6 +2406,8 @@ class fStructuredGrid(pv.StructuredGrid):
 		ret.append(self.seq_to_string(self.points,format,t))
 		
 		return '\n'.join(ret)
+
+
 class fUnstructuredGrid(pv.UnstructuredGrid):
 	def __init__(self,points,vertex=[],poly_vertex=[],line=[],poly_line=[],
 				 triangle=[],triangle_strip=[],polygon=[],pixel=[],
@@ -2352,6 +2447,8 @@ class fUnstructuredGrid(pv.UnstructuredGrid):
 				'CELL_TYPES %s'%(len(tps)),
 				self.seq_to_string(tps,format,'int')]
 		return '\n'.join(ret)
+
+
 class fVtkData(pv.VtkData):
 	def __init__(self,*args,**kws):
 		pv.VtkData.__init__(self,*args,**kws)
@@ -2420,6 +2517,8 @@ class fVtkData(pv.VtkData):
 		f = open(filename,'wb')
 		f.write(self.to_string(format=format,material=True))
 		f.close()
+
+
 class fvtk(object):
 	def __init__(self,parent,filename,contour,diff,zscale,spatial_derivatives,time_derivatives):
 		self.parent = parent
@@ -2982,6 +3081,8 @@ class fvtk(object):
 		f.close()
 	def _get_filename(self): return self.path.absolute_to_file+os.sep+self.path.filename
 	filename = property(_get_filename) #: (**)
+
+
 class fcsv(object):
 	def __init__(self,parent,filename,history,diff,time_derivatives):
 		self.parent = parent
