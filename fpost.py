@@ -21,8 +21,16 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General
 Public License for more details.
 """
 
-import numpy as np
 import os
+import platform
+import numpy as np
+import pyvtk as pv
+
+from ftool import *
+from fdflt import *
+from copy import copy, deepcopy
+from scipy.interpolate import griddata
+
 try:
 	from matplotlib import pyplot as plt
 	from mpl_toolkits.mplot3d import axes3d
@@ -30,13 +38,8 @@ try:
 	import matplotlib
 except ImportError:
 	'placeholder'
-from copy import copy,deepcopy
-from ftool import*
-import platform
 
-from fdflt import*
 dflt = fdflt()
-import pyvtk as pv
 
 WINDOWS = platform.system()=='Windows'
 if WINDOWS: copyStr = 'copy'; delStr = 'del'
@@ -896,34 +899,52 @@ class fcontour(object):
 				valsI = valsI - (tau - mu*(sig-sp) - cohesion)
 				
 		return X, Y, Z, valsI
-	def slice_plot_line(self,variable=None,time=None,slice='',divisions=[20,20],labels=False, label_size=10.,levels=10,xlims=[],	
-		ylims=[],colors='k',linestyle='-',save='',	xlabel='x / m',ylabel='y / m',title='', font_size='medium', method='nearest',
-		equal_axes=True):	
-		'''Returns a line plot of contour data. Invokes the ``slice()`` method to interpolate slice data for plotting.
+
+	def slice_plot_line(self, variable=None, time=None, slice='',
+						divisions=[20, 20], labels=False, label_size=10.,
+						levels=10, xlims=[], ylims=[], colors='k',
+						linestyle='-', save='',	xlabel='x / m', ylabel='y / m',
+						title='', font_size='medium', method='nearest',
+		equal_axes=True):
+		'''Returns a line plot of contour data. Invokes the ``slice()``
+		method to interpolate slice data for plotting.
 		
 		:param variable: Output data variable, for example 'P' = pressure.
 		:type variable: str
-		:param time: Time for which output data is requested. Can be supplied via ``fcontour.times`` list. Default is most recently available data. If a list of two times is passed, the difference between the first and last is plotted.
+		:param time: Time for which output data is requested. Can be supplied
+			via ``fcontour.times`` list. Default is most recently available
+			data. If a list of two times is passed, the difference between
+			the first and last is plotted.
 		:type time: fl64
-		:param slice: List specifying orientation of output slice, e.g., ['x',200.] is a vertical slice at ``x = 200``, ['z',-500.] is a horizontal slice at ``z = -500.``, [point1, point2] is a fixed limit vertical or horizontal domain corresponding to the bounding box defined by point1 and point2.
+		:param slice: List specifying orientation of output slice, e.g.,
+			['x',200.] is a vertical slice at ``x = 200``, ['z',-500.] is
+			a horizontal slice at ``z = -500.``, [point1, point2] is a fixed
+			limit vertical or horizontal domain corresponding to the bounding
+			box defined by point1 and point2.
 		:type slice: lst[str,fl64]
 		:param divisions: Resolution to supply mesh data.
 		:type divisions: [int,int]
-		:param method: Method of interpolation, options are 'nearest', 'linear'.
+		:param method: Method of interpolation, options are 'nearest',
+			'linear'.
 		:type method: str
 		:param labels: Specify whether labels should be added to contour plot.
 		:type labels: bool
-		:param label_size: Specify text size of labels on contour plot, either as an integer or string, e.g., 10, 'small', 'x-large'.
+		:param label_size: Specify text size of labels on contour plot,
+			either as an integer or string, e.g., 10, 'small', 'x-large'.
 		:type label_size: str, int
-		:param levels: Contour levels to plot. Can specify specific levels in list form, or a single integer indicating automatic assignment of levels. 
+		:param levels: Contour levels to plot. Can specify specific levels in
+			list form, or a single integer indicating automatic assignment
+			of levels.
 		:type levels: lst[fl64], int
 		:param xlims: Plot limits on x-axis.
 		:type xlims: [fl64, fl64]
 		:param ylims: Plot limits on y-axis.
 		:type ylims: [fl64, fl64]
-		:param linestyle: Style of contour lines, e.g., 'k-' = solid black line, 'r:' red dotted line.
+		:param linestyle: Style of contour lines, e.g., 'k-' = solid black
+			line, 'r:' red dotted line.
 		:type linestyle: str
-		:param save: Name to save plot. Format specified extension (default .png if none give). Supported extensions: .png, .eps, .pdf.
+		:param save: Name to save plot. Format specified extension (default
+			.png if none give). Supported extensions: .png, .eps, .pdf.
 		:type save: str
 		:param xlabel: Label on x-axis.
 		:type xlabel: str
@@ -931,7 +952,8 @@ class fcontour(object):
 		:type ylabel: str
 		:param title: Plot title.
 		:type title: str
-		:param font_size: Specify text size, either as an integer or string, e.g., 10, 'small', 'x-large'.
+		:param font_size: Specify text size, either as an integer or string,
+			e.g., 10, 'small', 'x-large'.
 		:type font_size: str, int
 		:param equal_axes: Specify equal scales on axes.
 		:type equal_axes: bool
@@ -939,58 +961,84 @@ class fcontour(object):
 		'''	
 		save = os_path(save)
 		# at this stage, only structured grids are supported
-		if time==None: time = self.times[-1]
+		if time == None:
+			time = self.times[-1]
 		delta = False
-		if isinstance(time,list) or isinstance(time,np.ndarray):
-			if len(time)>1: 
+		if isinstance(time, list) or isinstance(time, np.ndarray):
+			if len(time) > 1:
 				time0 = np.min(time)
 				time = np.max(time)
 				delta=True
-		return_flag = self._check_inputs(variable,time,slice)
+		return_flag = self._check_inputs(variable, time, slice)
 		if return_flag: return
 		# gather plot data
-		X, Y, Z, valsI = self.slice(variable=variable, time=time, slice=slice, divisions=divisions, method=method)
+		X, Y, Z, valsI = self.slice(variable=variable, time=time, slice=slice,
+									divisions=divisions, method=method)
 		if delta:
-			X, Y, Z, valsIi = self.slice(variable=variable, time=time0, slice=slice, divisions=divisions, method=method)
+			X, Y, Z, valsIi = self.slice(variable=variable, time=time0,
+										 slice=slice, divisions=divisions,
+										 method=method)
 			valsI = valsI - valsIi
 		plt.clf()
-		plt.figure(figsize=[8,8])
-		ax = plt.axes([0.15,0.15,0.75,0.75])
-		if xlims: ax.set_xlim(xlims)
-		if ylims: ax.set_ylim(ylims)
+		plt.figure(figsize=[8, 8])
+		ax = plt.axes([0.15, 0.15, 0.75, 0.75])
+		if xlims:
+			ax.set_xlim(xlims)
+		if ylims:
+			ax.set_ylim(ylims)
 		if equal_axes: ax.set_aspect('equal', 'datalim')
-		CS = plt.contour(X,Y,valsI,levels,colors=colors,linestyle=linestyle)
-		if labels: plt.clabel(CS,incline=1,fontsize=label_size)
-		if xlabel: plt.xlabel(xlabel,size=font_size)		
-		if ylabel: plt.ylabel(ylabel,size=font_size)
-		if title: plt.title(title,size=font_size)
+		CS = plt.contour(X, Y, valsI, levels, colors=colors,
+						 linestyle=linestyle)
+		if labels:
+			plt.clabel(CS, incline=1, fontsize=label_size)
+		if xlabel:
+			plt.xlabel(xlabel, size=font_size)
+		if ylabel:
+			plt.ylabel(ylabel, size=font_size)
+		if title: plt.title(title, size=font_size)
 		for t in ax.get_xticklabels():
 			t.set_fontsize(font_size)
 		for t in ax.get_yticklabels():
 			t.set_fontsize(font_size)
-					
-		extension, save_fname, pdf = save_name(save,variable=variable,time=time)
-		plt.savefig(save_fname, dpi=100, facecolor='w', edgecolor='w',orientation='portrait', 
-		format=extension,transparent=True, bbox_inches=None, pad_inches=0.1)
+		extension, save_fname, pdf = save_name(save, variable=variable,
+											   time=time)
+		plt.savefig(save_fname, dpi=100, facecolor='w', edgecolor='w',
+					orientation='portrait', format=extension, transparent=True,
+					bbox_inches=None, pad_inches=0.1)
 		if pdf: 
 			os.system('epstopdf ' + save_fname)
 			os.remove(save_fname)	
-	def slice_plot(self,variable=None,time=None,slice='',divisions=[20,20],levels=10,cbar=False,xlims=[],
-		ylims=[],colors='k',linestyle='-',save='',	xlabel='x / m',ylabel='y / m',title='', font_size='medium', method='nearest',
-		equal_axes=True,mesh_lines = None,perm_contrasts=None, scale = 1.):		
-		'''Returns a filled plot of contour data. Invokes the ``slice()`` method to interpolate slice data for plotting.
+
+	def slice_plot(self, variable=None, time=None, slice='',
+				   divisions=[20, 20], levels=10, cbar=False, xlims=[],
+				   ylims=[], colors='k', linestyle='-', save='',
+				   xlabel='x / m', ylabel='y / m', title='',
+				   font_size='medium', method='nearest', equal_axes=True,
+				   mesh_lines=None, perm_contrasts=None, scale = 1.):
+		'''Returns a filled plot of contour data. Invokes the ``slice()``
+		method to interpolate slice data for plotting.
 		
 		:param variable: Output data variable, for example 'P' = pressure.
 		:type variable: str
-		:param time: Time for which output data is requested. Can be supplied via ``fcontour.times`` list. Default is most recently available data. If a list of two times is passed, the difference between the first and last is plotted.
+		:param time: Time for which output data is requested. Can be supplied
+			via ``fcontour.times`` list. Default is most recently available
+			data. If a list of two times is passed, the difference between
+			the first and last is plotted.
 		:type time: fl64
-		:param slice: List specifying orientation of output slice, e.g., ['x',200.] is a vertical slice at ``x = 200``, ['z',-500.] is a horizontal slice at ``z = -500.``, [point1, point2] is a fixed limit vertical or horizontal domain corresponding to the bounding box defined by point1 and point2.
+		:param slice: List specifying orientation of output slice, e.g.,
+			['x',200.] is a vertical slice at ``x = 200``, ['z',-500.] is a
+			horizontal slice at ``z = -500.``, [point1, point2] is a fixed
+			limit vertical or horizontal domain corresponding to the bounding
+			box defined by point1 and point2.
 		:type slice: lst[str,fl64]
 		:param divisions: Resolution to supply mesh data.
 		:type divisions: [int,int]
-		:param method: Method of interpolation, options are 'nearest', 'linear'.
+		:param method: Method of interpolation, options are 'nearest',
+			'linear'.
 		:type method: str
-		:param levels: Contour levels to plot. Can specify specific levels in list form, or a single integer indicating automatic assignment of levels. 
+		:param levels: Contour levels to plot. Can specify specific levels
+			in list form, or a single integer indicating automatic assignment
+			of levels.
 		:type levels: lst[fl64], int
 		:param cbar: Add colour bar to plot.
 		:type cbar: bool
@@ -1000,9 +1048,11 @@ class fcontour(object):
 		:type ylims: [fl64, fl64]
 		:param colors: Specify colour string for contour levels.
 		:type colors: lst[str]
-		:param linestyle: Style of contour lines, e.g., 'k-' = solid black line, 'r:' red dotted line.
+		:param linestyle: Style of contour lines, e.g., 'k-' = solid black
+			line, 'r:' red dotted line.
 		:type linestyle: str
-		:param save: Name to save plot. Format specified extension (default .png if none give). Supported extensions: .png, .eps, .pdf.
+		:param save: Name to save plot. Format specified extension (default
+			.png if none give). Supported extensions: .png, .eps, .pdf.
 		:type save: str
 		:param xlabel: Label on x-axis.
 		:type xlabel: str
@@ -1010,15 +1060,20 @@ class fcontour(object):
 		:type ylabel: str
 		:param title: Plot title.
 		:type title: str
-		:param font_size: Specify text size, either as an integer or string, e.g., 10, 'small', 'x-large'.
+		:param font_size: Specify text size, either as an integer or string,
+			e.g., 10, 'small', 'x-large'.
 		:type font_size: str, int
 		:param equal_axes: Specify equal scales on axes.
 		:type equal_axes: bool
-		:param mesh_lines: Superimpose mesh on the plot (line intersections correspond to node positions) according to specified linestyle, e.g., 'k:' is a dotted black line.
+		:param mesh_lines: Superimpose mesh on the plot (line intersections
+			correspond to node positions) according to specified linestyle,
+			e.g., 'k:' is a dotted black line.
 		:type mesh_lines: bool
-		:param perm_contrasts: Superimpose permeability contours on the plot according to specified linestyle, e.g., 'k:' is a dotted black line. A gradient method is used to pick out sharp changes in permeability.
+		:param perm_contrasts: Superimpose permeability contours on the plot
+			according to specified linestyle, e.g., 'k:' is a dotted black
+			line. A gradient method is used to pick out sharp changes in
+			permeability.
 		:type perm_contrasts: bool
-		
 		'''	
 		if save:
 			save = os_path(save)
@@ -1032,136 +1087,174 @@ class fcontour(object):
 				time0 = np.min(time)
 				time = np.max(time)
 				delta=True
-		# if data not available for one coordinate, assume 2-D simulation, adjust slice accordingly
-		if 'x' not in self.variables: slice = ['x',None]
-		if 'y' not in self.variables: slice = ['y',None]
-		if 'z' not in self.variables: slice = ['z',None]
-		return_flag = self._check_inputs(variable=variable,time=time,slice=slice)
+		# if data not available for one coordinate, assume 2-D simulation,
+		# adjust slice accordingly
+		if 'x' not in self.variables:
+			slice = ['x',None]
+		if 'y' not in self.variables:
+			slice = ['y',None]
+		if 'z' not in self.variables:
+			slice = ['z',None]
+		return_flag = self._check_inputs(variable=variable, time=time,
+										 slice=slice)
 		if return_flag: return
 		# gather plot data
-		X, Y, Z, valsI = self.slice(variable=variable, time=time, slice=slice, divisions=divisions, method=method)
+		X, Y, Z, valsI = self.slice(variable=variable, time=time, slice=slice,
+									divisions=divisions, method=method)
 		if delta:
-			X, Y, Z, valsIi = self.slice(variable=variable, time=time0, slice=slice, divisions=divisions, method=method)
+			X, Y, Z, valsIi = self.slice(variable=variable, time=time0,
+										 slice=slice, divisions=divisions,
+										 method=method)
 			valsI = valsI - valsIi
-		if isinstance(slice[0],list):
+		if isinstance(slice[0], list):
 			# check if horizontal or vertical slice
-			dx,dy,dz = abs(slice[0][0]-slice[1][0]),abs(slice[0][1]-slice[1][1]),abs(slice[0][2]-slice[1][2])
-			if not(100*dz<dx and 100*dz<dy): 	
+			dx, dy, dz = abs(slice[0][0] - slice[1][0]),\
+						 abs(slice[0][1] - slice[1][1]),\
+						 abs(slice[0][2] - slice[1][2])
+			if not(100 * dz < dx and 100 * dz < dy):
 				if dx < dy:
 					X = Y
 				Y = Z
-					
 		plt.clf()
-		plt.figure(figsize=[8,8])
-		ax = plt.axes([0.15,0.15,0.75,0.75])
-		if xlims: ax.set_xlim(xlims)
-		if ylims: ax.set_ylim(ylims)
-		if equal_axes: ax.set_aspect('equal', 'datalim')
-		if not isinstance(scale,list):
-			CS = plt.contourf(X,Y,valsI*scale,levels)
+		plt.figure(figsize=[8, 8])
+		ax = plt.axes([0.15, 0.15, 0.75, 0.75])
+		if xlims:
+			ax.set_xlim(xlims)
+		if ylims:
+			ax.set_ylim(ylims)
+		if equal_axes:
+			ax.set_aspect('equal', 'datalim')
+		if not isinstance(scale, list):
+			CS = plt.contourf(X, Y, valsI * scale, levels)
 		elif len(scale) == 2:
-			CS = plt.contourf(X,Y,valsI*scale[0]+scale[1],levels)
-		if xlabel: plt.xlabel(xlabel,size=font_size)		
-		if ylabel: plt.ylabel(ylabel,size=font_size)
-		if title: plt.title(title,size=font_size)
+			CS = plt.contourf(X, Y, valsI * scale[0] + scale[1], levels)
+		if xlabel:
+			plt.xlabel(xlabel, size=font_size)
+		if ylabel:
+			plt.ylabel(ylabel, size=font_size)
+		if title:
+			plt.title(title, size=font_size)
 		if cbar:			
-			cbar=plt.colorbar(CS)
+			cbar = plt.colorbar(CS)
 			for t in cbar.ax.get_yticklabels():
 				t.set_fontsize(font_size)
 		for t in ax.get_xticklabels():
 			t.set_fontsize(font_size)
 		for t in ax.get_yticklabels():
 			t.set_fontsize(font_size)
-			
 		if perm_contrasts:
 			if 'perm_x' not in self.variables: 
-				pyfehm_print('WARNING: No permeability data to construct unit boundaries.',self._silent)
+				pyfehm_print('WARNING: No permeability data to construct '
+				+ 'unit boundaries.', self._silent)
 			else:
-				X, Y, Z, k = self.slice(variable='perm_z', time=time, slice=slice, divisions=divisions, method=method)
+				X, Y, Z, k = self.slice(variable='perm_z', time=time,
+										slice=slice, divisions=divisions,
+										method=method)
 				# calculate derivatives in X and Y directions
-				dkdX = np.diff(k,1,0)#/np.diff(Y,1,0)
-				dkdX = (dkdX[1:,1:-1]+dkdX[:-1,1:-1])/2
-				dkdY = np.diff(k,1,1)#/np.diff(X,1,1)
-				dkdY = (dkdY[1:-1,1:]+dkdY[1:-1,:-1])/2
-				dk = (abs((dkdX+dkdY)/2)>0.2)*1.
-				col = 'k'; ln = '-'
+				dkdX = np.diff(k, 1, 0)
+				dkdX = (dkdX[1:, 1:-1] + dkdX[:-1, 1:-1]) / 2
+				dkdY = np.diff(k, 1, 1)
+				dkdY = (dkdY[1:-1, 1:] + dkdY[1:-1, :-1]) / 2
+				dk = (abs((dkdX + dkdY) / 2) > 0.2) * 1.
+				col = 'k'
+				ln = '-'
 				for let in perm_contrasts:
-					if let in ['k','r','g','b','m','c','y','w']: col = let
-					if let in ['-','--','-.',':']: ln = let
-				CS = plt.contour(X[1:-1,1:-1],Y[1:-1,1:-1],dk,[0.99999999999],colors=col,linestyles=ln)
-				
+					if let in ['k', 'r', 'g', 'b', 'm', 'c', 'y', 'w']:
+						col = let
+					if let in ['-', '--', '-.', ':']:
+						ln = let
+				CS = plt.contour(X[1:-1, 1:-1], Y[1:-1, 1:-1], dk,
+								 [0.99999999999], colors=col, linestyles=ln)
 		xlims = ax.get_xlim()
 		ylims = ax.get_ylim()
 		if mesh_lines:
 			# add grid lines
-			ax.set_xlim(xlims[0],xlims[1])
-			ax.set_ylim(ylims[0],ylims[1])
+			ax.set_xlim(xlims[0], xlims[1])
+			ax.set_ylim(ylims[0], ylims[1])
 			if slice[0] == 'z':
 				for t in np.unique(self[self.times[0]]['x']):
-					ax.plot([t,t],[ylims[0],ylims[1]],mesh_lines,zorder=100)
+					ax.plot([t, t], [ylims[0], ylims[1]], mesh_lines,
+							zorder=100)
 				for t in np.unique(self[self.times[0]]['y']):
-					ax.plot([xlims[0],xlims[1]],[t,t],mesh_lines,zorder=100)
+					ax.plot([xlims[0], xlims[1]], [t, t], mesh_lines,
+							zorder=100)
 			elif slice[0] == 'x':
 				for t in np.unique(self[self.times[0]]['y']):
-					ax.plot([t,t],[ylims[0],ylims[1]],mesh_lines,zorder=100)
+					ax.plot([t, t], [ylims[0], ylims[1]], mesh_lines,
+							zorder=100)
 				for t in np.unique(self[self.times[0]]['z']):
-					ax.plot([xlims[0],xlims[1]],[t,t],mesh_lines,zorder=100)
+					ax.plot([xlims[0], xlims[1]], [t, t], mesh_lines,
+							zorder=100)
 			elif slice[0] == 'y':
 				for t in np.unique(self[self.times[0]]['x']):
-					ax.plot([t,t],[ylims[0],ylims[1]],mesh_lines,zorder=100)
+					ax.plot([t, t], [ylims[0], ylims[1]], mesh_lines,
+							zorder=100)
 				for t in np.unique(self[self.times[0]]['z']):
-					ax.plot([xlims[0],xlims[1]],[t,t],mesh_lines,zorder=100)
-		
+					ax.plot([xlims[0], xlims[1]], [t, t], mesh_lines,
+							zorder=100)
 		if save:
-			extension, save_fname, pdf = save_name(save=save,variable=variable,time=time)
-			plt.savefig(save_fname, dpi=100, facecolor='w', edgecolor='w',orientation='portrait', 
-			format=extension,transparent=True, bbox_inches=None, pad_inches=0.1)
-			if pdf: 
+			extension, save_fname, pdf = save_name(save=save,
+												   variable=variable,
+												   time=time)
+			plt.savefig(save_fname, dpi=100, facecolor='w', edgecolor='w',
+						orientation='portrait', format=extension,
+						transparent=True, bbox_inches=None, pad_inches=0.1)
+			if pdf:
 				os.system('epstopdf ' + save_fname)
 				os.remove(save_fname)	
 		else:
 			plt.show()
-	def profile(self, variable, profile, time=None, divisions=30, method='nearest'):
-		'''Return variable data along the specified line in 3-D space. If only two points are supplied,
-		the profile is assumed to be a straight line between them.
+
+	def profile(self, variable, profile, time=None, divisions=30,
+				method='nearest'):
+		'''Return variable data along the specified line in 3-D space.
+		If only two points are supplied, the profile is assumed to be a
+		straight line between them.
 		
-		:param variable: Output data variable, for example 'P' = pressure. Can specify multiple variables with a list.
+		:param variable: Output data variable, for example 'P' = pressure.
+			Can specify multiple variables with a list.
 		:type variable: str, lst[str]
-		:param time: Time for which output data is requested. Can be supplied via ``fcontour.times`` list. Default is most recently available data.
+		:param time: Time for which output data is requested. Can be
+			supplied via ``fcontour.times`` list. Default is most recently
+			available data.
 		:type time: fl64
-		:param profile: Three column array with each row corresponding to a point in the profile.
+		:param profile: Three column array with each row corresponding to a
+			point in the profile.
 		:type profile: ndarray
-		:param divisions: Number of points in profile. Only relevant if straight line profile being constructed from two points.
+		:param divisions: Number of points in profile. Only relevant if
+			straight line profile being constructed from two points.
 		:type divisions: int
-		:param method: Interpolation method, options are 'nearest' (default) and 'linear'.
+		:param method: Interpolation method, options are 'nearest' (default)
+			and 'linear'.
 		:type method: str
 		
-		:returns: Multi-column array. Columns are in order x, y and z coordinates of profile, followed by requested variables.
-		
+		:returns: Multi-column array. Columns are in order x, y and z
+			coordinates of profile, followed by requested variables.
 		'''
-		if isinstance(profile,list): profile = np.array(profile)
-		if divisions: divisions = int(divisions)
-		if time==None: time = self.times[-1]		
-		from scipy.interpolate import griddata
-		if not isinstance(variable,list): variable = [variable,]
-		
+		if isinstance(profile, list):
+			profile = np.array(profile)
+		if divisions:
+			divisions = int(divisions)
+		if time==None:
+			time = self.times[-1]
+		if not isinstance(variable, list):
+			variable = [variable,]
 		dat = self[time]
-		points = np.transpose(np.array([dat['x'],dat['y'],dat['z']]))
-		
-		if profile.shape[0]==2:
+		points = np.transpose(np.array([dat['x'], dat['y'], dat['z']]))
+		if profile.shape[0] == 2:
 			# construct line profile		
-			xrange = np.linspace(profile[0][0],profile[1][0],divisions)
-			yrange = np.linspace(profile[0][1],profile[1][1],divisions)
-			zrange = np.linspace(profile[0][2],profile[1][2],divisions)
-			profile = np.transpose(np.array([xrange,yrange,zrange]))
-		
-		outpoints = [list(profile[:,0]),list(profile[:,1]),list(profile[:,2])]
+			xrange = np.linspace(profile[0][0], profile[1][0], divisions)
+			yrange = np.linspace(profile[0][1], profile[1][1], divisions)
+			zrange = np.linspace(profile[0][2], profile[1][2], divisions)
+			profile = np.transpose(np.array([xrange, yrange, zrange]))
+		outpoints = [list(profile[:, 0]), list(profile[:, 1]),
+					 list(profile[:, 2])]
 		for var in variable:
 			vals = np.transpose(np.array(dat[var]))
-			valsI = griddata(points,vals,profile,method=method)
+			valsI = griddata(points, vals, profile, method=method)
 			outpoints.append(list(valsI))
-		
 		return np.array(outpoints).transpose()
+
 	def profile_plot(self,variable=None,time=None, profile=[],divisions = 30,xlims=[],ylims=[],
 		color='k',marker='x-',save='',xlabel='distance / m',ylabel='',title='',font_size='medium',method='nearest',
 		verticalPlot=False,elevationPlot=False):
@@ -1196,12 +1289,10 @@ class fcontour(object):
 		:type title: str
 		:param font_size: Specify text size, either as an integer or string, e.g., 10, 'small', 'x-large'.
 		:type font_size: str, int
-		
 		:param verticalPlot: Flag to plot variable against profile distance on the y-axis.
 		:type verticalPlot: bool
 		:param elevationPlot: Flag to plot variable against elevation on the y-axis.
 		:type elevationPlot: bool
-		
 		'''
 		save = os_path(save)
 		if time==None: time = self.times[-1]	
@@ -1258,6 +1349,7 @@ class fcontour(object):
 		if pdf: 
 			os.system('epstopdf ' + save_fname)
 			os.remove(save_fname)	
+
 	def cutaway_plot(self,variable=None,time=None,divisions=[20,20,20],levels=10,cbar=False,angle=[45,45],xlims=[],method='nearest',
 		ylims=[],zlims=[],colors='k',linestyle='-',save='',	xlabel='x / m', ylabel='y / m', zlabel='z / m', title='', 
 		font_size='medium',equal_axes=True,grid_lines=None):
@@ -1407,6 +1499,7 @@ class fcontour(object):
 		extension, save_fname, pdf = save_name(save=save,variable=variable,time=time)
 		plt.savefig(save_fname, dpi=100, facecolor='w', edgecolor='w',orientation='portrait', 
 		format=extension,transparent=True, bbox_inches=None, pad_inches=0.1)
+
 	def node(self,node,time=None,variable=None):
 		'''Returns all information for a specific node.
 		
@@ -1452,6 +1545,7 @@ class fcontour(object):
 		else:
 			outdat = self[time][variable][nd]
 		return outdat
+
 	def paraview(self, grid, stor = None, exe = dflt.paraview_path,filename = 'temp.vtk',show=None,diff = False,zscale = 1., time_derivatives = False):
 		""" Launches an instance of Paraview that displays the contour object.
 		
@@ -1680,7 +1774,7 @@ class fhistory(object):
 			i+=1
 		data = []
 		for ln in lns[i:]:
-			data.append([float(d) for d in ln.strip().split()])
+			data.append(self._check_line(ln, format='tec'))
 		data = np.array(data)
 		if data[-1,0] < data[-2,0]:
 			data = data[:-1, :]
@@ -1694,7 +1788,7 @@ class fhistory(object):
 		lns = self._file.readlines()
 		data = []
 		for ln in lns:
-			data.append([float(d) for d in ln.strip().split(',')])
+			data.append(self._check_line(ln, format='surf'))
 		data = np.array(data)
 		if data[-1, 0] < data[-2, 0]:
 			data = data[:-1, :]
@@ -1708,7 +1802,7 @@ class fhistory(object):
 		lns = self._file.readlines()
 		data = []
 		for ln in lns:
-			data.append([float(d) for d in ln.strip().split()])
+			data.append(self._check_line(ln, format='default'))
 		data = np.array(data)
 		if data[-1, 0] < data[-2, 0]:
 			data = data[:-1, :]
@@ -1716,6 +1810,18 @@ class fhistory(object):
 		self._data[hist_var_names[var_key]] = dict([(node, data[:, icol + 1])
 													for icol, node
 													in enumerate(self.nodes)])
+	def _check_line(self, line, format):
+		# Check for scientific notation overruns (i.e. 9.0004-175)
+		# Return inf for positive, zero for negative exponents
+		if format == 'surf':
+			delim = ','
+		else:
+			delim = ''
+		data = [float('inf') if '+' in d and not 'E' in d
+				else 0.0 if '-' in d and not 'E' in d
+				else float(d)
+				for d in line.strip().split(delim)]
+		return data
 
 	def time_plot(self, variable=None, node=0, t_lim=[], var_lim=[],
 				  marker='x-', color='k', save='', xlabel='', ylabel='',
@@ -1951,6 +2057,8 @@ class fzoneflux(fhistory): 					# Derived class of fhistory, for zoneflux output
 	def _get_zones(self): return self._zones
 	def _set_zones(self,value): self._zones = value
 	zones = property(_get_zones, _set_zones) #: (*lst[int]*) List of zone indices for which output data are available.
+
+
 class fnodeflux(object): 					# Reading and plotting methods associated with internode flux files.
 	'''Internode flux information.
 		
