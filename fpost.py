@@ -748,6 +748,7 @@ class fcontour(object):
 		self._data[time][name] = data
 		if name not in self._user_variables:
 			self._user_variables.append(name)
+
 	def slice(self, variable, slice, divisions, time=None, method='nearest'):
 		'''Returns mesh data for a specified slice orientation from 3-D
 		contour output data.
@@ -758,106 +759,136 @@ class fcontour(object):
 			friction coefficient and cohesion. Will return coulomb failure
 			stress.
 		:type variable: str
-		:param time: Time for which output data is requested. Can be supplied via ``fcontour.times`` list. Default is most recently available data.
+		:param time: Time for which output data is requested. Can be supplied
+			via ``fcontour.times`` list. Default is most recently available
+			data.
 		:type time: fl64
-		:param slice: List specifying orientation of output slice, e.g., ['x',200.] is a vertical slice at ``x = 200``, ['z',-500.] is a horizontal slice at ``z = -500.``, [point1, point2] is a fixed limit vertical or horizontal domain corresponding to the bounding box defined by point1 and point2.
+		:param slice: List specifying orientation of output slice,
+			e.g., ['x',200.] is a vertical slice at ``x = 200``, ['z',-500.]
+			is a horizontal slice at ``z = -500.``, [point1, point2] is a
+			fixed limit vertical or horizontal domain corresponding to the
+			bounding box defined by point1 and point2.
 		:type slice: lst[str,fl64]
 		:param divisions: Resolution to supply mesh data.
 		:type divisions: [int,int]
-		:param method: Method of interpolation, options are 'nearest', 'linear'.
+		:param method: Method of interpolation, options are 'nearest',
+			'linear'.
 		:type method: str:	
 		:returns: X -- x-coordinates of mesh data.
-		
 		'''
-		if time==None: 
-			if np.min(self.times)<0: time = self.times[0]
-			else: time = self.times[-1]
-		from scipy.interpolate import griddata		
+		if time == None:
+			if np.min(self.times) < 0:
+				time = self.times[0]
+			else:
+				time = self.times[-1]
 		delta = False
-		if isinstance(time,list) or isinstance(time,np.ndarray):
-			if len(time)>1: 
+		if isinstance(time, list) or isinstance(time, np.ndarray):
+			if len(time) > 1:
 				time0 = np.min(time)
 				time = np.max(time)
 				delta=True		
 		dat = self[time]
-		
 		# check to see if cfs plot requested
 		cfs = False
-		if isinstance(variable,list):
-			if variable[0] in ['cfs','CFS']: cfs = True
-		
+		if isinstance(variable, list):
+			if variable[0] in ['cfs', 'CFS']:
+				cfs = True
 		if not cfs:
-			if delta: dat0 = self[time0]
-			if isinstance(slice[0],str):
+			if delta:
+				dat0 = self[time0]
+			if isinstance(slice[0], str):
 				if slice[0].startswith('y'):
-					xmin = np.min(dat['x']);xmax = np.max(dat['x'])
-					ymin = np.min(dat['z']);ymax = np.max(dat['z'])		
+					xmin = np.min(dat['x'])
+					xmax = np.max(dat['x'])
+					ymin = np.min(dat['z'])
+					ymax = np.max(dat['z'])
 					if slice[1] is None:
-						points = np.transpose(np.array([dat['x'],dat['z'],np.ones((1,len(dat['z'])))[0]]))
+						points = np.transpose(
+							np.array([dat['x'], dat['z'],
+									 np.ones((1, len(dat['z'])))[0]]))
 						slice[1] = 1
 					else:
-						points = np.transpose(np.array([dat['x'],dat['z'],dat['y']]))
+						points = np.transpose(np.array([dat['x'], dat['z'],
+														dat['y']]))
 				elif slice[0].startswith('x'):
-					xmin = np.min(dat['y']);xmax = np.max(dat['y'])
-					ymin = np.min(dat['z']);ymax = np.max(dat['z'])		
+					xmin = np.min(dat['y'])
+					xmax = np.max(dat['y'])
+					ymin = np.min(dat['z'])
+					ymax = np.max(dat['z'])
 					if slice[1] is None:
-						points = np.transpose(np.array([dat['y'],dat['z'],np.ones((1,len(dat['z'])))[0]]))
+						points = np.transpose(
+							np.array([dat['y'], dat['z'],
+									  np.ones((1, len(dat['z'])))[0]]))
 						slice[1] = 1
 					else:
-						points = np.transpose(np.array([dat['y'],dat['z'],dat['x']]))
+						points = np.transpose(np.array([dat['y'], dat['z'],
+														dat['x']]))
 				elif slice[0].startswith('z'):
-					xmin = np.min(dat['x']);xmax = np.max(dat['x'])
-					ymin = np.min(dat['y']);ymax = np.max(dat['y'])		
+					xmin = np.min(dat['x'])
+					xmax = np.max(dat['x'])
+					ymin = np.min(dat['y'])
+					ymax = np.max(dat['y'])
 					if slice[1] is None:
-						points = np.transpose(np.array([dat['x'],dat['y'],np.ones((1,len(dat['y'])))[0]]))
+						points = np.transpose(
+							np.array([dat['x'], dat['y'],
+									  np.ones((1, len(dat['y'])))[0]]))
 						slice[1] = 1
 					else:
-						points = np.transpose(np.array([dat['x'],dat['y'],dat['z']]))
+						points = np.transpose(np.array([dat['x'], dat['y'],
+														dat['z']]))
 				elif slice[0].startswith('theta'): 
-					pyfehm_print('ERROR: theta slicing not supported yet',self._silent)	
+					pyfehm_print('ERROR: theta slicing not supported yet',
+								 self._silent)
 					return
-				xrange = np.linspace(xmin,xmax,divisions[0])
-				yrange = np.linspace(ymin,ymax,divisions[1])
-				X,Y = np.meshgrid(xrange,yrange)
-				Z = (X+np.sqrt(1.757))/(X+np.sqrt(1.757))*slice[1]
-				pointsI = np.transpose(np.reshape((X,Y,Z),(3,X.size)))
+				xrange = np.linspace(xmin, xmax, divisions[0])
+				yrange = np.linspace(ymin, ymax, divisions[1])
+				X, Y = np.meshgrid(xrange, yrange)
+				Z = (X + np.sqrt(1.757)) / (X + np.sqrt(1.757)) * slice[1]
+				pointsI = np.transpose(np.reshape((X, Y, Z), (3, X.size)))
 				vals = np.transpose(np.array(dat[variable]))
-				valsI = griddata(points,vals,pointsI,method=method)
-				valsI =  np.reshape(valsI,(X.shape[0],X.shape[1]))
+				valsI = griddata(points, vals, pointsI, method=method)
+				valsI =  np.reshape(valsI, (X.shape[0], X.shape[1]))
 				if delta:
 					vals = np.transpose(np.array(dat0[variable]))
-					valsI0 = griddata(points,vals,pointsI,method=method)
-					valsI0 =  np.reshape(valsI0,(X.shape[0],X.shape[1]))
+					valsI0 = griddata(points, vals, pointsI, method=method)
+					valsI0 =  np.reshape(valsI0, (X.shape[0], X.shape[1]))
 					valsI = valsI - valsI0
-			elif isinstance(slice[0],list):
+			elif isinstance(slice[0], list):
 				# check if horizontal or vertical slice
-				dx,dy,dz = abs(slice[0][0]-slice[1][0]),abs(slice[0][1]-slice[1][1]),abs(slice[0][2]-slice[1][2])
-				if 100*dz<dx and 100*dz<dy: 	#horizontal
-					xmin,xmax = np.min([slice[0][0],slice[1][0]]),np.max([slice[0][0],slice[1][0]])
-					ymin,ymax = np.min([slice[0][1],slice[1][1]]),np.max([slice[0][1],slice[1][1]])
-					xrange = np.linspace(xmin,xmax,divisions[0])
-					yrange = np.linspace(ymin,ymax,divisions[1])
-					X,Y = np.meshgrid(xrange,yrange)
-					Z = (X+np.sqrt(1.757))/(X+np.sqrt(1.757))*(slice[0][2]+slice[1][2])/2
-				else: 							#vertical 
-					xmin,xmax = 0,np.sqrt((slice[0][0]-slice[1][0])**2+(slice[0][1]-slice[1][1])**2)
-					ymin,ymax = np.min([slice[0][2],slice[1][2]]),np.max([slice[0][2],slice[1][2]])
-					xrange = np.linspace(xmin,xmax,divisions[0])
-					yrange = np.linspace(ymin,ymax,divisions[1])
-					X,Z = np.meshgrid(xrange,yrange)
-					Y = X/xmax*abs(slice[0][1]-slice[1][1]) + slice[0][1]
-					X = X/xmax*abs(slice[0][0]-slice[1][0]) + slice[0][0]
-				points = np.transpose(np.array([dat['x'],dat['y'],dat['z']]))
-				pointsI = np.transpose(np.reshape((X,Y,Z),(3,X.size)))
+				dx, dy, dz = abs(slice[0][0] - slice[1][0]),\
+							 abs(slice[0][1] - slice[1][1]),\
+							 abs(slice[0][2] - slice[1][2])
+				if 100 * dz < dx and 100 * dz < dy:  # horizontal
+					xmin, xmax = np.min([slice[0][0], slice[1][0]]),\
+								 np.max([slice[0][0], slice[1][0]])
+					ymin, ymax = np.min([slice[0][1], slice[1][1]]),\
+								 np.max([slice[0][1], slice[1][1]])
+					xrange = np.linspace(xmin, xmax, divisions[0])
+					yrange = np.linspace(ymin, ymax, divisions[1])
+					X, Y = np.meshgrid(xrange, yrange)
+					Z = (X + np.sqrt(1.757)) / (X + np.sqrt(1.757))\
+						* (slice[0][2] + slice[1][2]) / 2
+				else:  # vertical
+					xmin, xmax = 0, np.sqrt((slice[0][0] - slice[1][0]) ** 2
+											+ (slice[0][1] - slice[1][1]) ** 2)
+					ymin, ymax = np.min([slice[0][2], slice[1][2]]),\
+								 np.max([slice[0][2], slice[1][2]])
+					xrange = np.linspace(xmin, xmax, divisions[0])
+					yrange = np.linspace(ymin, ymax, divisions[1])
+					X, Z = np.meshgrid(xrange, yrange)
+					Y = X / xmax * abs(slice[0][1] - slice[1][1]) + slice[0][1]
+					X = X / xmax * abs(slice[0][0] - slice[1][0]) + slice[0][0]
+				points = np.transpose(
+					np.array([dat['x'], dat['y'], dat['z']]))
+				pointsI = np.transpose(np.reshape((X, Y, Z), (3, X.size)))
 				vals = np.transpose(np.array(dat[variable]))
-				valsI = griddata(points,vals,pointsI,method=method)
-				valsI =  np.reshape(valsI,(X.shape[0],X.shape[1]))
+				valsI = griddata(points, vals, pointsI, method=method)
+				valsI =  np.reshape(valsI, (X.shape[0], X.shape[1]))
 				if delta:
 					vals = np.transpose(np.array(dat0[variable]))
-					valsI0 = griddata(points,vals,pointsI,method=method)
-					valsI0 =  np.reshape(valsI0,(X.shape[0],X.shape[1]))
+					valsI0 = griddata(points, vals, pointsI, method=method)
+					valsI0 =  np.reshape(valsI0, (X.shape[0], X.shape[1]))
 					valsI = valsI - valsI0
-			
 		else:
 			if delta: time0 = time[0]; time = time[-1]
 			X,Y,Z,sxx = self.slice('strs_xx', slice, divisions, time, method)
@@ -867,37 +898,38 @@ class fcontour(object):
 			X,Y,Z,sxz = self.slice('strs_xz', slice, divisions, time, method)
 			X,Y,Z,syz = self.slice('strs_yz', slice, divisions, time, method)
 			X,Y,Z,sp  = self.slice('P',	   slice, divisions, time, method)
-			
-			dip = variable[2]/180.*math.pi
-			azi = variable[1]/180.*math.pi+3.14159/2.
-			nhat = np.array([np.cos(azi)*np.sin(dip),np.sin(azi)*np.sin(dip),np.cos(dip)])
+			dip = variable[2] / 180. * math.pi
+			azi = variable[1] / 180. * math.pi + 3.14159 / 2.
+			nhat = np.array([np.cos(azi) * np.sin(dip),
+							 np.sin(azi) * np.sin(dip), np.cos(dip)])
 			mu = variable[3]
 			cohesion = variable[4]
-			
-			px = sxx*nhat[0]+sxy*nhat[1]+sxz*nhat[2]
-			py = sxy*nhat[0]+syy*nhat[1]+syz*nhat[2]
-			pz = sxz*nhat[0]+syz*nhat[1]+szz*nhat[2]
-			
-			sig = px*nhat[0]+py*nhat[1]+pz*nhat[2]
-			tau = np.sqrt(px**2+py**2+pz**2 - sig**2)
-			valsI = tau - mu*(sig-sp) - cohesion
+			px = sxx * nhat[0] + sxy * nhat[1] + sxz * nhat[2]
+			py = sxy * nhat[0] + syy * nhat[1] + syz * nhat[2]
+			pz = sxz * nhat[0] + syz * nhat[1] + szz * nhat[2]
+			sig = px * nhat[0] + py * nhat[1] + pz * nhat[2]
+			tau = np.sqrt(px ** 2 + py ** 2 + pz ** 2 - sig ** 2)
+			valsI = tau - mu * (sig - sp) - cohesion
 			if delta:
-				X,Y,Z,sxx = self.slice('strs_xx', slice, divisions, time0, method)
-				X,Y,Z,syy = self.slice('strs_yy', slice, divisions, time0, method)
-				X,Y,Z,szz = self.slice('strs_zz', slice, divisions, time0, method)
-				X,Y,Z,sxy = self.slice('strs_xy', slice, divisions, time0, method)
-				X,Y,Z,sxz = self.slice('strs_xz', slice, divisions, time0, method)
-				X,Y,Z,syz = self.slice('strs_yz', slice, divisions, time0, method)
-				X,Y,Z,sp  = self.slice('P',	   slice, divisions, time0, method)
-				
-				px = sxx*nhat[0]+sxy*nhat[1]+sxz*nhat[2]
-				py = sxy*nhat[0]+syy*nhat[1]+syz*nhat[2]
-				pz = sxz*nhat[0]+syz*nhat[1]+szz*nhat[2]
-				
-				sig = px*nhat[0]+py*nhat[1]+pz*nhat[2]
-				tau = np.sqrt(px**2+py**2+pz**2 - sig**2)
-				valsI = valsI - (tau - mu*(sig-sp) - cohesion)
-				
+				X, Y, Z, sxx = self.slice('strs_xx', slice, divisions,
+										  time0, method)
+				X, Y, Z, syy = self.slice('strs_yy', slice, divisions,
+										  time0, method)
+				X, Y, Z, szz = self.slice('strs_zz', slice, divisions,
+										  time0, method)
+				X, Y, Z, sxy = self.slice('strs_xy', slice, divisions,
+										  time0, method)
+				X, Y, Z, sxz = self.slice('strs_xz', slice, divisions,
+										  time0, method)
+				X, Y, Z, syz = self.slice('strs_yz', slice, divisions,
+										  time0, method)
+				X, Y, Z, sp  = self.slice('P', slice, divisions, time0, method)
+				px = sxx * nhat[0] + sxy * nhat[1] + sxz * nhat[2]
+				py = sxy * nhat[0] + syy * nhat[1] + syz * nhat[2]
+				pz = sxz * nhat[0] + syz * nhat[1] + szz * nhat[2]
+				sig = px * nhat[0] + py * nhat[1] + pz * nhat[2]
+				tau = np.sqrt(px ** 2 + py ** 2 + pz ** 2 - sig ** 2)
+				valsI = valsI - (tau - mu * (sig - sp) - cohesion)
 		return X, Y, Z, valsI
 
 	def slice_plot_line(self, variable=None, time=None, slice='',
@@ -905,7 +937,7 @@ class fcontour(object):
 						levels=10, xlims=[], ylims=[], colors='k',
 						linestyle='-', save='',	xlabel='x / m', ylabel='y / m',
 						title='', font_size='medium', method='nearest',
-		equal_axes=True):
+						equal_axes=True):
 		'''Returns a line plot of contour data. Invokes the ``slice()``
 		method to interpolate slice data for plotting.
 		
@@ -1265,7 +1297,8 @@ class fcontour(object):
 					 xlims=[], ylims=[], color='k', marker='x-', save='',
 					 xlabel='distance / m', ylabel='', title='',
 					 font_size='medium', method='nearest',
-					 verticalPlot=False, elevationPlot=False, ax=None):
+					 verticalPlot=False, elevationPlot=False, legend=False,
+					 line_label=None, ax=None):
 		'''Return a plot of the given variable along a specified profile.
 		If the profile comprises two points, these are interpreted as the
 		start and end points of a straight line profile.
@@ -1314,6 +1347,10 @@ class fcontour(object):
 		:param elevationPlot: Flag to plot variable against elevation on the
 			y-axis.
 		:type elevationPlot: bool
+		:param legend: Whether to plot a legend with the plot
+		:type legend: bool
+		:param ax: Axes instance to plot this profile on
+		:type ax: matplotlib.pyplot.Axes
 		'''
 		save = os_path(save)
 		if time == None:
@@ -1333,6 +1370,10 @@ class fcontour(object):
 			return True
 		if not ylabel:
 			ylabel = variable
+		if line_label:
+			l_lab = line_label
+		else:
+			l_lab = variable
 		# plt.clf()
 		if not ax:
 			plt.figure(figsize=[8, 8])
@@ -1357,7 +1398,7 @@ class fcontour(object):
 			y = outpts[:, 2]
 			temp = xlabel; xlabel = ylabel; ylabel = temp
 			temp = xlims; xlims = ylims; ylims = temp
-		ax.plot(x, y, marker, color=color)
+		ax.plot(x, y, marker, color=color, label=l_lab)
 		if xlims:
 			ax.set_xlim(xlims)
 		if ylims:
@@ -1372,6 +1413,8 @@ class fcontour(object):
 			t.set_fontsize(font_size)
 		for t in ax.get_yticklabels():
 			t.set_fontsize(font_size)
+		if legend:
+			plt.legend()
 		extension, save_fname, pdf = save_name(save, variable=variable,
 											   time=time)
 		plt.savefig(save_fname, dpi=100, facecolor='w', edgecolor='w',
@@ -1448,11 +1491,10 @@ class fcontour(object):
 		:param grid_lines: Extend tick lines across plot according to
 			specified linestyle, e.g., 'k:' is a dotted black line.
 		:type grid_lines: bool
-		 
-		'''	
+		'''
 		save = os_path(save)
 		# check inputs
-		if time==None:
+		if time == None:
 			time = self.times[-1]
 		delta = False
 		if isinstance(time, list) or isinstance(time, np.ndarray):
@@ -1491,48 +1533,60 @@ class fcontour(object):
 		ax.set_ylabel(ylabel, size=font_size)
 		ax.set_zlabel(zlabel, size=font_size)
 		plt.title(title + '\n\n\n\n', size=font_size)
-		scale = 1e6
-		levels = [l / scale for l in levels]
-		X, Y, Z, valsI = self.slice(variable, [[xlims[0], ylims[0], zlims[0]],
-											   [xlims[1], ylims[1], zlims[0]]],
-									[divisions[0], divisions[1]], time, method)
+		# Get slices for edges of 3d box
+		Xz, Yz, Zz, valsIz = self.slice(variable,
+										[[xlims[0], ylims[0], zlims[0]],
+										 [xlims[1], ylims[1], zlims[0]]],
+										[divisions[0], divisions[1]],
+										time, method)
 		if delta:
-			X, Y, Z, valsIi = self.slice(variable,
-										 [[xlims[0], ylims[0],zlims[0]],
-										  [xlims[1], ylims[1], zlims[0]]],
-										 [divisions[0], divisions[1]], time0,
-										 method)
-			valsI = valsI - valsIi
-		cset = ax.contourf(X, Y, valsI / scale, zdir='z', offset=zlims[0],
-						   cmap=cm.coolwarm, levels=levels)
-		X, Y, Z, valsI = self.slice(variable, [[xlims[0], ylims[0], zlims[0]],
-											   [xlims[0], ylims[1], zlims[1]]],
-									[divisions[1], divisions[2]], time, method)
+			X, Y, Z, valsIiz = self.slice(variable,
+										  [[xlims[0], ylims[0],zlims[0]],
+										   [xlims[1], ylims[1], zlims[0]]],
+										  [divisions[0], divisions[1]],
+										  time0, method)
+			valsIz = valsIz - valsIiz
+		Xx, Yx, Zx, valsIx = self.slice(variable,
+										[[xlims[0], ylims[0], zlims[0]],
+										 [xlims[0], ylims[1], zlims[1]]],
+										[divisions[1], divisions[2]],
+										time, method)
 		if delta:
-			X, Y, Z, valsIi = self.slice(variable,
+			Xx, Yx, Zx, valsIix = self.slice(variable,
 										 [[xlims[0], ylims[0], zlims[0]],
 										  [xlims[0], ylims[1], zlims[1]]],
 										 [divisions[1], divisions[2]], time0,
 										 method)
-			valsI = valsI - valsIi
-		cset = ax.contourf(valsI / scale, Y, Z,  zdir='x', offset=xlims[0],
-						   cmap=cm.coolwarm, levels=levels)
-		X, Y, Z, valsI = self.slice(variable, [[xlims[0], ylims[0], zlims[0]],
-											   [xlims[1], ylims[0], zlims[1]]],
-									[divisions[0], divisions[2]], time, method)
+			valsIx = valsIx - valsIix
+		Xy, Yy, Zy, valsIy = self.slice(variable,
+										[[xlims[0], ylims[0], zlims[0]],
+									     [xlims[1], ylims[0], zlims[1]]],
+										[divisions[0], divisions[2]], time, method)
 		if delta:
-			X, Y, Z, valsIi = self.slice(variable,
+			Xy, Yy, Zy, valsIiy = self.slice(variable,
 										 [[xlims[0], ylims[0], zlims[0]],
 										  [xlims[1], ylims[0], zlims[1]]],
 										 [divisions[0], divisions[2]], time0,
 										 method)
-			valsI = valsI - valsIi
-		cset = ax.contourf(X, valsI / scale, Z,  zdir='y', offset=ylims[0],
+			valsIy = valsIy - valsIiy
+		# color scale
+		scale = 1e6
+		if isinstance(levels, int):
+			levels = np.linspace(
+				np.min(np.concatenate([valsIy, valsIx, valsIz])),
+				np.max(np.concatenate([valsIy, valsIx, valsIz])), levels)
+		levels = [l / scale for l in levels]
+		# Plot em
+		cset = ax.contourf(Xz, Yz, valsIz / scale, zdir='z', offset=zlims[0],
+						   cmap=cm.coolwarm, levels=levels)
+		cset = ax.contourf(valsIx / scale, Yx, Zx, zdir='x', offset=xlims[0],
+						   cmap=cm.coolwarm, levels=levels)
+		cset = ax.contourf(Xy, valsIy / scale, Zy,  zdir='y', offset=ylims[0],
 						   cmap=cm.coolwarm, levels=levels)
 		if cbar:
 			cbar=plt.colorbar(cset)
-			# Limit to two dec. places
-			tick_labels = ['{:.2f}'.format(t * scale) for t in levels]
+			# Limit to six dec. places
+			tick_labels = ['{:.6f}'.format(t * scale) for t in levels]
 			cbar.locator = matplotlib.ticker.FixedLocator(levels)
 			cbar.formatter = matplotlib.ticker.FixedFormatter(tick_labels)
 			cbar.set_label(cbar_label)
@@ -2011,9 +2065,9 @@ class fhistory(object):
 		if var_lim:
 			ax.set_ylim(var_lim)
 		if xlabel:
-			ax.xlabel(xlabel, size=font_size)
+			ax.set_xlabel(xlabel, size=font_size)
 		if ylabel:
-			ax.ylabel(ylabel, size=font_size)
+			ax.set_ylabel(ylabel, size=font_size)
 		if title: plt.title(title, size=font_size)
 		for t in ax.get_xticklabels():
 			t.set_fontsize(font_size)
