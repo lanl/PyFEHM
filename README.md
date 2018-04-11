@@ -9,7 +9,7 @@ Briefly, PyFEHM functionality includes:
 3. Post-processing of output, including visualisation in Paraview.
 4. Scripting tools that supports Python’s built-in multi-processing capabilities for batch simulations.
 
-Visit the [online tutorial here](https://lanl.github.io/Py-FEHM/) for more information.
+Visit the [online tutorial here](https://lanl.github.io/PyFEHM/) for more information.
 
 ## License ##
 
