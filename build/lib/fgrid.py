@@ -296,7 +296,7 @@ class fconn(object):				#Connection object.
 	def __init__(self,nodes=[fnode(),fnode()]):
 		self._nodes = nodes		
 		pos1 = self.nodes[0].position; pos2 = self.nodes[1].position
-		if pos1 is None and pos2 is None: self._distance = None
+		if pos1 == None and pos2 == None: self._distance = None
 		else: self._distance = np.sqrt((pos1[0]-pos2[0])**2+(pos1[1]-pos2[1])**2+(pos1[2]-pos2[2])**2)
 		self._geom_coef = None
 	def __repr__(self):	return 'n'+str(self.nodes[0].index)+':n'+str(self.nodes[1].index)	
