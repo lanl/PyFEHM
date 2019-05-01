@@ -15,7 +15,7 @@ Visit the [online tutorial here](https://lanl.github.io/PyFEHM/) for more inform
 
 Los Alamos National Security, LLC owns the copyright to "PyFEHM". The license for the software is BSD with standard clauses regarding modifications and redistribution.
 
-PyFEHM has been assigned the Los Alamos Computer Code Number LA-CC-13-081. 
+PyFEHM LANL LA-CC-13-081, Copyright No. C13153
 
 <pre>
 Copyright (c) 2013. Triad National Security, LLC. All rights reserved. This program was produced 
