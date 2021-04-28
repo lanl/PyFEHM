@@ -11,7 +11,7 @@ Briefly, PyFEHM functionality includes:
 
 Visit the [online docs here](https://lanl.github.io/PyFEHM/)
 
-The original developer of pyFEHM has continued support, contact David Dempsey at david.dempsey@canterbury.ac.nz
+The original developer of pyFEHM continues support, contact David Dempsey at david.dempsey@canterbury.ac.nz
 
 For updates to Python 3 visit: [github.com/ddempsey/PyFEHM](https://github.com/ddempsey/PyFEHM)
 
